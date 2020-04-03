@@ -1,4 +1,4 @@
-package main.util;
+package util;
 
 public enum Face {
     Jack {

@@ -1,7 +1,8 @@
-package main.util;
+package util;
 
 import java.util.Comparator;
-import static main.util.Suit.*;
+
+import static util.Suit.*;
 
 public class SuitOrder implements Comparator<Card> {
     boolean sortByValue;

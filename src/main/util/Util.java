@@ -1,4 +1,4 @@
-package main.util;
+package util;
 
 public final class Util {
     public static boolean faceGreaterThan(Face a, Face b) {

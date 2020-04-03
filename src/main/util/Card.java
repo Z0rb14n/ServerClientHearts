@@ -1,6 +1,6 @@
-package main.util;
+package util;
 
-import static main.util.Face.*;
+import static util.Face.*;
 
 public class Card {
     private Suit suit;
@@ -91,7 +91,7 @@ public class Card {
     }
     public boolean isPenaltyCard() {
         if (suit.equals(Suit.Heart)) {
-            return (!isFaceCard && number > 4) || isFaceCard;
+            return isFaceCard || number > 4;
         } else if (suit.equals(Suit.Spade)) {
             return Face.Queen.equals(face);
         } else if (suit.equals(Suit.Diamond)) {

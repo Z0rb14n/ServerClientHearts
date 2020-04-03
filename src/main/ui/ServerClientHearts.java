@@ -1,14 +1,15 @@
-package main;
+package ui;
 
 // TODO: DO THIS FIRST BEFORE WORKING ON CLIENT
+
+import processing.core.PApplet;
+import processing.net.Client;
+import processing.net.Server;
+import util.Deck;
 
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.UUID;
-import processing.core.PApplet;
-import processing.net.Client;
-import processing.net.Server;
-import main.util.*;
 
 public class ServerClientHearts extends PApplet {
     Server server;
