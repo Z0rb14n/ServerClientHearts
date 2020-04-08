@@ -108,7 +108,7 @@ public class Card {
         if (Suit.Heart.equals(suit)) {
             if (!isFaceCard && number < 5) return 0;
             else if (!isFaceCard) return 10;
-            else return (Util.getValue(face)-9)*10;
+            else return (face.getValue() - 9) * 10;
         }
         return 0;
     }
@@ -121,6 +121,12 @@ public class Card {
         hash = 97 * hash + (this.isFaceCard ? 1 : 0);
         return hash;
     }
+
+    public int getValue() {
+        if (number != -1) return number;
+        else return face.getValue();
+    }
+
     public boolean is10C() {
         return Suit.Club.equals(suit) && number == 10;
     }

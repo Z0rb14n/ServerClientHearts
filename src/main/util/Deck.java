@@ -144,7 +144,7 @@ public class Deck {
         boolean[] contains = new boolean[13];
         for (Card c : cards) {
             if (c.isHeart()) {
-                contains[Util.getValue(c)-2] = true;
+                contains[c.getValue() - 2] = true;
             }
         }
         for (boolean b : contains) {

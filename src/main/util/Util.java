@@ -8,23 +8,16 @@ public final class Util {
         return false;
     }
     public static boolean faceGreaterThan(Card a, Card b) {
+        if (a.getFace() == null) return false;
+        if (b.getFace() == null) return true;
         return faceGreaterThan(a.getFace(), b.getFace());
     }
     public static boolean faceLessThan(Face a, Face b) {
         return !faceGreaterThan(a,b) && !a.equals(b);
     }
     public static boolean faceLessThan(Card a, Card b) {
+        if (a.getFace() == null) return b.getFace() != null;
+        if (b.getFace() == null) return false;
         return faceLessThan(a.getFace(), b.getFace());
-    }
-    public static int getValue(Face a) {
-        if (a.equals(Face.Ace)) return 14;
-        if (a.equals(Face.King)) return 13;
-        if (a.equals(Face.Queen)) return 12;
-        if (a.equals(Face.Jack)) return 11;
-        throw new IllegalArgumentException();
-    }
-    public static int getValue(Card a) {
-        if (!a.isFaceCard()) return a.getNumber();
-        return getValue(a.getFace());
     }
 }
