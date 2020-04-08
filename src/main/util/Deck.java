@@ -50,13 +50,9 @@ public class Deck {
         }
         return false;
     }
-    /**
-     * Distributes the 52 cards in the deck randomly into d1,d2,d3 and d4
-     * @param d1
-     * @param d2
-     * @param d3
-     * @param d4 
-     */
+
+    // MODIFIES: d1, d2, d3, d4, this
+    // EFFECTS: distributes all 52 cards in this given deck into d1,d2, d3 and d4,
     public void randomlyDistribute(Deck d1, Deck d2, Deck d3, Deck d4) {
         assert(cards.size() == 52);
         Random random = new Random();
@@ -84,11 +80,8 @@ public class Deck {
         assert(d4.deckSize() == 13);
         assert(cards.isEmpty());
     }
-    /**
-     * Returns all playable cards (NOTE: THE CARDS ARE SHALLOW COPIES OF THE PARENT DECK)
-     * @param a
-     * @return 
-     */
+
+    // EFFECTS: returns a SHALLOW COPY of all playable cards in the deck
     public Deck getPlayableCards(Suit a) {
         if (!containsSuit(a)) return copy();
         Deck play = new Deck();

@@ -5,11 +5,11 @@ import java.util.Comparator;
 import static util.Suit.*;
 
 public class SuitOrder implements Comparator<Card> {
-    boolean sortByValue;
-    Suit top;
-    Suit secondTop;
-    Suit secondBottom;
-    Suit bottom;
+    private boolean sortByValue;
+    private Suit top;
+    private Suit secondTop;
+    private Suit secondBottom;
+    private Suit bottom;
     public SuitOrder() {
         // Defaults: Hearts > Diamonds > Spades > Clubs
         sortByValue = false;

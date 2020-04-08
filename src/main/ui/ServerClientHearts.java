@@ -29,7 +29,7 @@ public class ServerClientHearts extends PApplet {
     public final static String PLAYER_ID_HEADER = "P\\dID:.+";
     public final static String STARTING_HAND = "START:";
     public final static int FPS = 30;
-    private String[] IDS = new String[4];
+    private final String[] IDS = new String[4];
     public static final int port = 5204;
     private ArrayDeque<String> clientMessages;
 
@@ -79,6 +79,7 @@ public class ServerClientHearts extends PApplet {
         }
         addNewMessages();
         if (hasNewAction()) {
+            System.out.println("TODO: HANDLE MESSAGES");
             // do action
         }
     }

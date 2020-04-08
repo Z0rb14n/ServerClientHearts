@@ -32,6 +32,18 @@ public class CardTest {
     }
 
     @Test
+    public void testGetValue() {
+        for (int i = 2; i < 11; i++) {
+            String name = i + "C";
+            assertEquals(i, new Card(name).getValue());
+        }
+        assertEquals(11, new Card("JC").getValue());
+        assertEquals(12, new Card("QC").getValue());
+        assertEquals(13, new Card("KC").getValue());
+        assertEquals(14, new Card("AC").getValue());
+    }
+
+    @Test
     public void testIsFaceCard() {
         card = new Card("JH");
         assertTrue(card.isFaceCard());

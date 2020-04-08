@@ -25,10 +25,16 @@ public class GameState {
         isGameStarted = false;
     }
 
-    // MDOIFIES: this
+    // MODIFIES: this
     // EFFECTS: finishes passing the cards
     public void finishPassingCards() {
         allCardsPassed = true;
+    }
+
+    // MODIFIES: this
+    // EFFECTS: increments the turn counter
+    public void newTurn() {
+        numTurns++;
     }
 
     // EFFECTS: returns whether the game has started
