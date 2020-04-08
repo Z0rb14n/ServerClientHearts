@@ -1,7 +1,6 @@
 <component name="libraryTable">
   <library name="AllLibraries">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/core.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/gluegen-rt.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/gluegen-rt-natives-linux-aarch64.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/gluegen-rt-natives-linux-amd64.jar!/" />
@@ -18,7 +17,6 @@
       <root url="jar://$PROJECT_DIR$/lib/jogl-all-natives-macosx-universal.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jogl-all-natives-windows-amd64.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jogl-all-natives-windows-i586.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/net.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
