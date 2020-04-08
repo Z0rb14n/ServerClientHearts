@@ -1,54 +1,70 @@
 package util;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Random;
 
 // Represents a deck of cards
-public class Deck {
+public class Deck implements Iterable<Card> {
     private SuitOrder order;
     private final ArrayList<Card> cards;
 
+    // EFFECTS: Initializes the deck of cards with default suit order
     public Deck() {
         order = new SuitOrder();
         cards = new ArrayList<>(13);
     }
 
+    // EFFECTS: gets the suit order of the deck
     public SuitOrder getOrder() {
         return order;
     }
 
+    // MODIFIES: this
+    // EFFECTS: sets the suit order to given suit order
     public void setOrder(SuitOrder so) {
         order = so;
     }
 
+    // MODIFIES; this
+    // EFFECTS; sorts the deck with internal suit order
     public void sort() {
         cards.sort(order);
     }
 
+    // EFFECTS: returns the number of cards in the deck
     public int deckSize() {
         return cards.size();
     }
 
+    // EFFECTS; returns whether the deck is empty or not
     public boolean isEmpty() {
         return cards.isEmpty();
     }
 
+    // MODIFIES: this
+    // EFFECTS: adds a card to the deck
     public void addCard(Card a) {
         cards.add(a);
     }
 
+    // MODIFIES: this
+    // EFFECTS; removes a card from the deck
     public void removeCard(Card a) {
         cards.remove(a);
     }
 
+    // EFFECTS: checks whether the deck contains the three of clubs (cuz lazy);
     public boolean containsThreeOfClubs() {
         return cards.contains(new Card("3C"));
     }
 
+    // EFFECTS: checks whether the deck contains the 10 of clubs (cuz lazy);
     public boolean containsTenOfClubs() {
         return cards.contains(new Card("10C"));
     }
 
+    // EFFECTS: checks whether the deck contains a card of given suit
     public boolean containsSuit(Suit a) {
         for(Card c : cards) {
             if (c.getSuit().equals(a)) return true;
@@ -56,6 +72,7 @@ public class Deck {
         return false;
     }
 
+    // REQUIRES: cards.size() == 52 or generate52() has to be called prior
     // MODIFIES: d1, d2, d3, d4, this
     // EFFECTS: distributes all 52 cards in this given deck into d1,d2, d3 and d4,
     public void randomlyDistribute(Deck d1, Deck d2, Deck d3, Deck d4) {
@@ -96,6 +113,7 @@ public class Deck {
         return play;
     }
 
+    // EFFECTS: returns the number of penalty cards in the deck
     public int numPenaltyCards() {
         int value = 0;
         for(Card c : cards) {
@@ -104,6 +122,7 @@ public class Deck {
         return value;
     }
 
+    // EFFECTS: returns the number of penalty points from the deck
     public int penaltyPoints() {
         if (containsTenOfClubs() && numPenaltyCards() == 1) return -50;
         int value = 0;
@@ -111,17 +130,13 @@ public class Deck {
             if (containsTenOfClubs()) {
                 for(Card c : cards) {
                     if (c.isPenaltyCard() && !c.is10C()) {
-                        int pen = c.getPenaltyPoints();
-                        if (pen < 0) value += pen * 2;
-                        else value -= pen * 2;
+                        value += -Math.abs(c.getPenaltyPoints()) * 2;
                     }
                 }
             } else {
                 for(Card c : cards) {
-                    if (c.isPenaltyCard() && !c.is10C()) {
-                        int pen = c.getPenaltyPoints();
-                        if (pen < 0) value += pen;
-                        else value -= pen;
+                    if (c.isPenaltyCard()) {
+                        value += -Math.abs(c.getPenaltyPoints());
                     }
                 }
             }
@@ -141,6 +156,7 @@ public class Deck {
         return value;
     }
 
+    // EFFECTS: returns whether a shoot is possible (i.e. you have all hearts from 2H to AH)
     public boolean isShootPossible() {
         boolean[] contains = new boolean[13];
         for (Card c : cards) {
@@ -154,7 +170,10 @@ public class Deck {
         return true;
     }
 
+    // MODIFIES: this
+    // EFFECTS: generates a deck of 52 cards
     public void generate52() {
+        assert (cards.isEmpty());
         for (Suit s: Suit.values()) {
             for (int i = 2; i < 11; i++) {
                 cards.add(new Card("" + i + s.toString()));
@@ -167,6 +186,7 @@ public class Deck {
     }
 
     @Override
+    // EFFECTS: returns string representation of this deck
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < cards.size(); i++) {
@@ -178,20 +198,28 @@ public class Deck {
         return sb.toString();
     }
 
+    // EFFECTS: checks whether this deck is valid, but does not check duplicates
     public boolean isValid() {
         for (Card c: cards) {
             if (!c.isValid()) {
                 return false;
             }
         }
-        return true; // DOES NOT CHECK DUPLICATES
+        return true;
     }
 
+    // EFFECTS: returns a copy of the deck
     public Deck copy() {
         Deck deck = new Deck();
-        for (Card a: cards) {
+        for (Card a : cards) {
             deck.addCard(a);
         }
         return deck;
+    }
+
+    @Override
+    // EFFECTS: returns an iterator over the cards
+    public Iterator<Card> iterator() {
+        return cards.iterator();
     }
 }
