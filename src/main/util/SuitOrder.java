@@ -6,17 +6,12 @@ import static util.Suit.*;
 
 public class SuitOrder implements Comparator<Card> {
     private boolean sortByValue;
-    private Suit top;
-    private Suit secondTop;
-    private Suit secondBottom;
-    private Suit bottom;
+    public static final Suit[] DEFAULT = new Suit[]{Heart, Diamond, Spade, Club};
+    //{top,secondTop,secondBottom,bottom};
+    private Suit[] suits = new Suit[4];
     public SuitOrder() {
         // Defaults: Hearts > Diamonds > Spades > Clubs
-        sortByValue = false;
-        top = Heart;
-        secondTop = Diamond;
-        secondBottom = Spade;
-        bottom = Club;
+        reset();
     }
     public boolean isSortingByValue() {
         return sortByValue;
@@ -24,56 +19,78 @@ public class SuitOrder implements Comparator<Card> {
     public void setSortByValue(boolean val) {
         sortByValue = val;
     }
+
+    // MODIFIES: this
+    // EFFECTS: moves a suit to top, shifts everything else down
     public void moveSuitToTop(Suit a) {
-        int location = locateSuit(a);
-        if (location == 1) return;
-        Suit temp = top;
-        top = a;
-        // shifts everything down one
-        if (location == 4) bottom = secondBottom;
-        if (location == 3) secondBottom = secondTop;
-        if (location == 2) secondTop = temp;
+        moveSuitToLocation(a, 1);
     }
+
+    // EFFECTS: returns the order of the suits
+    public Suit[] getSuitOrder() {
+        Suit[] temp = new Suit[4];
+        System.arraycopy(suits, 0, temp, 0, 4);
+        return temp;
+    }
+
+    // MODIFIES: this
+    // EFFECTS: resets SuitOrder
+    public void reset() {
+        sortByValue = false;
+        System.arraycopy(DEFAULT, 0, suits, 0, 4);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: moves a suit to specific location (1-4, or index + 1)
+    public void moveSuitToLocation(Suit a, int location) {
+        final int prevLocation = locateSuit(a);
+        if (prevLocation == location) return;
+        if (prevLocation > location) {
+            // shifts everything down 1
+            // a,b,c,d -> a,a,b,c
+            System.arraycopy(suits, location - 1, suits, location, prevLocation - location);
+        } else {
+            // shifts everything up 1
+            System.arraycopy(suits, prevLocation, suits, prevLocation - 1, location - prevLocation);
+        }
+        suits[location - 1] = a;
+    }
+
+    // MODIFIES: this
+    // EFFECTS: moves suit a to bottom, shifts everything else up
     public void moveSuitToBottom(Suit a) {
-        int location = locateSuit(a);
-        if (location == 4) return;
-        Suit temp = bottom;
-        bottom = a;
-        if (location == 1) top = secondTop;
-        if (location == 2) secondTop = secondBottom;
-        if (location == 3) secondBottom = temp;
+        moveSuitToLocation(a, 4);
     }
+
+    // EFFECTS: returns position from top (e.g. top is 1, bottom is 4)
     public int locateSuit(Suit a) {
-        if (top.equals(a)) return 1;
-        if (secondTop.equals(a)) return 2;
-        if (secondBottom.equals(a)) return 3;
-        if (bottom.equals(a)) return 4;
-        throw new IllegalArgumentException();
-    }
-    
-    public int suitCompare(Card a, Card b) {
-        return suitCompare(a.getSuit(),b.getSuit());
-    }
-    public int suitCompare(Suit a, Suit b) {
-        if (a.equals(b)) return 0;
-        if (a.equals(top)) return 1;
-        if (a.equals(bottom)) return -1;
-        if (a.equals(secondTop)) {
-            if (b.equals(top)) return -1;
-            else return 1;
-        }
-        if (a.equals(secondBottom)) {
-            if (b.equals(bottom)) return 1;
-            else return -1;
-        }
+        if (suits[0].equals(a)) return 1;
+        if (suits[1].equals(a)) return 2;
+        if (suits[2].equals(a)) return 3;
+        if (suits[3].equals(a)) return 4;
         throw new IllegalArgumentException();
     }
 
+    // EFFECTS: returns 1 if a.suit > b.suit, 0 if equal, -1 if a.suit < b.suit
+    public int suitCompare(Card a, Card b) {
+        return suitCompare(a.getSuit(),b.getSuit());
+    }
+
+    // EFFECTS: returns 1 if a > b, 0 if equal, -1 if a < b
+    public int suitCompare(Suit a, Suit b) {
+        return Integer.compare(locateSuit(b), locateSuit(a));
+        // order is reversed (locateSuit(b),locateSuit(a)) because locateSuit returns small numbers if top, large if bottom
+    }
+
+    // EFFECTS: returns 1 if a.value > b.value, 0 if equal, -1 if a.value < b.value
+    public int valueCompare(Card a, Card b) {
+        return Integer.compare(a.getValue(), b.getValue());
+    }
+
     @Override
+    // EFFECTS: returns 1 if a > b, 0 if a == b, -1 if a < b
     public int compare(Card a, Card b) {
-        CardNumberComparator lol = new CardNumberComparator();
-        if (sortByValue) return lol.compare(a,b);
-        if (suitCompare(a,b) != 0) return suitCompare(a,b);
-        else return lol.compare(a,b);
+        if (!sortByValue && suitCompare(a, b) != 0) return suitCompare(a, b);
+        else return valueCompare(a, b);
     }
 }
