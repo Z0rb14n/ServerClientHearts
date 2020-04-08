@@ -35,6 +35,7 @@ public class ServerClientHearts extends PApplet {
     private ArrayDeque<String> clientMessages;
 
     private GameState gameState;
+    private ChatMessageHandler cmh;
 
     private Deck player1Hand;
     private Deck player2Hand;
@@ -44,6 +45,11 @@ public class ServerClientHearts extends PApplet {
     // EFFECTS: returns whether a message is a chat message
     public static boolean isChatMessage(String msg) {
         return msg.matches(CHAT_MSG);
+    }
+
+    public static void main(String[] args) {
+        ServerClientHearts sch = new ServerClientHearts();
+        PApplet.runSketch(new String[]{ServerClientHearts.class.getName()}, sch);
     }
 
     @Override
@@ -58,16 +64,7 @@ public class ServerClientHearts extends PApplet {
         gameState = new GameState();
         clientMessages = new ArrayDeque<>();
         clients = new LinkedHashMap<>(4);
-    }
-
-    @Override
-    // MODIFIES: this
-    // EFFECTS: runs at beginning of program before draw
-    public void setup() {
-        frameRate(FPS);
-        server = new Server(this, port);
-        System.out.println("Server started at: " + Server.ip());
-        surface.setTitle("Server Client Hearts Server?");
+        cmh = new ChatMessageHandler();
     }
 
     @Override
@@ -78,7 +75,6 @@ public class ServerClientHearts extends PApplet {
         if (!gameState.isGameStarted() && firstEmptySpace() == -1) {
             startGame();
         }
-        addNewMessages();
         if (hasNewAction()) {
             System.out.println("TODO: HANDLE MESSAGES");
             // do action
@@ -131,7 +127,6 @@ public class ServerClientHearts extends PApplet {
         int clientNum = getClientNumber(sender);
         final String header = "CHAT" + clientNum + ":";
         for(int i = 0; i < 4; i++) {
-            if ((i+1) == clientNum) continue;
             clients.get(IDS[i]).write(header + msg.substring(CHAT_MSG_INDEX));
         }
     }
@@ -240,4 +235,52 @@ public class ServerClientHearts extends PApplet {
         removeClientFromEntries(c);
     }
 
+    @Override
+    // MODIFIES: this
+    // EFFECTS: runs at beginning of program before draw
+    public void setup() {
+        frameRate(FPS);
+        server = new Server(this, port);
+        System.out.println("Server started at: " + Server.ip());
+        surface.setTitle("Server Client Hearts Server?");
+        cmh.start();
+    }
+
+    // Represents the thread that handles the chat messages
+    private class ChatMessageHandler extends Thread {
+        private boolean stop = false;
+
+        // MODIFIES: this
+        // EFFECTS: stops the thread
+        public void end() {
+            stop = true;
+        }
+
+        @Override
+        // MODIFIES: server
+        // EFFECTS: deals with chat messages by writing to clients and/or adding non-chat messages to server clientMessages
+        public void run() {
+            while (!stop) {
+                Client c = server.available();
+                while (c != null) {
+                    String sent = c.readString();
+                    System.out.println("Client number " + getClientNumber(c) + " has sent " + sent);
+                    checkValidMessage(sent, c);
+                    if (isChatMessage(sent)) handleChatMessage(sent, c);
+                    else clientMessages.add(sent);
+                    c = server.available(); // get next client
+                }
+                delay(20); // runs 50 times a second
+            }
+        }
+
+        // MODIFIES: this
+        // EFFECTS: sleeps for ms milliseconds
+        public void delay(long ms) {
+            try {
+                sleep(ms);
+            } catch (InterruptedException e) {
+            }
+        }
+    }
 }
