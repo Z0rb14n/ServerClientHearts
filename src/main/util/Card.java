@@ -79,7 +79,7 @@ public class Card {
     }
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Card) || o == null) return false;
+        if (!(o instanceof Card)) return false;
         Card object = (Card) o;
         if (object.isFaceCard) {
             if (!isFaceCard) return false;
@@ -102,12 +102,12 @@ public class Card {
         throw new IllegalArgumentException("WHAT");
     }
     public int getPenaltyPoints() {
-        if (Suit.Club.equals(suit) && number == 10) return -50;
+        if (is10C()) return -50;
         if (Suit.Diamond.equals(suit) && Face.Jack.equals(face)) return -100;
         if (Suit.Spade.equals(suit) && Face.Queen.equals(face)) return 100;
         if (Suit.Heart.equals(suit)) {
-            if (isFaceCard && number < 5) return 0;
-            else if (isFaceCard) return 10;
+            if (!isFaceCard && number < 5) return 0;
+            else if (!isFaceCard) return 10;
             else return (Util.getValue(face)-9)*10;
         }
         return 0;
@@ -131,6 +131,7 @@ public class Card {
         return new Card(toString());
     }
     public boolean equalFace(Card b) {
+        if (face == null) return b.face == null;
         return face.equals(b.face);
     }
     public boolean equalSuit(Card b) {

@@ -28,6 +28,7 @@ public class ServerClientHearts extends PApplet {
     public final static int PLAY_MSG_INDEX = PLAY_MSG_HEADER.length();
     public final static String PLAYER_ID_HEADER = "P\\dID:.+";
     public final static String STARTING_HAND = "START:";
+    public final static int FPS = 30;
     private String[] IDS = new String[4];
     public static final int port = 5204;
     private ArrayDeque<String> clientMessages;
@@ -39,7 +40,14 @@ public class ServerClientHearts extends PApplet {
     private Deck player3Hand;
     private Deck player4Hand;
 
+    // EFFECTS: returns whether a message is a chat message
+    public static boolean isChatMessage(String msg) {
+        return msg.matches(CHAT_MSG);
+    }
+
     @Override
+    // MODIFIES: this
+    // EFFECTS: runs at beginning of program before setup - size() must be in settings() (see PApplet in processing for details)
     public void settings() {
         size(640, 480);
         player1Hand = new Deck();
@@ -48,18 +56,22 @@ public class ServerClientHearts extends PApplet {
         player4Hand = new Deck();
         gameState = new GameState();
         clientMessages = new ArrayDeque<>();
+        clients = new LinkedHashMap<>(4);
     }
 
     @Override
+    // MODIFIES: this
+    // EFFECTS: runs at beginning of program before draw
     public void setup() {
-        frameRate(30);
-        clients = new LinkedHashMap<>(4);
+        frameRate(FPS);
         server = new Server(this, port);
         System.out.println("Server started at: " + Server.ip());
         surface.setTitle("Server Client Hearts Server?");
     }
 
     @Override
+    // MODIFIES: this
+    // EFFECTS: loops FPS times per second and renders to the screen
     public void draw() {
         background(255);
         if (!gameState.isGameStarted() && firstEmptySpace() == -1) {
@@ -70,24 +82,29 @@ public class ServerClientHearts extends PApplet {
             // do action
         }
     }
-    
+
+    // EFFECTS: returns whether there is another client message to process
     public boolean hasNewAction() {
         return !clientMessages.isEmpty();
     }
-    
+
+    // MODIFIES: this
+    // EFFECTS: starts the current game of hearts and transitions to "pass cards" stage
     public void startGame() {
         gameState.startGame();
-            server.write(START_GAME_MSG);
-            // start the game
-            Deck temp = new Deck();
-            temp.generate52();
-            temp.randomlyDistribute(player1Hand, player2Hand, player3Hand, player4Hand);
-            getNthClient(0).write(STARTING_HAND + player1Hand.toString());
-            getNthClient(1).write(STARTING_HAND + player2Hand.toString());
-            getNthClient(2).write(STARTING_HAND + player3Hand.toString());
-            getNthClient(3).write(STARTING_HAND + player4Hand.toString());
+        server.write(START_GAME_MSG);
+        // start the game
+        Deck temp = new Deck();
+        temp.generate52();
+        temp.randomlyDistribute(player1Hand, player2Hand, player3Hand, player4Hand);
+        getNthClient(0).write(STARTING_HAND + player1Hand.toString());
+        getNthClient(1).write(STARTING_HAND + player2Hand.toString());
+        getNthClient(2).write(STARTING_HAND + player3Hand.toString());
+        getNthClient(3).write(STARTING_HAND + player4Hand.toString());
     }
-    
+
+    // MODIFIES: this
+    // EFFECTS: if seen new chat message, send to other users. Else, add to queue
     public void addNewMessages() {
         Client c = server.available();
         while (c != null) {
@@ -96,18 +113,18 @@ public class ServerClientHearts extends PApplet {
             checkValidMessage(sent,c);
             if (isChatMessage(sent)) handleChatMessage(sent,c);
             else clientMessages.add(sent);
-            c = server.available(); // get next client 
+            c = server.available(); // get next client
         }
     }
-    
-    public boolean isChatMessage(String msg) {
-        return msg.matches(CHAT_MSG);
-    }
-    
+
+    // MODIFIES: this
+    // EFFECTS: checks that a message is valid. If not, kick the client.
     public void checkValidMessage(String msg, Client c) {
         if (!isChatMessage(msg) && !msg.matches(PLAY_MSG)) kick(c);
     }
-    
+
+    // MODIFIES: this
+    // EFFECTS: handles all chat messages.
     public void handleChatMessage(String msg, Client sender) {
         int clientNum = getClientNumber(sender);
         final String header = "CHAT" + clientNum + ":";
@@ -116,7 +133,10 @@ public class ServerClientHearts extends PApplet {
             clients.get(IDS[i]).write(header + msg.substring(CHAT_MSG_INDEX));
         }
     }
-    
+
+    // MODIFIES: this
+    // EFFECTS: handles the messages in queue (probably delete later)
+    @Deprecated
     public void handleMessages() {
         while (!clientMessages.isEmpty()) {
             String msg = clientMessages.poll();
@@ -124,6 +144,8 @@ public class ServerClientHearts extends PApplet {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: runs when a client connects to the server
     public void serverEvent(Server s, Client c) {
         System.out.println("New client " + c.ip() + " connected to server  " + Server.ip());
         int spot = firstEmptySpace();
@@ -138,18 +160,24 @@ public class ServerClientHearts extends PApplet {
             System.out.println(s.clientCount);
         }
     }
-    
+
+    // MODIFIES: this
+    // EFFECTS: kicks the client
     public void kick(Client c) {
         kick(c,KICK_DEFAULT_MSG);
     }
-    
+
+    // MODIFIES: this
+    // EFFECTS: kicks the client with given message
     public void kick(Client c, String msg) {
         c.write(msg);
         server.disconnect(c);
         System.out.println("Client kicked: " + c.ip());
         removeClientFromEntries(c);
     }
-    
+
+    // MODIFIES: this
+    // EFFECTS: removes a client from the list of entries
     private void removeClientFromEntries(Client c) {
         if (!clients.containsValue(c)) return;
         String toRemove = null;
@@ -169,23 +197,17 @@ public class ServerClientHearts extends PApplet {
         clients.remove(toRemove);
         System.out.println("Successfully removed id " + toRemove + ", ip: " + c.ip());
     }
-    
-    /**
-     * 
-     * @param n number from 1-4
-     * @return 
-     */
+
+
+    // EFFECTS: gets Client with given client number (1-4)
     public Client getNthClient(int n) {
         if (n < 1 || n > 4) throw new IllegalArgumentException("n must be a number from 1-4");
         if (IDS[n-1] == null) return null;
         if (!clients.containsKey(IDS[n-1])) return null;
         return clients.get(IDS[n-1]);
     }
-    /**
-     * 
-     * @param c client
-     * @return number 1-4, 0 if unavailable
-     */
+
+    // EFFECTS: returns client number (1-4), 0 if non-existent
     public int getClientNumber(Client c) {
         if (!clients.containsValue(c)) return 0;
         for (String id : clients.keySet()) {
@@ -200,7 +222,7 @@ public class ServerClientHearts extends PApplet {
         return 0;
     }
 
-    // EFFECTS: returns the first empty index for IDs
+    // EFFECTS: returns the first empty index (0-3) for IDs
     public int firstEmptySpace() {
         if (IDS[0] == null) return 0;
         if (IDS[1] == null) return 1;
