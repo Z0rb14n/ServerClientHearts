@@ -6,14 +6,15 @@ import processing.core.PApplet;
 import processing.net.Client;
 import processing.net.Server;
 import util.Deck;
+import util.GameState;
 
 import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
 public class ServerClientHearts extends PApplet {
-    Server server;
-    LinkedHashMap<String, Client> clients;
+    private Server server;
+    private LinkedHashMap<String, Client> clients;
     public final static String ERR_TOO_MANY_PLAYERS = "ERR: TOO MANY PLAYERS";
     public final static String ERR_INVALID_MSG = "ERR: INVALID MSG";
     public final static String KICK_DEFAULT_MSG = "ERR: KICKED";
@@ -27,16 +28,16 @@ public class ServerClientHearts extends PApplet {
     public final static int PLAY_MSG_INDEX = PLAY_MSG_HEADER.length();
     public final static String PLAYER_ID_HEADER = "P\\dID:.+";
     public final static String STARTING_HAND = "START:";
-    String[] IDS = new String[4];
+    private String[] IDS = new String[4];
     public static final int port = 5204;
-    ArrayDeque<String> clientMessages;
-    
-    boolean gameStarted = false;
-    
-    Deck player1Hand;
-    Deck player2Hand;
-    Deck player3Hand;
-    Deck player4Hand;
+    private ArrayDeque<String> clientMessages;
+
+    private GameState gameState;
+
+    private Deck player1Hand;
+    private Deck player2Hand;
+    private Deck player3Hand;
+    private Deck player4Hand;
 
     @Override
     public void settings() {
@@ -45,6 +46,7 @@ public class ServerClientHearts extends PApplet {
         player2Hand = new Deck();
         player3Hand = new Deck();
         player4Hand = new Deck();
+        gameState = new GameState();
         clientMessages = new ArrayDeque<>();
     }
 
@@ -60,7 +62,7 @@ public class ServerClientHearts extends PApplet {
     @Override
     public void draw() {
         background(255);
-        if (!gameStarted && firstEmptySpace() == -1) {
+        if (!gameState.isGameStarted() && firstEmptySpace() == -1) {
             startGame();
         }
         addNewMessages();
@@ -74,7 +76,7 @@ public class ServerClientHearts extends PApplet {
     }
     
     public void startGame() {
-        gameStarted = true;
+        gameState.startGame();
             server.write(START_GAME_MSG);
             // start the game
             Deck temp = new Deck();
@@ -197,10 +199,8 @@ public class ServerClientHearts extends PApplet {
         }
         return 0;
     }
-    /**
-     * 
-     * @return index from 0-3
-     */
+
+    // EFFECTS: returns the first empty index for IDs
     public int firstEmptySpace() {
         if (IDS[0] == null) return 0;
         if (IDS[1] == null) return 1;
@@ -208,16 +208,12 @@ public class ServerClientHearts extends PApplet {
         if (IDS[3] == null) return 3;
         return -1;
     }
-    
+
+    // MODIFIES: this
+    // EFFECTS: after a client has disconnected, remove them from the entries list
     public void disconnectEvent(Client c) {
         System.out.println("Client disconnected: " + c.ip());
         removeClientFromEntries(c);
-    }
-
-    public static void main(String[] args) {
-        String[] processingArgs = {"lmao"};
-        ServerClientHearts sch = new ServerClientHearts();
-        PApplet.runSketch(processingArgs, sch);
     }
 
 }
