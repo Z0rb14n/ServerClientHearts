@@ -1,5 +1,6 @@
 package util;
 
+// Represents the state of the server (i.e. has the game started?)
 public class GameState {
     private boolean isGameStarted;
     private boolean allCardsPassed;

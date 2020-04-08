@@ -3,47 +3,52 @@ package util;
 import java.util.ArrayList;
 import java.util.Random;
 
+// Represents a deck of cards
 public class Deck {
     private SuitOrder order;
     private final ArrayList<Card> cards;
-    
+
     public Deck() {
         order = new SuitOrder();
         cards = new ArrayList<>(13);
     }
-    
+
     public SuitOrder getOrder() {
         return order;
     }
-    
+
     public void setOrder(SuitOrder so) {
         order = so;
     }
-    
+
     public void sort() {
         cards.sort(order);
     }
-    
+
     public int deckSize() {
         return cards.size();
     }
+
     public boolean isEmpty() {
         return cards.isEmpty();
     }
-    
+
     public void addCard(Card a) {
         cards.add(a);
     }
-    
+
     public void removeCard(Card a) {
         cards.remove(a);
     }
+
     public boolean containsThreeOfClubs() {
         return cards.contains(new Card("3C"));
     }
+
     public boolean containsTenOfClubs() {
         return cards.contains(new Card("10C"));
     }
+
     public boolean containsSuit(Suit a) {
         for(Card c : cards) {
             if (c.getSuit().equals(a)) return true;
@@ -90,6 +95,7 @@ public class Deck {
         }
         return play;
     }
+
     public int numPenaltyCards() {
         int value = 0;
         for(Card c : cards) {
@@ -97,6 +103,7 @@ public class Deck {
         }
         return value;
     }
+
     public int penaltyPoints() {
         if (containsTenOfClubs() && numPenaltyCards() == 1) return -50;
         int value = 0;
@@ -133,6 +140,7 @@ public class Deck {
         }
         return value;
     }
+
     public boolean isShootPossible() {
         boolean[] contains = new boolean[13];
         for (Card c : cards) {
@@ -145,6 +153,7 @@ public class Deck {
         }
         return true;
     }
+
     public void generate52() {
         for (Suit s: Suit.values()) {
             for (int i = 2; i < 11; i++) {
@@ -156,6 +165,7 @@ public class Deck {
         }
         isValid();
     }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -167,6 +177,7 @@ public class Deck {
         }
         return sb.toString();
     }
+
     public boolean isValid() {
         for (Card c: cards) {
             if (!c.isValid()) {
@@ -175,6 +186,7 @@ public class Deck {
         }
         return true; // DOES NOT CHECK DUPLICATES
     }
+
     public Deck copy() {
         Deck deck = new Deck();
         for (Card a: cards) {

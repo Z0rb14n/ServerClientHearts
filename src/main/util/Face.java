@@ -1,5 +1,6 @@
 package util;
 
+// Represents the face value of a card
 public enum Face {
 
     Jack {

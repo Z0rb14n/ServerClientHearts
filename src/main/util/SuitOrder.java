@@ -4,18 +4,22 @@ import java.util.Comparator;
 
 import static util.Suit.*;
 
+// Represents an ordering of cards
 public class SuitOrder implements Comparator<Card> {
     private boolean sortByValue;
     public static final Suit[] DEFAULT = new Suit[]{Heart, Diamond, Spade, Club};
     //{top,secondTop,secondBottom,bottom};
     private Suit[] suits = new Suit[4];
+
     public SuitOrder() {
         // Defaults: Hearts > Diamonds > Spades > Clubs
         reset();
     }
+
     public boolean isSortingByValue() {
         return sortByValue;
     }
+
     public void setSortByValue(boolean val) {
         sortByValue = val;
     }

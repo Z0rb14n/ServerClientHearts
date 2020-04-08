@@ -2,12 +2,13 @@ package util;
 
 import static util.Face.*;
 
+// Represents a singular card
 public class Card {
     private Suit suit;
     private int number; // -1 if faceCard
     private Face face;
     private boolean isFaceCard;
-    
+
     // Card has to be of format <NUM><SUIT>
     public Card(String card) {
         if (card.length() < 2 || card.length() > 3) throw new IllegalArgumentException("Invalid card length: " + card.length());
@@ -47,18 +48,23 @@ public class Card {
         }
         assert(isValid());
     }
+
     public Suit getSuit() {
         return suit;
     }
+
     public boolean isFaceCard() {
         return isFaceCard;
     }
+
     public int getNumber() {
         return number;
     }
+
     public Face getFace() {
         return face;
     }
+
     private static Suit convertStringToSuit(String suit) {
         if (suit.equals("S")) return Suit.Spade;
         if (suit.equals("H")) return Suit.Heart;
@@ -66,6 +72,7 @@ public class Card {
         if (suit.equals("D")) return Suit.Diamond;
         throw new IllegalArgumentException("Invalid Suit Character: " + suit);
     }
+
     @Override
     final public String toString() {
         if (isFaceCard) {
@@ -74,9 +81,11 @@ public class Card {
             return number + "" + suit.toString();
         }
     }
+
     final public boolean isValid() {
         return suit != null && ((isFaceCard && face != null && number == -1) || (!isFaceCard && face==null && (number < 11 && number > 1)));
     }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Card)) return false;
@@ -89,6 +98,7 @@ public class Card {
             return object.suit.equals(suit) && object.number == number;
         }
     }
+
     public boolean isPenaltyCard() {
         if (suit.equals(Suit.Heart)) {
             return isFaceCard || number > 4;
@@ -101,6 +111,7 @@ public class Card {
         }
         throw new IllegalArgumentException("WHAT");
     }
+
     public int getPenaltyPoints() {
         if (is10C()) return -50;
         if (Suit.Diamond.equals(suit) && Face.Jack.equals(face)) return -100;
@@ -112,6 +123,7 @@ public class Card {
         }
         return 0;
     }
+
     @Override
     public int hashCode() {
         int hash = 5;
@@ -130,19 +142,24 @@ public class Card {
     public boolean is10C() {
         return Suit.Club.equals(suit) && number == 10;
     }
+
     public boolean isHeart() {
         return Suit.Heart.equals(suit);
     }
+
     public Card copy() {
         return new Card(toString());
     }
+
     public boolean equalFace(Card b) {
         if (face == null) return b.face == null;
         return face.equals(b.face);
     }
+
     public boolean equalSuit(Card b) {
         return suit.equals(b.suit);
     }
+
     public boolean equalNumber(Card b) {
         return number == b.getNumber();
     }

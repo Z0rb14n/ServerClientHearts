@@ -12,6 +12,7 @@ import java.util.ArrayDeque;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
+// Represents the server application
 public class ServerClientHearts extends PApplet {
     private Server server;
     private LinkedHashMap<String, Client> clients;

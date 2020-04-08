@@ -1,5 +1,6 @@
 package util;
 
+// Represents a suit
 public enum Suit {
     Club {
         @Override
