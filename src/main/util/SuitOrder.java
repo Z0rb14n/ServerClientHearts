@@ -1,5 +1,6 @@
 package util;
 
+import java.util.Arrays;
 import java.util.Comparator;
 
 import static util.Suit.*;
@@ -96,5 +97,22 @@ public class SuitOrder implements Comparator<Card> {
     public int compare(Card a, Card b) {
         if (!sortByValue && suitCompare(a, b) != 0) return suitCompare(a, b);
         else return valueCompare(a, b);
+    }
+
+    @Override
+    // EFFECTS: returns true if the two objects are equal
+    public boolean equals(Object o) {
+        if (!(o instanceof SuitOrder)) return false;
+        SuitOrder so = (SuitOrder) o;
+        return Arrays.equals(suits, so.getSuitOrder()) && sortByValue == so.isSortingByValue();
+    }
+
+    @Override
+    // EFFECTS: returns hash code of this SuitOrder
+    public int hashCode() {
+        int result = 17;
+        result += 31 * result + (sortByValue ? 0 : 1);
+        result += 31 * Arrays.hashCode(suits);
+        return result;
     }
 }

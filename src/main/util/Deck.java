@@ -26,6 +26,14 @@ public class Deck implements Iterable<Card> {
         order = so;
     }
 
+    // EFFECTS: determines whether deck is sorted
+    public boolean isSorted() {
+        for (int i = cards.size() - 1; i > 0; i--) {
+            if (order.compare(cards.get(i), cards.get(i - 1)) < 0) return false;
+        }
+        return true;
+    }
+
     // MODIFIES; this
     // EFFECTS; sorts the deck with internal suit order
     public void sort() {
