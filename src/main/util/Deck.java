@@ -34,8 +34,14 @@ public class Deck implements Iterable<Card> {
         return true;
     }
 
-    // MODIFIES; this
-    // EFFECTS; sorts the deck with internal suit order
+    // MODIFIES: this
+    // EFFECTS: clears the deck
+    public void clear() {
+        cards.clear();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: sorts the deck with internal suit order
     public void sort() {
         cards.sort(order);
     }
@@ -45,7 +51,7 @@ public class Deck implements Iterable<Card> {
         return cards.size();
     }
 
-    // EFFECTS; returns whether the deck is empty or not
+    // EFFECTS: returns whether the deck is empty or not
     public boolean isEmpty() {
         return cards.isEmpty();
     }
@@ -57,9 +63,27 @@ public class Deck implements Iterable<Card> {
     }
 
     // MODIFIES: this
+    // EFFECTS: adds the contents of the other deck to this deck
+    public void addAll(Deck a) {
+        cards.addAll(a.cards);
+    }
+
+    // MODIFIES: this
     // EFFECTS; removes a card from the deck
     public void removeCard(Card a) {
         cards.remove(a);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: removes all cards that does not match the given suit
+    public void removeNonMatchingSuit(Suit a) {
+        cards.removeIf(t -> !t.getSuit().equals(a));
+    }
+
+    // MODIFIES: this
+    // EFFECTS: removes non-penalty cards
+    public void removeNonPenaltyCards() {
+        cards.removeIf(t -> !t.isPenaltyCard());
     }
 
     // EFFECTS: checks whether the deck contains the three of clubs (cuz lazy);
@@ -219,6 +243,21 @@ public class Deck implements Iterable<Card> {
             }
         }
         return true;
+    }
+
+    // EFFECTS: returns index of highest value card of given suit
+    public int highestIndexOfSuit(Suit a) {
+        int index = -1;
+        int value = -1;
+        for (int i = 0; i < cards.size(); i++) {
+            if (cards.get(i).getSuit().equals(a)) {
+                if (cards.get(i).getValue() > value) {
+                    value = cards.get(i).getValue();
+                    index = i;
+                }
+            }
+        }
+        return index;
     }
 
     // EFFECTS: returns a copy of the deck

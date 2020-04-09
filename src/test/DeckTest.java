@@ -1,5 +1,7 @@
 import org.junit.jupiter.api.Test;
+import util.Card;
 import util.Deck;
+import util.SuitOrder;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static util.Suit.*;
@@ -21,5 +23,18 @@ public class DeckTest {
         assertTrue(deck.containsSuit(Diamond));
         assertEquals(13, deck.numPenaltyCards());
         assertEquals(-800, deck.penaltyPoints());
+    }
+
+    @Test
+    public void lol() {
+        Deck deck = new Deck();
+        SuitOrder so = new SuitOrder();
+        so.setSortByValue(true);
+        deck.setOrder(so);
+        deck.generate52();
+        deck.sort();
+        for (Card c : deck) {
+            System.out.print(c);
+        }
     }
 }

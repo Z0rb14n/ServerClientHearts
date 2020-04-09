@@ -2,11 +2,13 @@ package ui;
 
 // TODO: DO THIS FIRST BEFORE WORKING ON CLIENT
 
+// TODO: START NEW TURN in SERVER CLIENT HEARTS
+
+// TODO: CARD MESSAGE PARSER -> SEND PARSED MESSAGE INTO GAME STATE UNDER PLAYCARD(PLAYERNUM, CALLER, CARDS)
+
 import processing.core.PApplet;
 import processing.net.Client;
 import processing.net.Server;
-import util.Card;
-import util.Deck;
 import util.GameState;
 
 import java.util.ArrayDeque;
@@ -30,6 +32,7 @@ public class ServerClientHearts extends PApplet {
     public final static int PLAY_MSG_INDEX = PLAY_MSG_HEADER.length();
     public final static String PLAYER_ID_HEADER = "P\\dID:.+";
     public final static String STARTING_HAND = "START:";
+    public final static String RESET = "RESET";
     public final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
     public final static int FPS = 30;
     private final String[] IDS = new String[4];
@@ -38,11 +41,6 @@ public class ServerClientHearts extends PApplet {
 
     private GameState gameState;
     private MessageHandler cmh;
-
-    private Deck player1Hand;
-    private Deck player2Hand;
-    private Deck player3Hand;
-    private Deck player4Hand;
 
     public static void main(String[] args) {
         ServerClientHearts sch = new ServerClientHearts();
@@ -59,10 +57,6 @@ public class ServerClientHearts extends PApplet {
     // EFFECTS: runs at beginning of program before setup - size() must be in settings() (see PApplet in processing for details)
     public void settings() {
         size(640, 480);
-        player1Hand = new Deck();
-        player2Hand = new Deck();
-        player3Hand = new Deck();
-        player4Hand = new Deck();
         gameState = new GameState();
         clientMessages = new ArrayDeque<>();
         clients = new LinkedHashMap<>(4);
@@ -90,14 +84,10 @@ public class ServerClientHearts extends PApplet {
     public void startGame() {
         gameState.startGame();
         server.write(START_GAME_MSG);
-        // start the game
-        Deck temp = new Deck();
-        temp.generate52();
-        temp.randomlyDistribute(player1Hand, player2Hand, player3Hand, player4Hand);
-        getNthClient(0).write(STARTING_HAND + player1Hand.toString());
-        getNthClient(1).write(STARTING_HAND + player2Hand.toString());
-        getNthClient(2).write(STARTING_HAND + player3Hand.toString());
-        getNthClient(3).write(STARTING_HAND + player4Hand.toString());
+        getNthClient(0).write(STARTING_HAND + gameState.getPlayerOneHand().toString());
+        getNthClient(1).write(STARTING_HAND + gameState.getPlayerTwoHand().toString());
+        getNthClient(2).write(STARTING_HAND + gameState.getPlayerThreeHand().toString());
+        getNthClient(3).write(STARTING_HAND + gameState.getPlayerFourHand().toString());
     }
 
     @Override
@@ -133,6 +123,12 @@ public class ServerClientHearts extends PApplet {
     }
 
     // MODIFIES: this
+    // EFFECTS: starts new turn and writes messages to players, given "winner" (player number 1-4)
+    public void startNewTurn(int winner) {
+        // TODO METHOD BODY
+    }
+
+    // MODIFIES: this
     // EFFECTS: handles the messages in queue (probably delete later)
     public void handleMessages() {
         while (!clientMessages.isEmpty()) {
@@ -144,6 +140,16 @@ public class ServerClientHearts extends PApplet {
                 // idk alright i can't code rn
             }
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: resets the server/games
+    public void reset() {
+        clientMessages.clear();
+        for (Client c : clients.values()) {
+            c.write(RESET);
+        }
+        gameState.reset();
     }
 
     // MODIFIES: this
@@ -161,6 +167,12 @@ public class ServerClientHearts extends PApplet {
             IDS[spot] = id;
             System.out.println(s.clientCount);
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: kicks the client of given number (1-4)
+    public void kick(int playerNum) {
+        kick(clients.get(IDS[playerNum - 1]));
     }
 
     // MODIFIES: this
@@ -230,15 +242,6 @@ public class ServerClientHearts extends PApplet {
         if (IDS[2] == null) return 2;
         if (IDS[3] == null) return 3;
         return -1;
-    }
-
-    // EFFECTS: determines whether card can be played by player number (1-4)
-    public boolean isValidCard(Card c, int num) {
-        if (num == 1) return player1Hand.contains(c);
-        if (num == 2) return player2Hand.contains(c);
-        if (num == 3) return player3Hand.contains(c);
-        if (num == 4) return player4Hand.contains(c);
-        else throw new IllegalArgumentException("Invalid client number.");
     }
 
     // MODIFIES: this
