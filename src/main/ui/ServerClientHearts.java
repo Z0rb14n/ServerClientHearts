@@ -5,6 +5,7 @@ package ui;
 import processing.core.PApplet;
 import processing.net.Client;
 import processing.net.Server;
+import util.Card;
 import util.Deck;
 import util.GameState;
 
@@ -29,27 +30,28 @@ public class ServerClientHearts extends PApplet {
     public final static int PLAY_MSG_INDEX = PLAY_MSG_HEADER.length();
     public final static String PLAYER_ID_HEADER = "P\\dID:.+";
     public final static String STARTING_HAND = "START:";
+    public final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
     public final static int FPS = 30;
     private final String[] IDS = new String[4];
     public static final int port = 5204;
-    private ArrayDeque<String> clientMessages;
+    private ArrayDeque<MessagePair> clientMessages;
 
     private GameState gameState;
-    private ChatMessageHandler cmh;
+    private MessageHandler cmh;
 
     private Deck player1Hand;
     private Deck player2Hand;
     private Deck player3Hand;
     private Deck player4Hand;
 
-    // EFFECTS: returns whether a message is a chat message
-    public static boolean isChatMessage(String msg) {
-        return msg.matches(CHAT_MSG);
-    }
-
     public static void main(String[] args) {
         ServerClientHearts sch = new ServerClientHearts();
         PApplet.runSketch(new String[]{ServerClientHearts.class.getName()}, sch);
+    }
+
+    // EFFECTS: returns whether a message is a chat message
+    public static boolean isChatMessage(String msg) {
+        return msg.matches(CHAT_MSG);
     }
 
     @Override
@@ -64,21 +66,18 @@ public class ServerClientHearts extends PApplet {
         gameState = new GameState();
         clientMessages = new ArrayDeque<>();
         clients = new LinkedHashMap<>(4);
-        cmh = new ChatMessageHandler();
+        cmh = new MessageHandler();
     }
 
     @Override
     // MODIFIES: this
-    // EFFECTS: loops FPS times per second and renders to the screen
-    public void draw() {
-        background(255);
-        if (!gameState.isGameStarted() && firstEmptySpace() == -1) {
-            startGame();
-        }
-        if (hasNewAction()) {
-            System.out.println("TODO: HANDLE MESSAGES");
-            // do action
-        }
+    // EFFECTS: runs at beginning of program before draw
+    public void setup() {
+        frameRate(FPS);
+        server = new Server(this, port);
+        System.out.println("Server started at: " + Server.ip());
+        surface.setTitle("Server Client Hearts Server?");
+        cmh.start();
     }
 
     // EFFECTS: returns whether there is another client message to process
@@ -101,24 +100,17 @@ public class ServerClientHearts extends PApplet {
         getNthClient(3).write(STARTING_HAND + player4Hand.toString());
     }
 
+    @Override
     // MODIFIES: this
-    // EFFECTS: if seen new chat message, send to other users. Else, add to queue
-    public void addNewMessages() {
-        Client c = server.available();
-        while (c != null) {
-            String sent = c.readString();
-            System.out.println("Client number " + getClientNumber(c) + " has sent " + sent);
-            checkValidMessage(sent,c);
-            if (isChatMessage(sent)) handleChatMessage(sent,c);
-            else clientMessages.add(sent);
-            c = server.available(); // get next client
+    // EFFECTS: loops FPS times per second and renders to the screen
+    public void draw() {
+        background(255);
+        if (!gameState.isGameStarted() && firstEmptySpace() == -1) {
+            startGame();
         }
-    }
-
-    // MODIFIES: this
-    // EFFECTS: checks that a message is valid. If not, kick the client.
-    public void checkValidMessage(String msg, Client c) {
-        if (!isChatMessage(msg) && !msg.matches(PLAY_MSG)) kick(c);
+        if (hasNewAction()) {
+            handleMessages();
+        }
     }
 
     // MODIFIES: this
@@ -132,12 +124,25 @@ public class ServerClientHearts extends PApplet {
     }
 
     // MODIFIES: this
+    // EFFECTS: checks that a message is valid. If not, kick the client.
+    public void checkValidMessage(String msg, Client c) {
+        for (String msgType : ALLOWED_MESSAGES) {
+            if (msgType.matches(msg)) return;
+        }
+        kick(c);
+    }
+
+    // MODIFIES: this
     // EFFECTS: handles the messages in queue (probably delete later)
-    @Deprecated
     public void handleMessages() {
         while (!clientMessages.isEmpty()) {
-            String msg = clientMessages.poll();
-            // do something
+            MessagePair msg = clientMessages.poll();
+            if (gameState.isPassingCards()) {
+
+                // ASSUMES THERE'S ONLY TWO TYPES OF MESSAGES - CHAT (already handled) AND PLAY
+                // do something
+                // idk alright i can't code rn
+            }
         }
     }
 
@@ -195,7 +200,6 @@ public class ServerClientHearts extends PApplet {
         System.out.println("Successfully removed id " + toRemove + ", ip: " + c.ip());
     }
 
-
     // EFFECTS: gets Client with given client number (1-4)
     public Client getNthClient(int n) {
         if (n < 1 || n > 4) throw new IllegalArgumentException("n must be a number from 1-4");
@@ -228,6 +232,15 @@ public class ServerClientHearts extends PApplet {
         return -1;
     }
 
+    // EFFECTS: determines whether card can be played by player number (1-4)
+    public boolean isValidCard(Card c, int num) {
+        if (num == 1) return player1Hand.contains(c);
+        if (num == 2) return player2Hand.contains(c);
+        if (num == 3) return player3Hand.contains(c);
+        if (num == 4) return player4Hand.contains(c);
+        else throw new IllegalArgumentException("Invalid client number.");
+    }
+
     // MODIFIES: this
     // EFFECTS: after a client has disconnected, remove them from the entries list
     public void disconnectEvent(Client c) {
@@ -235,19 +248,8 @@ public class ServerClientHearts extends PApplet {
         removeClientFromEntries(c);
     }
 
-    @Override
-    // MODIFIES: this
-    // EFFECTS: runs at beginning of program before draw
-    public void setup() {
-        frameRate(FPS);
-        server = new Server(this, port);
-        System.out.println("Server started at: " + Server.ip());
-        surface.setTitle("Server Client Hearts Server?");
-        cmh.start();
-    }
-
     // Represents the thread that handles the chat messages
-    private class ChatMessageHandler extends Thread {
+    private class MessageHandler extends Thread {
         private boolean stop = false;
 
         // MODIFIES: this
@@ -267,7 +269,7 @@ public class ServerClientHearts extends PApplet {
                     System.out.println("Client number " + getClientNumber(c) + " has sent " + sent);
                     checkValidMessage(sent, c);
                     if (isChatMessage(sent)) handleChatMessage(sent, c);
-                    else clientMessages.add(sent);
+                    else clientMessages.add(new MessagePair(c, sent));
                     c = server.available(); // get next client
                 }
                 delay(20); // runs 50 times a second

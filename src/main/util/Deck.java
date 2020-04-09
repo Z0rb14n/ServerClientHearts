@@ -80,6 +80,11 @@ public class Deck implements Iterable<Card> {
         return false;
     }
 
+    // EFFECTS: checks whether the deck contains the card
+    public boolean contains(Card a) {
+        return cards.contains(a);
+    }
+
     // REQUIRES: cards.size() == 52 or generate52() has to be called prior
     // MODIFIES: d1, d2, d3, d4, this
     // EFFECTS: distributes all 52 cards in this given deck into d1,d2, d3 and d4,

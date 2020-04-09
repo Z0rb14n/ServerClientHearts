@@ -52,7 +52,7 @@ public class SuitOrder implements Comparator<Card> {
         if (prevLocation == location) return;
         if (prevLocation > location) {
             // shifts everything down 1
-            // a,b,c,d -> a,a,b,c
+            // a,b,client,d -> a,a,b,client
             System.arraycopy(suits, location - 1, suits, location, prevLocation - location);
         } else {
             // shifts everything up 1
@@ -111,8 +111,8 @@ public class SuitOrder implements Comparator<Card> {
     // EFFECTS: returns hash code of this SuitOrder
     public int hashCode() {
         int result = 17;
-        result += 31 * result + (sortByValue ? 0 : 1);
-        result += 31 * Arrays.hashCode(suits);
+        result = 31 * result + (sortByValue ? 0 : 1);
+        result = 31 * result + Arrays.hashCode(suits);
         return result;
     }
 }

@@ -14,6 +14,11 @@ public class GameState {
         numTurns = 0;
     }
 
+    // EFFECTS: gets whether we're currently in the "currently passing 3 cards" stage
+    public boolean isPassingCards() {
+        return isGameStarted && !allCardsPassed;
+    }
+
     // MODIFIES: this
     // EFFECTS: starts the game
     public void startGame() {
