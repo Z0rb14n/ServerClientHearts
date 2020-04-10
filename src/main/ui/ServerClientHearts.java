@@ -113,37 +113,42 @@ public class ServerClientHearts extends PApplet {
         int clientNum = getClientNumber(sender);
         final String header = "CHAT" + clientNum + ":";
         for(int i = 0; i < 4; i++) {
-            clients.get(IDS[i]).write(header + msg.substring(CHAT_MSG_INDEX));
+            if (IDS[i] != null) clients.get(IDS[i]).write(header + msg.substring(CHAT_MSG_INDEX));
         }
     }
 
     // MODIFIES: this
     // EFFECTS: checks that a message is valid. If not, kickInvalid the client.
-    private void checkValidMessage(String msg, Client c) {
+    private boolean checkValidMessage(String msg, Client c) {
         for (String msgType : ALLOWED_MESSAGES) {
-            if (msgType.matches(msg)) return;
+            if (msg.matches(msgType)) return true;
         }
         kick(c);
+        return false;
     }
 
+    // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: asks player to play 3C
     public void startFirstTurn(int starter) {
         // TODO METHOD BODY
     }
 
+    // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: asks next player to play a card
     public void requestNextCard(int justPlayed, int playerNumOfNextPlayer, Card played, Suit required) {
         // TODO METHOD BODY
     }
 
+    // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: starts new turn and writes messages to players, given "winner" (player number 1-4)
     public void startNewTurn(int winner) {
         // TODO METHOD BODY
     }
 
+    // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: when game has ended - writes messages to players (who won, etc.)
     public void endGame() {
@@ -151,7 +156,7 @@ public class ServerClientHearts extends PApplet {
     }
 
     // MODIFIES: this
-    // EFFECTS: handles the messages in queue (probably delete later)
+    // EFFECTS: handles the messages in queue
     private void handleMessages() {
         while (!clientMessages.isEmpty()) {
             MessagePair msg = clientMessages.poll();
@@ -315,9 +320,11 @@ public class ServerClientHearts extends PApplet {
                 while (c != null) {
                     String sent = c.readString();
                     System.out.println("Client number " + getClientNumber(c) + " has sent " + sent);
-                    checkValidMessage(sent, c);
-                    if (isChatMessage(sent)) handleChatMessage(sent, c);
-                    else clientMessages.add(new MessagePair(c, sent));
+                    boolean result = checkValidMessage(sent, c);
+                    if (result) {
+                        if (isChatMessage(sent)) handleChatMessage(sent, c);
+                        else clientMessages.add(new MessagePair(c, sent));
+                    }
                     c = server.available(); // get next client
                 }
                 delay(20); // runs 50 times a second
