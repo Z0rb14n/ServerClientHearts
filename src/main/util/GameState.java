@@ -6,11 +6,13 @@ import static util.PassOrder.ASCENDING_NUM;
 
 // Represents the state of the server (i.e. has the game started?)
 public class GameState {
-    public static final PassOrder PASSING_ORDER = ASCENDING_NUM;
+    private static final PassOrder PASSING_ORDER = ASCENDING_NUM;
     private boolean isGameStarted;
     private boolean allCardsPassed;
     private int numTurns;
     private Suit currentSuitToPlay;
+    private boolean threeOfClubsNeeded;
+    private boolean gameEnded;
 
     private Deck[] hands;      // Hands of each player
     private Deck[] passingHands; // PassingHands of each player
@@ -40,6 +42,8 @@ public class GameState {
         hands = new Deck[4];
         currentSuitToPlay = null;
         startingPlayer = -1;
+        threeOfClubsNeeded = false;
+        gameEnded = false;
         initDecks();
     }
 
@@ -89,15 +93,15 @@ public class GameState {
     //</editor-fold>
 
     // EFFECTS: determines whether player number c (1-4) can play card (i.e. in their deck)
-    public boolean isValidPlay(Card c, int playerNum) {
+    private boolean isInvalidPlay(Card c, int playerNum) {
         if (playerNum < 1 || playerNum > 4)
             throw new IllegalArgumentException("Player number must be within 1-4: " + playerNum);
-        return hands[playerNum - 1].contains(c);
+        return !hands[playerNum - 1].contains(c);
     }
 
     // REQUIRES: current suit != null
     // EFFECTS: determines whether the card being played actually follows the current suit
-    public boolean matchesCurrentSuit(Card c, int playerNum) {
+    private boolean matchesCurrentSuit(Card c, int playerNum) {
         if (playerNum < 1 || playerNum > 4)
             throw new IllegalArgumentException("Player number must be within 1-4: " + playerNum);
         if (currentSuitToPlay == null || c.getSuit().equals(currentSuitToPlay)) return true;
@@ -105,7 +109,7 @@ public class GameState {
     }
 
     // EFFECTS: determines whether the player (1-4) has played a card already (i.e. is in the center)
-    public boolean hasPlayedCard(int playerNum) {
+    private boolean hasPlayedCard(int playerNum) {
         if (startingPlayer > playerNum) playerNum += 4;
         return playerNum < startingPlayer + center.deckSize() && playerNum >= startingPlayer;
     }
@@ -113,9 +117,9 @@ public class GameState {
     // MODIFIES: this, server
     // EFFECTS: receives the card played and updates game state, kicks player if invalid
     public void playCard(int playerNum, ServerClientHearts server, Card a, Card... c) {
-        if (!isValidPlay(a, playerNum)) server.kick(playerNum);
-        for (int i = 0; i < c.length; i++) {
-            if (!isValidPlay(c[i], playerNum)) server.kick(playerNum);
+        if (isInvalidPlay(a, playerNum)) server.kick(playerNum);
+        for (Card card1 : c) {
+            if (isInvalidPlay(card1, playerNum)) server.kick(playerNum);
         }
         if (!allCardsPassed) {
             if (c.length != 2) server.kick(playerNum); // you must be passing exactly three cards
@@ -132,8 +136,10 @@ public class GameState {
             else if (!matchesCurrentSuit(a, playerNum))
                 server.kick(playerNum); // can't play clubs if suit is hearts, etc.
             else if (hasPlayedCard(playerNum)) server.kick(playerNum); // you can't play twice
+            else if (threeOfClubsNeeded && !a.is3C()) server.kick(playerNum); // you have to play 3C if starting
             else {
                 center.addCard(a);
+                if (threeOfClubsNeeded) threeOfClubsNeeded = false;
                 if (currentSuitToPlay == null) {
                     currentSuitToPlay = a.getSuit(); // if starting new turn, set new suit
                     startingPlayer = playerNum;
@@ -154,8 +160,8 @@ public class GameState {
         deck.removeNonPenaltyCards();
         penalties[startingPlayer - 1].addAll(deck); // distribute penalties
         currentSuitToPlay = null; // can play whatever suit
-
-        caller.startNewTurn(startingPlayer);
+        checkGameEnd(caller);
+        if (!gameEnded) caller.startNewTurn(startingPlayer);
     }
 
     // REQUIRES: center.size == 4
@@ -186,12 +192,22 @@ public class GameState {
             hands[3].addAll(passingHands[0]);
         }
         allCardsPassed = true;
+        startFirstTurn();
     }
 
     // MODIFIES: this
-    // EFFECTS: increments the turn counter
-    public void newTurn() {
-        numTurns++;
+    // EFFECTS: checks whether the game has ended (i.e. turn number == 13)
+    private void checkGameEnd(ServerClientHearts caller) {
+        if (numTurns != 14) return;
+        gameEnded = true;
+        caller.endGame();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: starts the first turn - they MUST play three of clubs
+    private void startFirstTurn() {
+        threeOfClubsNeeded = true;
+        numTurns = 1;
     }
 
     // EFFECTS: returns whether the game has started

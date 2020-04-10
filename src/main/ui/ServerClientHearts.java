@@ -129,6 +129,12 @@ public class ServerClientHearts extends PApplet {
     }
 
     // MODIFIES: this
+    // EFFECTS: when game has ended - writes messages to players (who won, etc.)
+    public void endGame() {
+        // TODO METHOD BODY
+    }
+
+    // MODIFIES: this
     // EFFECTS: handles the messages in queue (probably delete later)
     public void handleMessages() {
         while (!clientMessages.isEmpty()) {

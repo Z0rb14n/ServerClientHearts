@@ -143,6 +143,10 @@ public class Card {
         return Suit.Club.equals(suit) && number == 10;
     }
 
+    public boolean is3C() {
+        return Suit.Club.equals(suit) && number == 3;
+    }
+
     public boolean isHeart() {
         return Suit.Heart.equals(suit);
     }
