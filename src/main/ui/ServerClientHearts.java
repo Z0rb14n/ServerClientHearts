@@ -161,15 +161,22 @@ public class ServerClientHearts extends PApplet {
         while (!clientMessages.isEmpty()) {
             MessagePair msg = clientMessages.poll();
             // ASSUMES THERE'S ONLY PLAY MESSAGES
+            System.out.print(msg.message + msg.message.matches(PLAY_MSG));
             if (!msg.message.matches(PLAY_MSG)) kick(msg.client, ERR_INVALID_MSG);
             String payload = msg.message.substring(PLAY_MSG_INDEX);
             payload = payload.trim();
+            System.out.print(payload + payload.contains(","));
             if (payload.contains(",")) {
                 // parse as 3 cards (e.g. CARDS:3C,4C,5C)
-                try (Scanner scanner = new Scanner(payload)) {
-                    Card card1 = new Card(scanner.next());
-                    Card card2 = new Card(scanner.next());
-                    Card card3 = new Card(scanner.next());
+                try (Scanner scanner = new Scanner(payload).useDelimiter(CARD_DELIMITER)) {
+                    String l1, l2, l3;
+                    l1 = scanner.next();
+                    l2 = scanner.next();
+                    l3 = scanner.next();
+                    System.out.print(l1 + l2 + l3);
+                    Card card1 = new Card(l1);
+                    Card card2 = new Card(l2);
+                    Card card3 = new Card(l3);
                     int clientnum = getClientNumber(msg.client);
                     if (clientnum != 0) {
                         gameState.playCard(clientnum, this, card1, card2, card3);
