@@ -114,6 +114,12 @@ public class GameState {
         return playerNum < startingPlayer + center.deckSize() && playerNum >= startingPlayer;
     }
 
+    // EFFECTS: determines whether the player is not the next player to play
+    private boolean isPlayingOutOfOrder(int playernum) {
+        int next = center.deckSize() + startingPlayer;
+        return playernum % 4 != next % 4;
+    }
+
     // MODIFIES: this, server
     // EFFECTS: receives the card played and updates game state, kicks player if invalid
     public void playCard(int playerNum, ServerClientHearts server, Card a, Card... c) {
@@ -129,7 +135,7 @@ public class GameState {
                 newDeck.addCard(a);
                 for (Card card : c) newDeck.addCard(card);
                 passingHands[playerNum - 1] = newDeck;
-                checkPassCards();
+                checkPassCards(server);
             }
         } else {
             if (c.length != 0) server.kick(playerNum); // you should not be playing more than one card
@@ -137,6 +143,7 @@ public class GameState {
                 server.kick(playerNum); // can't play clubs if suit is hearts, etc.
             else if (hasPlayedCard(playerNum)) server.kick(playerNum); // you can't play twice
             else if (threeOfClubsNeeded && !a.is3C()) server.kick(playerNum); // you have to play 3C if starting
+            else if (isPlayingOutOfOrder(playerNum)) server.kick(playerNum); // can't play out of order
             else {
                 center.addCard(a);
                 if (threeOfClubsNeeded) threeOfClubsNeeded = false;
@@ -176,7 +183,7 @@ public class GameState {
 
     // MODIFIES: this
     // EFFECTS: checks if all cards are passed. If so, actually pass cards and move on
-    private void checkPassCards() {
+    private void checkPassCards(ServerClientHearts caller) {
         for (Deck d : passingHands) {
             if (d.isEmpty()) return;
         }
@@ -192,7 +199,17 @@ public class GameState {
             hands[3].addAll(passingHands[0]);
         }
         allCardsPassed = true;
-        startFirstTurn();
+        startFirstTurn(caller);
+    }
+
+    // REQUIRES: game has JUST started
+    // EFFECTS: returns the player that should start first (i.e. has 3C)
+    private int gameStarter() {
+        if (hands[0].containsThreeOfClubs()) return 1;
+        if (hands[1].containsThreeOfClubs()) return 2;
+        if (hands[2].containsThreeOfClubs()) return 3;
+        if (hands[3].containsThreeOfClubs()) return 4;
+        throw new RuntimeException("Could not find Three of Clubs");
     }
 
     // MODIFIES: this
@@ -205,8 +222,10 @@ public class GameState {
 
     // MODIFIES: this
     // EFFECTS: starts the first turn - they MUST play three of clubs
-    private void startFirstTurn() {
+    private void startFirstTurn(ServerClientHearts caller) {
         threeOfClubsNeeded = true;
+        startingPlayer = gameStarter();
+        caller.startFirstTurn(startingPlayer);
         numTurns = 1;
     }
 

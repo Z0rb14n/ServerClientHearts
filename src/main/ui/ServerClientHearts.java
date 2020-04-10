@@ -123,6 +123,12 @@ public class ServerClientHearts extends PApplet {
     }
 
     // MODIFIES: this
+    // EFFECTS: asks player to play 3C
+    public void startFirstTurn(int starter) {
+        // TODO METHOD BODY
+    }
+
+    // MODIFIES: this
     // EFFECTS: starts new turn and writes messages to players, given "winner" (player number 1-4)
     public void startNewTurn(int winner) {
         // TODO METHOD BODY
