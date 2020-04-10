@@ -2,41 +2,40 @@ package ui;
 
 // TODO: DO THIS FIRST BEFORE WORKING ON CLIENT
 
-// TODO: START NEW TURN in SERVER CLIENT HEARTS
-
 // TODO: CARD MESSAGE PARSER -> SEND PARSED MESSAGE INTO GAME STATE UNDER PLAYCARD(PLAYERNUM, CALLER, CARDS)
 
 import processing.core.PApplet;
 import processing.net.Client;
 import processing.net.Server;
+import util.Card;
 import util.GameState;
+import util.Suit;
 
-import java.util.ArrayDeque;
-import java.util.LinkedHashMap;
-import java.util.UUID;
+import java.util.*;
 
 // Represents the server application
 public class ServerClientHearts extends PApplet {
     private Server server;
     private LinkedHashMap<String, Client> clients;
-    public final static String ERR_TOO_MANY_PLAYERS = "ERR: TOO MANY PLAYERS";
-    public final static String ERR_INVALID_MSG = "ERR: INVALID MSG";
-    public final static String KICK_DEFAULT_MSG = "ERR: KICKED";
-    public final static String START_GAME_MSG = "START GAME";
-    public final static String CHAT_MSG_HEADER = "CHAT:";
-    public final static String CHAT_MSG = CHAT_MSG_HEADER + ".+";
-    public final static int CHAT_MSG_INDEX = CHAT_MSG_HEADER.length();
-    public final static String OUTGOING_CHAT_MSG = "CHAT\\d:.+";
-    public final static String PLAY_MSG_HEADER = "CARDS:";
-    public final static String PLAY_MSG = PLAY_MSG_HEADER+".+";
-    public final static int PLAY_MSG_INDEX = PLAY_MSG_HEADER.length();
-    public final static String PLAYER_ID_HEADER = "P\\dID:.+";
-    public final static String STARTING_HAND = "START:";
-    public final static String RESET = "RESET";
-    public final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
-    public final static int FPS = 30;
+    private final static String ERR_TOO_MANY_PLAYERS = "ERR: TOO MANY PLAYERS";
+    private final static String ERR_INVALID_MSG = "ERR: INVALID MSG";
+    private final static String KICK_DEFAULT_MSG = "ERR: KICKED";
+    private final static String START_GAME_MSG = "START GAME";
+    private final static String CHAT_MSG_HEADER = "CHAT:";
+    private final static String CHAT_MSG = CHAT_MSG_HEADER + ".+";
+    private final static int CHAT_MSG_INDEX = CHAT_MSG_HEADER.length();
+    private final static String OUTGOING_CHAT_MSG = "CHAT\\d:.+";
+    private final static String PLAY_MSG_HEADER = "CARDS:";
+    private final static String PLAY_MSG = PLAY_MSG_HEADER + ".+";
+    private final static int PLAY_MSG_INDEX = PLAY_MSG_HEADER.length();
+    private final static String PLAYER_ID_HEADER = "P\\dID:.+";
+    private final static String STARTING_HAND = "START:";
+    private final static String RESET = "RESET";
+    private final static String CARD_DELIMITER = ",";
+    private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
+    private final static int FPS = 30;
     private final String[] IDS = new String[4];
-    public static final int port = 5204;
+    private static final int port = 5204;
     private ArrayDeque<MessagePair> clientMessages;
 
     private GameState gameState;
@@ -44,7 +43,7 @@ public class ServerClientHearts extends PApplet {
 
     public static void main(String[] args) {
         ServerClientHearts sch = new ServerClientHearts();
-        PApplet.runSketch(new String[]{ServerClientHearts.class.getName()}, sch);
+        PApplet.runSketch(new String[]{"ServerClientHearts"}, sch);
     }
 
     // EFFECTS: returns whether a message is a chat message
@@ -75,19 +74,24 @@ public class ServerClientHearts extends PApplet {
     }
 
     // EFFECTS: returns whether there is another client message to process
-    public boolean hasNewAction() {
+    private boolean hasNewAction() {
         return !clientMessages.isEmpty();
     }
 
     // MODIFIES: this
     // EFFECTS: starts the current game of hearts and transitions to "pass cards" stage
-    public void startGame() {
+    private void startGame() {
         gameState.startGame();
         server.write(START_GAME_MSG);
-        getNthClient(0).write(STARTING_HAND + gameState.getPlayerOneHand().toString());
-        getNthClient(1).write(STARTING_HAND + gameState.getPlayerTwoHand().toString());
-        getNthClient(2).write(STARTING_HAND + gameState.getPlayerThreeHand().toString());
-        getNthClient(3).write(STARTING_HAND + gameState.getPlayerFourHand().toString());
+        try {
+            getNthClient(1).write(STARTING_HAND + gameState.getPlayerOneHand().toString());
+            getNthClient(2).write(STARTING_HAND + gameState.getPlayerTwoHand().toString());
+            getNthClient(3).write(STARTING_HAND + gameState.getPlayerThreeHand().toString());
+            getNthClient(4).write(STARTING_HAND + gameState.getPlayerFourHand().toString());
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
     }
 
     @Override
@@ -105,7 +109,7 @@ public class ServerClientHearts extends PApplet {
 
     // MODIFIES: this
     // EFFECTS: handles all chat messages.
-    public void handleChatMessage(String msg, Client sender) {
+    private void handleChatMessage(String msg, Client sender) {
         int clientNum = getClientNumber(sender);
         final String header = "CHAT" + clientNum + ":";
         for(int i = 0; i < 4; i++) {
@@ -114,8 +118,8 @@ public class ServerClientHearts extends PApplet {
     }
 
     // MODIFIES: this
-    // EFFECTS: checks that a message is valid. If not, kick the client.
-    public void checkValidMessage(String msg, Client c) {
+    // EFFECTS: checks that a message is valid. If not, kickInvalid the client.
+    private void checkValidMessage(String msg, Client c) {
         for (String msgType : ALLOWED_MESSAGES) {
             if (msgType.matches(msg)) return;
         }
@@ -125,6 +129,12 @@ public class ServerClientHearts extends PApplet {
     // MODIFIES: this
     // EFFECTS: asks player to play 3C
     public void startFirstTurn(int starter) {
+        // TODO METHOD BODY
+    }
+
+    // MODIFIES: this
+    // EFFECTS: asks next player to play a card
+    public void requestNextCard(int justPlayed, int playerNumOfNextPlayer, Card played, Suit required) {
         // TODO METHOD BODY
     }
 
@@ -142,14 +152,37 @@ public class ServerClientHearts extends PApplet {
 
     // MODIFIES: this
     // EFFECTS: handles the messages in queue (probably delete later)
-    public void handleMessages() {
+    private void handleMessages() {
         while (!clientMessages.isEmpty()) {
             MessagePair msg = clientMessages.poll();
-            if (gameState.isPassingCards()) {
-
-                // ASSUMES THERE'S ONLY TWO TYPES OF MESSAGES - CHAT (already handled) AND PLAY
-                // do something
-                // idk alright i can't code rn
+            // ASSUMES THERE'S ONLY PLAY MESSAGES
+            if (!msg.message.matches(PLAY_MSG)) kick(msg.client, ERR_INVALID_MSG);
+            String payload = msg.message.substring(PLAY_MSG_INDEX);
+            payload = payload.trim();
+            if (payload.contains(",")) {
+                // parse as 3 cards (e.g. CARDS:3C,4C,5C)
+                try (Scanner scanner = new Scanner(payload)) {
+                    Card card1 = new Card(scanner.next());
+                    Card card2 = new Card(scanner.next());
+                    Card card3 = new Card(scanner.next());
+                    int clientnum = getClientNumber(msg.client);
+                    if (clientnum != 0) {
+                        gameState.playCard(clientnum, this, card1, card2, card3);
+                    } // else ignore
+                } catch (IllegalArgumentException | NoSuchElementException e) {
+                    kick(msg.client, ERR_INVALID_MSG);
+                }
+            } else {
+                // parse as one card (e.g. CARDS:3C)
+                try {
+                    Card card = new Card(payload);
+                    int clientnum = getClientNumber(msg.client);
+                    if (clientnum != 0) {
+                        gameState.playCard(clientnum, this, card);
+                    } // else ignore
+                } catch (IllegalArgumentException e) {
+                    kick(msg.client, ERR_INVALID_MSG);
+                }
             }
         }
     }
@@ -183,8 +216,8 @@ public class ServerClientHearts extends PApplet {
 
     // MODIFIES: this
     // EFFECTS: kicks the client of given number (1-4)
-    public void kick(int playerNum) {
-        kick(clients.get(IDS[playerNum - 1]));
+    public void kickInvalid(int playerNum) {
+        kick(clients.get(IDS[playerNum - 1]), ERR_INVALID_MSG);
     }
 
     // MODIFIES: this
@@ -225,7 +258,7 @@ public class ServerClientHearts extends PApplet {
     }
 
     // EFFECTS: gets Client with given client number (1-4)
-    public Client getNthClient(int n) {
+    private Client getNthClient(int n) {
         if (n < 1 || n > 4) throw new IllegalArgumentException("n must be a number from 1-4");
         if (IDS[n-1] == null) return null;
         if (!clients.containsKey(IDS[n-1])) return null;
@@ -233,7 +266,7 @@ public class ServerClientHearts extends PApplet {
     }
 
     // EFFECTS: returns client number (1-4), 0 if non-existent
-    public int getClientNumber(Client c) {
+    private int getClientNumber(Client c) {
         if (!clients.containsValue(c)) return 0;
         for (String id : clients.keySet()) {
             if (clients.get(id).equals(c)) {
@@ -248,7 +281,7 @@ public class ServerClientHearts extends PApplet {
     }
 
     // EFFECTS: returns the first empty index (0-3) for IDs
-    public int firstEmptySpace() {
+    private int firstEmptySpace() {
         if (IDS[0] == null) return 0;
         if (IDS[1] == null) return 1;
         if (IDS[2] == null) return 2;
@@ -293,10 +326,10 @@ public class ServerClientHearts extends PApplet {
 
         // MODIFIES: this
         // EFFECTS: sleeps for ms milliseconds
-        public void delay(long ms) {
+        private void delay(long ms) {
             try {
                 sleep(ms);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignored) {
             }
         }
     }
