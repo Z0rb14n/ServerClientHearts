@@ -29,7 +29,11 @@ public class ServerClientHearts extends PApplet {
     private final static String PLAY_MSG = PLAY_MSG_HEADER + ".+";
     private final static int PLAY_MSG_INDEX = PLAY_MSG_HEADER.length();
     private final static String PLAYER_ID_HEADER = "P\\dID:.+";
-    private final static String STARTING_HAND = "START:";
+    private final static String CENTER_HAND = "CENTER:";
+    private final static String STARTING_HAND = "STARTING_HAND:";
+    private final static String NEW_HAND = "NEW_HAND:";
+    private final static String START_ROUND = "START_ROUND";
+    private final static String START_3C = "START_3C";
     private final static String RESET = "RESET";
     private final static String CARD_DELIMITER = ",";
     private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
@@ -131,13 +135,18 @@ public class ServerClientHearts extends PApplet {
     // MODIFIES: this
     // EFFECTS: asks player to play 3C
     public void startFirstTurn(int starter) {
-        // TODO METHOD BODY
+        sendNthClientMessage(1, NEW_HAND + gameState.getPlayerOneHand().toString());
+        sendNthClientMessage(2, NEW_HAND + gameState.getPlayerTwoHand().toString());
+        sendNthClientMessage(3, NEW_HAND + gameState.getPlayerThreeHand().toString());
+        sendNthClientMessage(4, NEW_HAND + gameState.getPlayerFourHand().toString());
+        sendNthClientMessage(starter, START_3C);
     }
 
     // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: asks next player to play a card
     public void requestNextCard(int justPlayed, int playerNumOfNextPlayer, Card played, Suit required) {
+        server.write(CENTER_HAND + gameState.getCenter().toString());
         // TODO METHOD BODY
     }
 
@@ -275,6 +284,11 @@ public class ServerClientHearts extends PApplet {
         if (IDS[n-1] == null) return null;
         if (!clients.containsKey(IDS[n-1])) return null;
         return clients.get(IDS[n-1]);
+    }
+
+    // EFFECTS: sends Nth client a message
+    private void sendNthClientMessage(int n, String msg) {
+        getNthClient(n).write(msg);
     }
 
     // EFFECTS: returns client number (1-4), 0 if non-existent

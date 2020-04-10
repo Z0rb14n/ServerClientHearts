@@ -92,6 +92,11 @@ public class GameState {
     }
     //</editor-fold>
 
+    // EFFECTS: gets the center hand
+    public Deck getCenter() {
+        return center;
+    }
+
     // EFFECTS: determines whether player number c (1-4) can play card (i.e. in their deck)
     private boolean isInvalidPlay(Card c, int playerNum) {
         if (playerNum < 1 || playerNum > 4)
