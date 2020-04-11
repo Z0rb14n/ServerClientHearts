@@ -18,13 +18,9 @@ public class ServerClientHearts extends PApplet {
     private Server server;
     private LinkedHashMap<String, Client> clients;
     public final static int PORT = 5204;
+    private final static int FPS = 30;
     //<editor-fold desc="MESSAGE HEADERS">
     public final static String ERROR = "ERR: ";
-    //</editor-fold>
-    //<editor-fold desc="MESSAGE FORMATS">
-    public final static String ERROR_FORMAT = "ERR: .+";
-    private final static int FPS = 30;
-    private final static String CARD_DELIMITER = ",";
     private final static String NEW_PLAYER_HEADER = "NEW PLAYER:";
     private final static String CURRENT_PLAYERS_HEADER = "CURRENT PLAYERS:";
     private final static String REQUEST_CARD_HEADER = "PLAY:";
@@ -32,6 +28,10 @@ public class ServerClientHearts extends PApplet {
     private final static String PLAY_MSG_HEADER = "CARDS:";
     private final static String ROUND_WINNER_HEADER = "WINNER:";
     private final static String GAME_WINNER_HEADER = "GAME WINNER:";
+    //</editor-fold>
+    //<editor-fold desc="MESSAGE FORMATS">
+    public final static String ERROR_FORMAT = "ERR: .+";
+    private final static String CARD_DELIMITER = ",";
     private final static String REQUEST_CARD_MSG = REQUEST_CARD_HEADER + ".+";
     private final static String PREVIOUS_CARD_MSG = PREVIOUS_CARD_HEADER + "\\d,.+";
     private final static String ROUND_WINNER = ROUND_WINNER_HEADER + "\\d.*";
@@ -45,9 +45,6 @@ public class ServerClientHearts extends PApplet {
     private final static String CHAT_MSG_HEADER = "CHAT:";
     private final static String CHAT_MSG = CHAT_MSG_HEADER + ".+";
     private final static int CHAT_MSG_INDEX = CHAT_MSG_HEADER.length();
-    //</editor-fold>
-    private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
-    private final String[] IDS = new String[4];
     private final static String OUTGOING_CHAT_MSG = "CHAT\\d:.+";
     private final static String PLAY_MSG = PLAY_MSG_HEADER + ".+";
     private final static int PLAY_MSG_INDEX = PLAY_MSG_HEADER.length();
@@ -58,6 +55,10 @@ public class ServerClientHearts extends PApplet {
     private final static String START_ROUND = "START_ROUND";
     private final static String END_ROUND = "END ROUND";
     private final static String END_GAME = "END GAME";
+    //</editor-fold>
+    private final String[] IDS = new String[4];
+
+    private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
     private ArrayDeque<MessagePair> clientMessages;
     private GameState gameState;
     private final static String START_3C = "START_3C";
