@@ -15,9 +15,15 @@ import java.util.*;
 public class ServerClientHearts extends PApplet {
     private Server server;
     private LinkedHashMap<String, Client> clients;
-    public final static String ERR_TOO_MANY_PLAYERS = "ERR: TOO MANY PLAYERS";
-    public final static String ERR_INVALID_MSG = "ERR: INVALID MSG";
-    private final static String KICK_DEFAULT_MSG = "ERR: KICKED";
+    public final static String ERROR = "ERR: ";
+    public final static String ERROR_FORMAT = "ERR: .+";
+    public final static String ERR_TOO_MANY_PLAYERS = ERROR + "TOO MANY PLAYERS";
+    public final static String ERR_INVALID_MSG = ERROR + "INVALID MSG";
+    public final static String NEW_PLAYER_MSG = "NEW PLAYER:\\d";
+    public final static int PORT = 5204;
+    private final static String KICK_DEFAULT_MSG = ERROR + "KICKED";
+    private final static String NEW_PLAYER_HEADER = "NEW PLAYER:";
+    private final static String CURRENT_PLAYERS_MSG = "CURRENT PLAYERS:\\d*";
     private final static String START_GAME_MSG = "START GAME";
     private final static String CHAT_MSG_HEADER = "CHAT:";
     private final static String CHAT_MSG = CHAT_MSG_HEADER + ".+";
@@ -37,7 +43,7 @@ public class ServerClientHearts extends PApplet {
     private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
     private final static int FPS = 30;
     private final String[] IDS = new String[4];
-    public static final int PORT = 5204;
+    private final static String CURRENT_PLAYERS_HEADER = "CURRENT PLAYERS:";
     private ArrayDeque<MessagePair> clientMessages;
 
     private GameState gameState;
@@ -125,7 +131,7 @@ public class ServerClientHearts extends PApplet {
         for (String msgType : ALLOWED_MESSAGES) {
             if (msg.matches(msgType)) return true;
         }
-        kick(c);
+        kick(c, ERR_INVALID_MSG);
         return false;
     }
 
@@ -226,8 +232,31 @@ public class ServerClientHearts extends PApplet {
             c.write("P" + (spot+1) + "ID:" + id);
             clients.put(id, c);
             IDS[spot] = id;
+            informNewPlayerGameDetails(spot + 1);
+            informPlayersPlayerJoined(spot + 1);
             System.out.println(s.clientCount);
         }
+    }
+
+    // EFFECTS: messages all other clients that a player has joined
+    private void informPlayersPlayerJoined(int playerNumber) {
+        for (int i = 0; i < IDS.length; i++) {
+            if (IDS[i] != null && i != playerNumber - 1) {
+                clients.get(IDS[i]).write(NEW_PLAYER_HEADER + playerNumber);
+            }
+        }
+    }
+
+    // EFFECTS: messages new player about who's around
+    private void informNewPlayerGameDetails(int playerNumber) {
+        StringBuilder sb = new StringBuilder(CURRENT_PLAYERS_HEADER);
+        for (int i = 0; i < IDS.length; i++) {
+            if (IDS[i] != null && i != playerNumber - 1) {
+                sb.append((i + 1));
+            }
+        }
+        if (sb.toString().equals(CURRENT_PLAYERS_HEADER)) sb.append("NONE");
+        clients.get(IDS[playerNumber - 1]).write(sb.toString());
     }
 
     // MODIFIES: this

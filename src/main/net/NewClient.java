@@ -1,25 +1,31 @@
 package net;
 
-import processing.core.PApplet;
 import processing.net.Client;
 import ui.ServerClientHearts;
+import ui.ServerClientHeartsClient;
 
 // Represents the game client
 public class NewClient extends Client {
     public static final String CLIENT_ID_MSG = "P\\dID:(.+)";
     public static final String TOO_MANY_PLAYERS = ServerClientHearts.ERR_TOO_MANY_PLAYERS;
     public static final String ERR_INVALID_MSG = ServerClientHearts.ERR_INVALID_MSG;
+    public static final String ERR_KICKED = "Kicked";
+    private static final String ERROR = ServerClientHearts.ERROR;
+    private static final int PORT = ServerClientHearts.PORT;
     public boolean actuallyInitialized = false;
+    private ServerClientHeartsClient caller;
+    private String lastMessage;
     String clientID;
     private int playerNum;
 
     // EFFECTS: initializes client with params of Processing's Client parameters
-    public NewClient(PApplet pa, String ip, int port) {
-        super(pa, ip, port);
+    public NewClient(ServerClientHeartsClient pa, String ip) {
+        super(pa, ip, PORT);
+        caller = pa;
         if (active()) getClientID();
         else {
             stop();
-            System.out.println("Could not connect to ip: " + ip + ", port: " + port);
+            System.out.println("Could not connect to ip: " + ip + ", port: " + PORT);
             throw new ConnectionException();
         }
         actuallyInitialized = true;
@@ -53,8 +59,14 @@ public class NewClient extends Client {
     // MODIFIES: this
     // EFFECTS: disconnects client from the server and stops the client.
     public void stop() {
-        if (clientID != null) write(clientID + ":DISCONNECT");
+        lastMessage = readString();
+        if (lastMessage.matches(ServerClientHearts.ERROR_FORMAT)) caller.updateErrorMessage(lastMessage);
         super.stop();
+    }
+
+    // EFFECTS: gets the last message sent by the server
+    public String getLastMessage() {
+        return lastMessage;
     }
 
 }

@@ -6,7 +6,6 @@ import net.ConnectionException;
 import net.NewClient;
 import processing.core.PApplet;
 import processing.core.PVector;
-import processing.net.Client;
 
 import java.util.Scanner;
 
@@ -17,14 +16,13 @@ public class ServerClientHeartsClient extends PApplet {
     private final static int RED = 0xffff0000;
     private final static float IPENTERWIDTH = 225;
     private final static float IPENTERHEIGHT = 30;
-    private static final int port = ServerClientHearts.PORT;
+    private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
+    private final static String CONNECTION_TIMEOUT = "Timed out.";
+    private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
+    private final static String INVALID_MSG = "Invalid message sent to server.";
     private static PVector topLeftIPEnter;
     private final ServerClientHeartsClient actualClient = this;
     private NewClient client;
-    private boolean inGame = false;
-    private boolean inStarting = true;
-    private boolean failed = false;
-    private boolean tooManyPlayers = false;
     private int ipEnterPosition = 0;
     private String ip = "";
     private int playerNum;
@@ -53,32 +51,45 @@ public class ServerClientHeartsClient extends PApplet {
         tms.start();
     }
 
+    private static String errorDisplayed = "";
+
     // MODIFIES: this
     // EFFECTS: attempts to load the client
     public void tryLoadClient() {
+        errorDisplayed = "";
+        boolean failed = false;
         try {
-            Thread thread = new Thread(() -> client = new NewClient(actualClient, ip, port));
+            Thread thread = new Thread(() -> client = new NewClient(actualClient, ip));
             thread.start();
             final long time = System.nanoTime();
             thread.join(10000);
             if (System.nanoTime() - time > (9000000) && client == null) {
                 failed = true;
+                errorDisplayed = CONNECTION_TIMEOUT;
             }
         } catch (ConnectionException e) {
             System.out.print("HI");
             if (NewClient.TOO_MANY_PLAYERS.equals(e.getMessage())) {
-                tooManyPlayers = true;
+                errorDisplayed = TOO_MANY_PLAYERS_MSG;
             }
             failed = true;
         } catch (InterruptedException e) {
             e.printStackTrace();
             System.exit(2);
         }
-        if (client == null) failed = true;
-        if (!failed) {
-            inStarting = false;
+        if (client == null) {
+            if ("".equals(errorDisplayed)) {
+                errorDisplayed = DEFAULT_COULD_NOT_CONNECT;
+            }
+        } else if (!failed) {
             playerNum = client.getPlayerNum();
+            errorDisplayed = "";
         }
+    }
+
+    // EFFECTS: determines whether the client is active
+    private boolean isClientInactive() {
+        return client == null || !client.active();
     }
 
     // MODIFIES: this
@@ -116,13 +127,11 @@ public class ServerClientHeartsClient extends PApplet {
             }
             rect(xpos, topLeftIPEnter.y + 2, 2, IPENTERHEIGHT - 4);
         }
-        if (failed) {
+        if (!"".equals(errorDisplayed)) {
             textAlign(CENTER, CENTER);
             textSize(12);
             fill(RED);
-            if (!tooManyPlayers)
-                text("Could not connect.", topLeftIPEnter.x + IPENTERWIDTH / 2, topLeftIPEnter.y + IPENTERHEIGHT + 20);
-            else text("Too many players.", topLeftIPEnter.x + IPENTERWIDTH / 2, topLeftIPEnter.y + IPENTERHEIGHT + 20);
+            text(errorDisplayed, topLeftIPEnter.x + IPENTERWIDTH / 2, topLeftIPEnter.y + IPENTERHEIGHT + 20);
         }
     }
 
@@ -130,31 +139,44 @@ public class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: code run when a key is pressed (see Processing)
     public void keyPressed() {
-        if (inStarting) {
-            if (key != CODED && key != BACKSPACE && key != RETURN && key != ENTER && key != TAB && key != ESC) {
-                ip = ip.substring(0, ipEnterPosition) + key + ip.substring(ipEnterPosition);
-                ipEnterPosition++;
-                failed = false;
-                tooManyPlayers = false;
-            } else if (key == BACKSPACE) {
-                if (ip.length() != 0 && ipEnterPosition != 0) {
-                    ip = ip.substring(0, ipEnterPosition - 1) + ip.substring(ipEnterPosition);
-                    ipEnterPosition--;
-                    failed = false;
-                    tooManyPlayers = false;
-                }
-            } else if (keyCode == LEFT) {
-                if (ipEnterPosition > 0) {
-                    ipEnterPosition--;
-                }
-            } else if (keyCode == RIGHT) {
-                if (ipEnterPosition < ip.length()) {
-                    ipEnterPosition++;
-                }
-            } else if (key == RETURN || key == ENTER) {
-                tryLoadClient();
-            }
+        if (isClientInactive()) {
+            modifyIPEnterBox();
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: add/removes/returns characters for the IP Enter Box
+    private void modifyIPEnterBox() {
+        if (key != CODED && key != BACKSPACE && key != RETURN && key != ENTER && key != TAB && key != ESC) {
+            ip = ip.substring(0, ipEnterPosition) + key + ip.substring(ipEnterPosition);
+            ipEnterPosition++;
+        } else if (key == BACKSPACE) {
+            if (ip.length() != 0 && ipEnterPosition != 0) {
+                ip = ip.substring(0, ipEnterPosition - 1) + ip.substring(ipEnterPosition);
+                ipEnterPosition--;
+            }
+        } else if (keyCode == LEFT) {
+            if (ipEnterPosition > 0) {
+                ipEnterPosition--;
+            }
+        } else if (keyCode == RIGHT) {
+            if (ipEnterPosition < ip.length()) {
+                ipEnterPosition++;
+            }
+        } else if (key == RETURN || key == ENTER) {
+            tryLoadClient();
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: updates error message with given message
+    public void updateErrorMessage(String msg) {
+        if (msg.equals(NewClient.ERR_INVALID_MSG)) {
+            errorDisplayed = INVALID_MSG;
+        } else {
+            errorDisplayed = msg;
+        }
+
     }
 
     @Override
@@ -163,6 +185,7 @@ public class ServerClientHeartsClient extends PApplet {
     public void mouseClicked() {
     }
 
+    /*
     // EFFECTS: called when the client receives data from a server.
     public void clientEvent(Client c) {
 
@@ -172,13 +195,14 @@ public class ServerClientHeartsClient extends PApplet {
     public void disconnectEvent(Client c) {
         System.out.println("Client disconnected: " + c.ip());
     }
+    */
 
     @Override
     // MODIFIES: this
     // EFFECTS: runs FPS times a second to draw to a screen
     public void draw() {
         background(255);
-        if (inStarting) {
+        if (isClientInactive()) {
             drawIPEnterText();
             drawIPEnterBox();
         } else {
