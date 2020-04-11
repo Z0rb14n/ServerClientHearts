@@ -19,6 +19,10 @@ public class ServerClientHearts extends PApplet {
     private LinkedHashMap<String, Client> clients;
     public final static int PORT = 5204;
     private final static int FPS = 30;
+    private ArrayDeque<MessagePair> clientMessages;
+    private GameState gameState;
+    private MessageHandler cmh;
+
     //<editor-fold desc="MESSAGE HEADERS">
     public final static String ERROR = "ERR: ";
     private final static String NEW_PLAYER_HEADER = "NEW PLAYER:";
@@ -40,6 +44,7 @@ public class ServerClientHearts extends PApplet {
     public final static String ERR_INVALID_MSG = ERROR + "INVALID MSG";
     public final static String NEW_PLAYER_MSG = "NEW PLAYER:\\d";
     private final static String KICK_DEFAULT_MSG = ERROR + "KICKED";
+    private final static String RESET = "RESET";
     private final static String CURRENT_PLAYERS_MSG = CURRENT_PLAYERS_HEADER + "\\d*";
     private final static String START_GAME_MSG = "START GAME";
     private final static String CHAT_MSG_HEADER = "CHAT:";
@@ -55,15 +60,10 @@ public class ServerClientHearts extends PApplet {
     private final static String START_ROUND = "START_ROUND";
     private final static String END_ROUND = "END ROUND";
     private final static String END_GAME = "END GAME";
+    private final static String START_3C = "START_3C";
     //</editor-fold>
     private final String[] IDS = new String[4];
-
     private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
-    private ArrayDeque<MessagePair> clientMessages;
-    private GameState gameState;
-    private final static String START_3C = "START_3C";
-    private final static String RESET = "RESET";
-    private MessageHandler cmh;
 
     public static void main(String[] args) {
         ServerClientHearts sch = new ServerClientHearts();
@@ -75,6 +75,7 @@ public class ServerClientHearts extends PApplet {
         return msg.matches(CHAT_MSG);
     }
 
+    //<editor-fold desc="Processing loop commands (i.e. Settings, Setup, Draw)">
     @Override
     // MODIFIES: this
     // EFFECTS: runs at beginning of program before setup - size() must be in settings() (see PApplet in processing for details)
@@ -97,6 +98,50 @@ public class ServerClientHearts extends PApplet {
         cmh.start();
     }
 
+    @Override
+    // MODIFIES: this
+    // EFFECTS: loops FPS times per second and renders to the screen
+    public void draw() {
+        background(255);
+        if (!gameState.isGameStarted() && firstEmptySpace() == -1) {
+            startGame();
+        }
+        if (hasNewAction()) {
+            handleMessages();
+        }
+    }
+    //</editor-fold>
+
+    //<editor-fold desc="On-mouse/on-key Processing commands">
+    //</editor-fold>
+    //<editor-fold desc="Events (i.e. Client/Disconnect events)">
+    // MODIFIES: this
+    // EFFECTS: runs when a client connects to the server
+    public void serverEvent(Server s, Client c) {
+        System.out.println("New client " + c.ip() + " connected to server  " + Server.ip());
+        int spot = firstEmptySpace();
+        if (spot == -1) {
+            c.write(ERR_TOO_MANY_PLAYERS);
+            s.disconnect(c);
+        } else {
+            String id = UUID.randomUUID().toString();
+            c.write("P" + (spot + 1) + "ID:" + id);
+            clients.put(id, c);
+            IDS[spot] = id;
+            informNewPlayerGameDetails(spot + 1);
+            informPlayersPlayerJoined(spot + 1);
+            System.out.println(s.clientCount);
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: after a client has disconnected, remove them from the entries list
+    public void disconnectEvent(Client c) {
+        System.out.println("Client disconnected: " + c.ip());
+        removeClientFromEntries(c);
+    }
+    //</editor-fold>
+
     // EFFECTS: returns whether there is another client message to process
     private boolean hasNewAction() {
         return !clientMessages.isEmpty();
@@ -115,19 +160,6 @@ public class ServerClientHearts extends PApplet {
         } catch (NullPointerException e) {
             e.printStackTrace();
             System.exit(1);
-        }
-    }
-
-    @Override
-    // MODIFIES: this
-    // EFFECTS: loops FPS times per second and renders to the screen
-    public void draw() {
-        background(255);
-        if (!gameState.isGameStarted() && firstEmptySpace() == -1) {
-            startGame();
-        }
-        if (hasNewAction()) {
-            handleMessages();
         }
     }
 
@@ -240,25 +272,6 @@ public class ServerClientHearts extends PApplet {
         gameState.reset();
     }
 
-    // MODIFIES: this
-    // EFFECTS: runs when a client connects to the server
-    public void serverEvent(Server s, Client c) {
-        System.out.println("New client " + c.ip() + " connected to server  " + Server.ip());
-        int spot = firstEmptySpace();
-        if (spot == -1) {
-            c.write(ERR_TOO_MANY_PLAYERS);
-            s.disconnect(c);
-        } else {
-            String id = UUID.randomUUID().toString();
-            c.write("P" + (spot+1) + "ID:" + id);
-            clients.put(id, c);
-            IDS[spot] = id;
-            informNewPlayerGameDetails(spot + 1);
-            informPlayersPlayerJoined(spot + 1);
-            System.out.println(s.clientCount);
-        }
-    }
-
     // EFFECTS: messages all other clients that a player has joined
     private void informPlayersPlayerJoined(int playerNumber) {
         for (int i = 0; i < IDS.length; i++) {
@@ -358,13 +371,6 @@ public class ServerClientHearts extends PApplet {
         if (IDS[2] == null) return 2;
         if (IDS[3] == null) return 3;
         return -1;
-    }
-
-    // MODIFIES: this
-    // EFFECTS: after a client has disconnected, remove them from the entries list
-    public void disconnectEvent(Client c) {
-        System.out.println("Client disconnected: " + c.ip());
-        removeClientFromEntries(c);
     }
 
     // Represents the thread that handles the chat messages
