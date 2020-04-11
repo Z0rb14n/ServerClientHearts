@@ -63,10 +63,4 @@ public class NewClient extends Client {
         if (lastMessage.matches(ServerClientHearts.ERROR_FORMAT)) caller.updateErrorMessage(lastMessage);
         super.stop();
     }
-
-    // EFFECTS: gets the last message sent by the server
-    public String getLastMessage() {
-        return lastMessage;
-    }
-
 }
