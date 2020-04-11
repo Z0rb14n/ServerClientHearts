@@ -2,10 +2,12 @@ package ui;
 
 // TODO: DO THIS FIRST BEFORE WORKING ON CLIENT
 
+import net.MessagePair;
 import processing.core.PApplet;
 import processing.net.Client;
 import processing.net.Server;
 import util.Card;
+import util.Deck;
 import util.GameState;
 import util.Suit;
 
@@ -23,11 +25,16 @@ public class ServerClientHearts extends PApplet {
     public final static int PORT = 5204;
     private final static String KICK_DEFAULT_MSG = ERROR + "KICKED";
     private final static String NEW_PLAYER_HEADER = "NEW PLAYER:";
-    private final static String CURRENT_PLAYERS_MSG = "CURRENT PLAYERS:\\d*";
+    private final static String CURRENT_PLAYERS_HEADER = "CURRENT PLAYERS:";
+    private final static String CURRENT_PLAYERS_MSG = CURRENT_PLAYERS_HEADER + "\\d*";
     private final static String START_GAME_MSG = "START GAME";
     private final static String CHAT_MSG_HEADER = "CHAT:";
     private final static String CHAT_MSG = CHAT_MSG_HEADER + ".+";
     private final static int CHAT_MSG_INDEX = CHAT_MSG_HEADER.length();
+    private final static String REQUEST_CARD_HEADING = "PLAY:";
+    private final static String REQUEST_CARD_MSG = REQUEST_CARD_HEADING + ".+";
+    private final static String PREVIOUS_CARD_HEADING = "PLAYED:";
+    private final static String PREVIOUS_CARD_MSG = PREVIOUS_CARD_HEADING + "\\d,.+";
     private final static String OUTGOING_CHAT_MSG = "CHAT\\d:.+";
     private final static String PLAY_MSG_HEADER = "CARDS:";
     private final static String PLAY_MSG = PLAY_MSG_HEADER + ".+";
@@ -37,13 +44,18 @@ public class ServerClientHearts extends PApplet {
     private final static String STARTING_HAND = "STARTING_HAND:";
     private final static String NEW_HAND = "NEW_HAND:";
     private final static String START_ROUND = "START_ROUND";
+    private final static String END_ROUND = "END ROUND";
+    private final static String END_GAME = "END GAME";
+    private final static String ROUND_WINNER_HEADING = "WINNER:";
+    private final static String ROUND_WINNER = ROUND_WINNER_HEADING + "\\d.*";
+    private final static String GAME_WINNER_HEADING = "GAME WINNER:";
+    private final static String GAME_WINNER = GAME_WINNER_HEADING + "\\d" + ",POINTS:\\d+";
     private final static String START_3C = "START_3C";
     private final static String RESET = "RESET";
     private final static String CARD_DELIMITER = ",";
     private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
     private final static int FPS = 30;
     private final String[] IDS = new String[4];
-    private final static String CURRENT_PLAYERS_HEADER = "CURRENT PLAYERS:";
     private ArrayDeque<MessagePair> clientMessages;
 
     private GameState gameState;
@@ -135,7 +147,6 @@ public class ServerClientHearts extends PApplet {
         return false;
     }
 
-    // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: asks player to play 3C
     public void startFirstTurn(int starter) {
@@ -143,26 +154,32 @@ public class ServerClientHearts extends PApplet {
         sendNthClientMessage(2, NEW_HAND + gameState.getPlayerTwoHand().toString());
         sendNthClientMessage(3, NEW_HAND + gameState.getPlayerThreeHand().toString());
         sendNthClientMessage(4, NEW_HAND + gameState.getPlayerFourHand().toString());
+        server.write(START_ROUND);
         sendNthClientMessage(starter, START_3C);
     }
 
-    // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: asks next player to play a card
     public void requestNextCard(int justPlayed, int playerNumOfNextPlayer, Card played, Suit required) {
+        server.write(PREVIOUS_CARD_HEADING + justPlayed + "," + played.toString());
         server.write(CENTER_HAND + gameState.getCenter().toString());
+        getNthClient(playerNumOfNextPlayer - 1).write(REQUEST_CARD_HEADING + required.toString());
     }
 
-    // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: starts new turn and writes messages to players, given "winner" (player number 1-4)
-    public void startNewTurn(int winner) {
+    public void startNewTurn(int winner, Deck addedPenalties) {
+        server.write(END_ROUND);
+        server.write(ROUND_WINNER + winner + addedPenalties.toString());
+        server.write(START_ROUND);
     }
 
-    // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: when game has ended - writes messages to players (who won, etc.)
-    public void endGame() {
+    public void endGame(int winner, int points) {
+        server.write(END_ROUND);
+        server.write(END_GAME);
+        server.write(GAME_WINNER_HEADING + winner + ",POINTS:" + points);
     }
 
     // MODIFIES: this

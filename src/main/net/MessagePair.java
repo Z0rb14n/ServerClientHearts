@@ -1,4 +1,4 @@
-package ui;
+package net;
 
 import processing.net.Client;
 
@@ -6,7 +6,7 @@ public class MessagePair {
     public Client client;
     public String message;
 
-    public MessagePair() {
+    protected MessagePair() {
         client = null;
         message = null;
     }

@@ -182,7 +182,7 @@ public class GameState {
         penalties[startingPlayer - 1].addAll(deck); // distribute penalties
         currentSuitToPlay = null; // can play whatever suit
         checkGameEnd(caller);
-        if (!gameEnded) caller.startNewTurn(startingPlayer);
+        if (!gameEnded) caller.startNewTurn(startingPlayer, deck);
     }
 
     // REQUIRES: center.size == 4
@@ -231,7 +231,22 @@ public class GameState {
     private void checkGameEnd(ServerClientHearts caller) {
         if (numTurns != 14) return;
         gameEnded = true;
-        caller.endGame();
+        caller.endGame(gameWinner(), gameWinnerPoints());
+    }
+
+    // EFFECTS: returns current winner
+    private int gameWinner() {
+        int minimum = Math.min(Math.min(hands[0].penaltyPoints(), hands[1].penaltyPoints()), Math.min(hands[2].penaltyPoints(), hands[3].penaltyPoints()));
+        if (minimum == hands[0].penaltyPoints()) return 1;
+        if (minimum == hands[1].penaltyPoints()) return 2;
+        if (minimum == hands[2].penaltyPoints()) return 3;
+        if (minimum == hands[3].penaltyPoints()) return 4;
+        throw new IllegalArgumentException("AAAAAAAAAA");
+    }
+
+    // EFFECTS: returns point count of current winner
+    private int gameWinnerPoints() {
+        return Math.min(Math.min(hands[0].penaltyPoints(), hands[1].penaltyPoints()), Math.min(hands[2].penaltyPoints(), hands[3].penaltyPoints()));
     }
 
     // MODIFIES: this

@@ -3,7 +3,7 @@ package util;
 import static util.Face.*;
 
 // Represents a singular card
-public class Card {
+public final class Card {
     private Suit suit;
     private int number; // -1 if faceCard
     private Face face;
@@ -74,7 +74,7 @@ public class Card {
     }
 
     @Override
-    final public String toString() {
+    public final String toString() {
         if (isFaceCard) {
             return face.toString() + suit.toString();
         } else {
