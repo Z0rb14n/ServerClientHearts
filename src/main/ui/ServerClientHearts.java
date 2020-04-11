@@ -145,21 +145,18 @@ public class ServerClientHearts extends PApplet {
     // EFFECTS: asks next player to play a card
     public void requestNextCard(int justPlayed, int playerNumOfNextPlayer, Card played, Suit required) {
         server.write(CENTER_HAND + gameState.getCenter().toString());
-        // TODO METHOD BODY
     }
 
     // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: starts new turn and writes messages to players, given "winner" (player number 1-4)
     public void startNewTurn(int winner) {
-        // TODO METHOD BODY
     }
 
     // TODO METHOD BODY
     // MODIFIES: this
     // EFFECTS: when game has ended - writes messages to players (who won, etc.)
     public void endGame() {
-        // TODO METHOD BODY
     }
 
     // MODIFIES: this

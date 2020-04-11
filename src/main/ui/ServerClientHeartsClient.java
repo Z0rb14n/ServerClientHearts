@@ -1,5 +1,7 @@
 package ui;
 
+// TODO FINISH GUI AFTER FINALIZING SERVER
+
 import net.ConnectionException;
 import net.NewClient;
 import processing.core.PApplet;
