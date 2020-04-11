@@ -2,8 +2,6 @@ package ui;
 
 // TODO: DO THIS FIRST BEFORE WORKING ON CLIENT
 
-// TODO: CARD MESSAGE PARSER -> SEND PARSED MESSAGE INTO GAME STATE UNDER PLAYCARD(PLAYERNUM, CALLER, CARDS)
-
 import processing.core.PApplet;
 import processing.net.Client;
 import processing.net.Server;
@@ -17,8 +15,8 @@ import java.util.*;
 public class ServerClientHearts extends PApplet {
     private Server server;
     private LinkedHashMap<String, Client> clients;
-    private final static String ERR_TOO_MANY_PLAYERS = "ERR: TOO MANY PLAYERS";
-    private final static String ERR_INVALID_MSG = "ERR: INVALID MSG";
+    public final static String ERR_TOO_MANY_PLAYERS = "ERR: TOO MANY PLAYERS";
+    public final static String ERR_INVALID_MSG = "ERR: INVALID MSG";
     private final static String KICK_DEFAULT_MSG = "ERR: KICKED";
     private final static String START_GAME_MSG = "START GAME";
     private final static String CHAT_MSG_HEADER = "CHAT:";
@@ -39,7 +37,7 @@ public class ServerClientHearts extends PApplet {
     private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
     private final static int FPS = 30;
     private final String[] IDS = new String[4];
-    private static final int port = 5204;
+    public static final int PORT = 5204;
     private ArrayDeque<MessagePair> clientMessages;
 
     private GameState gameState;
@@ -71,7 +69,7 @@ public class ServerClientHearts extends PApplet {
     // EFFECTS: runs at beginning of program before draw
     public void setup() {
         frameRate(FPS);
-        server = new Server(this, port);
+        server = new Server(this, PORT);
         System.out.println("Server started at: " + Server.ip());
         surface.setTitle("Server Client Hearts Server?");
         cmh.start();
