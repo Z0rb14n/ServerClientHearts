@@ -29,9 +29,8 @@ public class ServerClientHeartsClient extends PApplet {
     private int playerNum;
 
     public static void main(String[] args) {
-        String[] processingArgs = {"lmao"};
         ServerClientHeartsClient sch = new ServerClientHeartsClient();
-        PApplet.runSketch(processingArgs, sch);
+        PApplet.runSketch(new String[]{"lmao"}/*Processing arguments*/, sch);
     }
 
     @Override
