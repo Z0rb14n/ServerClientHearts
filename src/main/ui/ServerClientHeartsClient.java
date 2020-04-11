@@ -10,6 +10,7 @@ import processing.net.Client;
 
 import java.util.Scanner;
 
+// Represents Client + GUI
 public class ServerClientHeartsClient extends PApplet {
     private final static int WHITE = 0xffffffff;
     private final static int BLACK = 0xff000000;
@@ -28,25 +29,32 @@ public class ServerClientHeartsClient extends PApplet {
     private String ip = "";
     private int playerNum;
 
+    // Main function to run
     public static void main(String[] args) {
         ServerClientHeartsClient sch = new ServerClientHeartsClient();
         PApplet.runSketch(new String[]{"lmao"}/*Processing arguments*/, sch);
     }
 
     @Override
+    // MODIFIES: this
+    // EFFECTS: sets size of window (see Processing for details)
     public void settings() {
         size(640, 480);
-        topLeftIPEnter = new PVector(width / 2.0f - IPENTERWIDTH / 2.0f, 100);
     }
 
     @Override
+    // MODIFIES: this
+    // EFFECTS: initializes variables
     public void setup() {
+        topLeftIPEnter = new PVector(width / 2.0f - IPENTERWIDTH / 2.0f, 100);
         frameRate(30);
         surface.setTitle("Server Hearts Client!");
         TerminalMessageSender tms = new TerminalMessageSender();
         tms.start();
     }
 
+    // MODIFIES: this
+    // EFFECTS: attempts to load the client
     public void tryLoadClient() {
         try {
             Thread thread = new Thread(() -> client = new NewClient(actualClient, ip, port));
@@ -73,14 +81,18 @@ public class ServerClientHeartsClient extends PApplet {
         }
     }
 
-    public void drawIPEnterText() {
+    // MODIFIES: this
+    // EFFECTS: draws the IP enter text
+    private void drawIPEnterText() {
         fill(BLACK);
         textAlign(CENTER, CENTER);
         textSize(24);
         text("Enter IP", topLeftIPEnter.x + IPENTERWIDTH / 2, topLeftIPEnter.y - IPENTERHEIGHT);
     }
 
-    public void drawIPEnterBox() {
+    // MODIFIES: this
+    // EFFECTS: drops the IP enter box
+    private void drawIPEnterBox() {
         fill(WHITE);
         stroke(BLACK);
         strokeWeight(3);
@@ -115,6 +127,8 @@ public class ServerClientHeartsClient extends PApplet {
     }
 
     @Override
+    // MODIFIES: this
+    // EFFECTS: code run when a key is pressed (see Processing)
     public void keyPressed() {
         if (inStarting) {
             if (key != CODED && key != BACKSPACE && key != RETURN && key != ENTER && key != TAB && key != ESC) {
@@ -144,18 +158,24 @@ public class ServerClientHeartsClient extends PApplet {
     }
 
     @Override
+    // MODIFIES: this
+    // EFFECTS: code run when the mouse is clicked
     public void mouseClicked() {
     }
 
+    // EFFECTS: called when the client receives data from a server.
     public void clientEvent(Client c) {
 
     }
 
+    // EFFECTS: called when a client disconnects from a server.
     public void disconnectEvent(Client c) {
         System.out.println("Client disconnected: " + c.ip());
     }
 
     @Override
+    // MODIFIES: this
+    // EFFECTS: runs FPS times a second to draw to a screen
     public void draw() {
         background(255);
         if (inStarting) {
@@ -168,8 +188,11 @@ public class ServerClientHeartsClient extends PApplet {
         }
     }
 
+    // Represents the Terminal I/O that can communicate with the server
     private class TerminalMessageSender extends Thread {
         @Override
+        // MODIFIES: this
+        // EFFECTS: when there's contents of the terminal to write, write it to the server
         public void run() {
             Scanner scanner = new Scanner(System.in);
             while (scanner.hasNext()) {
