@@ -17,26 +17,38 @@ import java.util.*;
 public class ServerClientHearts extends PApplet {
     private Server server;
     private LinkedHashMap<String, Client> clients;
+    public final static int PORT = 5204;
+    //<editor-fold desc="MESSAGE HEADERS">
     public final static String ERROR = "ERR: ";
+    //</editor-fold>
+    //<editor-fold desc="MESSAGE FORMATS">
     public final static String ERROR_FORMAT = "ERR: .+";
+    private final static int FPS = 30;
+    private final static String CARD_DELIMITER = ",";
+    private final static String NEW_PLAYER_HEADER = "NEW PLAYER:";
+    private final static String CURRENT_PLAYERS_HEADER = "CURRENT PLAYERS:";
+    private final static String REQUEST_CARD_HEADER = "PLAY:";
+    private final static String PREVIOUS_CARD_HEADER = "PLAYED:";
+    private final static String PLAY_MSG_HEADER = "CARDS:";
+    private final static String ROUND_WINNER_HEADER = "WINNER:";
+    private final static String GAME_WINNER_HEADER = "GAME WINNER:";
+    private final static String REQUEST_CARD_MSG = REQUEST_CARD_HEADER + ".+";
+    private final static String PREVIOUS_CARD_MSG = PREVIOUS_CARD_HEADER + "\\d,.+";
+    private final static String ROUND_WINNER = ROUND_WINNER_HEADER + "\\d.*";
+    private final static String GAME_WINNER = GAME_WINNER_HEADER + "\\d" + ",POINTS:\\d+";
     public final static String ERR_TOO_MANY_PLAYERS = ERROR + "TOO MANY PLAYERS";
     public final static String ERR_INVALID_MSG = ERROR + "INVALID MSG";
     public final static String NEW_PLAYER_MSG = "NEW PLAYER:\\d";
-    public final static int PORT = 5204;
     private final static String KICK_DEFAULT_MSG = ERROR + "KICKED";
-    private final static String NEW_PLAYER_HEADER = "NEW PLAYER:";
-    private final static String CURRENT_PLAYERS_HEADER = "CURRENT PLAYERS:";
     private final static String CURRENT_PLAYERS_MSG = CURRENT_PLAYERS_HEADER + "\\d*";
     private final static String START_GAME_MSG = "START GAME";
     private final static String CHAT_MSG_HEADER = "CHAT:";
     private final static String CHAT_MSG = CHAT_MSG_HEADER + ".+";
     private final static int CHAT_MSG_INDEX = CHAT_MSG_HEADER.length();
-    private final static String REQUEST_CARD_HEADING = "PLAY:";
-    private final static String REQUEST_CARD_MSG = REQUEST_CARD_HEADING + ".+";
-    private final static String PREVIOUS_CARD_HEADING = "PLAYED:";
-    private final static String PREVIOUS_CARD_MSG = PREVIOUS_CARD_HEADING + "\\d,.+";
+    //</editor-fold>
+    private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
+    private final String[] IDS = new String[4];
     private final static String OUTGOING_CHAT_MSG = "CHAT\\d:.+";
-    private final static String PLAY_MSG_HEADER = "CARDS:";
     private final static String PLAY_MSG = PLAY_MSG_HEADER + ".+";
     private final static int PLAY_MSG_INDEX = PLAY_MSG_HEADER.length();
     private final static String PLAYER_ID_HEADER = "P\\dID:.+";
@@ -46,19 +58,10 @@ public class ServerClientHearts extends PApplet {
     private final static String START_ROUND = "START_ROUND";
     private final static String END_ROUND = "END ROUND";
     private final static String END_GAME = "END GAME";
-    private final static String ROUND_WINNER_HEADING = "WINNER:";
-    private final static String ROUND_WINNER = ROUND_WINNER_HEADING + "\\d.*";
-    private final static String GAME_WINNER_HEADING = "GAME WINNER:";
-    private final static String GAME_WINNER = GAME_WINNER_HEADING + "\\d" + ",POINTS:\\d+";
+    private ArrayDeque<MessagePair> clientMessages;
+    private GameState gameState;
     private final static String START_3C = "START_3C";
     private final static String RESET = "RESET";
-    private final static String CARD_DELIMITER = ",";
-    private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
-    private final static int FPS = 30;
-    private final String[] IDS = new String[4];
-    private ArrayDeque<MessagePair> clientMessages;
-
-    private GameState gameState;
     private MessageHandler cmh;
 
     public static void main(String[] args) {
@@ -161,9 +164,9 @@ public class ServerClientHearts extends PApplet {
     // MODIFIES: this
     // EFFECTS: asks next player to play a card
     public void requestNextCard(int justPlayed, int playerNumOfNextPlayer, Card played, Suit required) {
-        server.write(PREVIOUS_CARD_HEADING + justPlayed + "," + played.toString());
+        server.write(PREVIOUS_CARD_HEADER + justPlayed + "," + played.toString());
         server.write(CENTER_HAND + gameState.getCenter().toString());
-        getNthClient(playerNumOfNextPlayer - 1).write(REQUEST_CARD_HEADING + required.toString());
+        getNthClient(playerNumOfNextPlayer - 1).write(REQUEST_CARD_HEADER + required.toString());
     }
 
     // MODIFIES: this
@@ -179,7 +182,7 @@ public class ServerClientHearts extends PApplet {
     public void endGame(int winner, int points) {
         server.write(END_ROUND);
         server.write(END_GAME);
-        server.write(GAME_WINNER_HEADING + winner + ",POINTS:" + points);
+        server.write(GAME_WINNER_HEADER + winner + ",POINTS:" + points);
     }
 
     // MODIFIES: this
