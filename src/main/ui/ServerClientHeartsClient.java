@@ -5,6 +5,7 @@ package ui;
 import net.ConnectionException;
 import net.NewClient;
 import processing.core.PApplet;
+import processing.core.PImage;
 import processing.core.PVector;
 
 import java.util.Scanner;
@@ -20,12 +21,19 @@ public class ServerClientHeartsClient extends PApplet {
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
     private final static String INVALID_MSG = "Invalid message sent to server.";
+    private static PImage CAT_DEFAULT;
+    private static PImage CAT_FACE_LEFT;
+    private static PImage CAT_FACE_RIGHT;
+    private static PImage CAT_BACK_ONLY;
+    private final int CHAT_GREY = color(150);
+    private final int CHAT_DARK_GREY = color(50);
+    private static final int CAT_WIDTH = 200;
+    private static final int CAT_HEIGHT = 200;
     private static PVector topLeftIPEnter;
     private final ServerClientHeartsClient actualClient = this;
     private NewClient client;
     private int ipEnterPosition = 0;
     private String ip = "";
-    private int playerNum;
 
     // Main function to run
     public static void main(String[] args) {
@@ -37,7 +45,7 @@ public class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: sets size of window (see Processing for details)
     public void settings() {
-        size(640, 480);
+        size(960, 720);
     }
 
     @Override
@@ -49,6 +57,20 @@ public class ServerClientHeartsClient extends PApplet {
         surface.setTitle("Server Hearts Client!");
         TerminalMessageSender tms = new TerminalMessageSender();
         tms.start();
+        initCats();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: initializes the cat images
+    private void initCats() {
+        CAT_DEFAULT = loadImage("./data/Symmetrical Miaow.png");
+        CAT_FACE_LEFT = loadImage("./data/Symmetrical Miaow Face Left.png");
+        CAT_FACE_RIGHT = loadImage("./data/Symmetrical Miaow Face Right.png");
+        CAT_BACK_ONLY = loadImage("./data/Symmetrical Miaow Background.png");
+        CAT_DEFAULT.resize(CAT_WIDTH, CAT_HEIGHT);
+        CAT_FACE_LEFT.resize(CAT_WIDTH, CAT_HEIGHT);
+        CAT_FACE_RIGHT.resize(CAT_WIDTH, CAT_HEIGHT);
+        CAT_BACK_ONLY.resize(CAT_WIDTH, CAT_HEIGHT);
     }
 
     private static String errorDisplayed = "";
@@ -82,7 +104,6 @@ public class ServerClientHeartsClient extends PApplet {
                 errorDisplayed = DEFAULT_COULD_NOT_CONNECT;
             }
         } else if (!failed) {
-            playerNum = client.getPlayerNum();
             errorDisplayed = "";
         }
     }
@@ -179,23 +200,14 @@ public class ServerClientHeartsClient extends PApplet {
 
     }
 
-    @Override
     // MODIFIES: this
-    // EFFECTS: code run when the mouse is clicked
-    public void mouseClicked() {
+    // EFFECTS: draws the chat window
+    private void drawChatWindow() {
+        fill(CHAT_GREY);
+        rect(50, height - 200, 200, 150);
+        fill(CHAT_DARK_GREY);
+        rect(60, height - 90, 180, 25);
     }
-
-    /*
-    // EFFECTS: called when the client receives data from a server.
-    public void clientEvent(Client c) {
-
-    }
-
-    // EFFECTS: called when a client disconnects from a server.
-    public void disconnectEvent(Client c) {
-        System.out.println("Client disconnected: " + c.ip());
-    }
-    */
 
     @Override
     // MODIFIES: this
@@ -206,6 +218,7 @@ public class ServerClientHeartsClient extends PApplet {
             drawIPEnterText();
             drawIPEnterBox();
         } else {
+            drawChatWindow();
             if (client.available() > 0) {
                 System.out.println(client.readString());
             }

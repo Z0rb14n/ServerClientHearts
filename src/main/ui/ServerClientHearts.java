@@ -26,6 +26,7 @@ public class ServerClientHearts extends PApplet {
     //<editor-fold desc="MESSAGE HEADERS">
     public final static String ERROR = "ERR: ";
     private final static String NEW_PLAYER_HEADER = "NEW PLAYER:";
+    private final static String DISCONNECT_PLAYER_HEADER = "DISCONNECT:";
     private final static String CURRENT_PLAYERS_HEADER = "CURRENT PLAYERS:";
     private final static String REQUEST_CARD_HEADER = "PLAY:";
     private final static String PREVIOUS_CARD_HEADER = "PLAYED:";
@@ -42,7 +43,8 @@ public class ServerClientHearts extends PApplet {
     private final static String GAME_WINNER = GAME_WINNER_HEADER + "\\d" + ",POINTS:\\d+";
     public final static String ERR_TOO_MANY_PLAYERS = ERROR + "TOO MANY PLAYERS";
     public final static String ERR_INVALID_MSG = ERROR + "INVALID MSG";
-    public final static String NEW_PLAYER_MSG = "NEW PLAYER:\\d";
+    public final static String NEW_PLAYER_MSG = NEW_PLAYER_HEADER + "\\d";
+    public final static String DISCONNECT_PLAYER_MSG = DISCONNECT_PLAYER_HEADER + "\\d";
     private final static String KICK_DEFAULT_MSG = ERROR + "KICKED";
     private final static String RESET = "RESET";
     private final static String CURRENT_PLAYERS_MSG = CURRENT_PLAYERS_HEADER + "\\d*";
@@ -138,6 +140,7 @@ public class ServerClientHearts extends PApplet {
     // EFFECTS: after a client has disconnected, remove them from the entries list
     public void disconnectEvent(Client c) {
         System.out.println("Client disconnected: " + c.ip());
+        informPlayersOnDisconnect(c);
         removeClientFromEntries(c);
     }
     //</editor-fold>
@@ -291,6 +294,14 @@ public class ServerClientHearts extends PApplet {
         }
         if (sb.toString().equals(CURRENT_PLAYERS_HEADER)) sb.append("NONE");
         clients.get(IDS[playerNumber - 1]).write(sb.toString());
+    }
+
+    // MODIFIES: this
+    // EFFECTS: informs other players that a player has disconnected
+    private void informPlayersOnDisconnect(Client c) {
+        int playerNum = getClientNumber(c);
+        if (playerNum == 0) return;
+        server.write(DISCONNECT_PLAYER_HEADER + playerNum);
     }
 
     // MODIFIES: this

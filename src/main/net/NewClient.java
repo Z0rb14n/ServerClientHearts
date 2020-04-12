@@ -60,7 +60,8 @@ public class NewClient extends Client {
     // EFFECTS: disconnects client from the server and stops the client.
     public void stop() {
         lastMessage = readString();
-        if (lastMessage.matches(ServerClientHearts.ERROR_FORMAT)) caller.updateErrorMessage(lastMessage);
+        if (lastMessage != null && lastMessage.matches(ServerClientHearts.ERROR_FORMAT))
+            caller.updateErrorMessage(lastMessage);
         super.stop();
     }
 }
