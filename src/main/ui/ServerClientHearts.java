@@ -52,7 +52,7 @@ public class ServerClientHearts extends PApplet {
     private final static String CHAT_MSG_HEADER = "CHAT:";
     private final static String CHAT_MSG = CHAT_MSG_HEADER + ".+";
     private final static int CHAT_MSG_INDEX = CHAT_MSG_HEADER.length();
-    private final static String OUTGOING_CHAT_MSG = "CHAT\\d:.+";
+    public final static String OUTGOING_CHAT_MSG = "CHAT\\d:.+";
     private final static String PLAY_MSG = PLAY_MSG_HEADER + ".+";
     private final static int PLAY_MSG_INDEX = PLAY_MSG_HEADER.length();
     private final static String PLAYER_ID_HEADER = "P\\dID:.+";
