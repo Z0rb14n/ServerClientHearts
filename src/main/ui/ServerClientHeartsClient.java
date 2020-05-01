@@ -203,6 +203,13 @@ public final class ServerClientHeartsClient extends PApplet {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: gets the CURRENT_PLAYERS message if the client accidentally gets it
+    public void catchAccidentalCurrentPlayersMessage(String msg) {
+        System.out.println("Accidental CurrentPlayers message found in ID string: " + msg);
+        clientState.processNewMessage(msg);
+    }
+
     //</editor-fold>
 
     @Override
@@ -247,13 +254,31 @@ public final class ServerClientHeartsClient extends PApplet {
             if (client.available() > 0) {
                 String clientMessage = client.readString();
                 clientState.processNewMessage(clientMessage);
-                System.out.println(clientMessage);
+                System.out.println("HI" + clientMessage);
 
             }
             if (clientState.getPlayerNum() == 1) {
                 fill(RED);
                 textAlign(CENTER);
                 text("YOU", 375, 80);
+            }
+            fill(RED);
+            textAlign(CENTER);
+            switch (clientState.getPlayerNum()) {
+                case 1:
+                    text("YOU", 375, 80);
+                    break;
+                case 2:
+                    text("YOU", 675, 250);
+                    break;
+                case 3:
+                    text("YOU", 375, 250);
+                    break;
+                case 4:
+                    text("YOU", 105, 250);
+                    break;
+                default:
+                    text("Umm...", width / 2, height / 2);
             }
             image(clientState.getDrawnImages()[0], 300, 80);
             image(clientState.getDrawnImages()[3], 30, 250);

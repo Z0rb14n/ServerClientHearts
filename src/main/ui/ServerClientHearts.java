@@ -239,7 +239,7 @@ public final class ServerClientHearts extends PApplet {
     // EFFECTS: messages all other clients that a player has joined
     private void informPlayersPlayerJoined(int playerNumber) {
         for (int i = 0; i < IDS.length; i++) {
-            if (IDS[i] != null && i != playerNumber - 1) {
+            if (IDS[i] != null && clients.get(IDS[i]) != null && i != playerNumber - 1) {
                 clients.get(IDS[i]).write(NEW_PLAYER_HEADER + playerNumber);
             }
         }
@@ -326,10 +326,10 @@ public final class ServerClientHearts extends PApplet {
         if (!clients.containsValue(c)) return 0;
         for (String id : clients.keySet()) {
             if (clients.get(id).equals(c)) {
-                if (IDS[0].equals(id)) return 1;
-                if (IDS[1].equals(id)) return 2;
-                if (IDS[2].equals(id)) return 3;
-                if (IDS[3].equals(id)) return 4;
+                if (IDS[0] != null && IDS[0].equals(id)) return 1;
+                if (IDS[1] != null && IDS[1].equals(id)) return 2;
+                if (IDS[2] != null && IDS[2].equals(id)) return 3;
+                if (IDS[3] != null && IDS[3].equals(id)) return 4;
                 else return 0;
             }
         }

@@ -45,6 +45,16 @@ public final class NewClient extends Client {
             throw new ConnectionException(ERR_INVALID_MSG);
         }
         clientID = idString.substring(5);
+        if (clientID.contains(MessageConstants.CURRENT_PLAYERS_HEADER)) {
+            for (int i = clientID.length() - 1; i > 0; i--) {
+                if (clientID.charAt(i) == MessageConstants.CURRENT_PLAYERS_HEADER.charAt(1)) {
+                    int index = i - 1;
+                    caller.catchAccidentalCurrentPlayersMessage(clientID.substring(index).trim());
+                    clientID = clientID.substring(0, index);
+                    break;
+                }
+            }
+        }
         playerNum = idString.charAt(1) - '0';
         System.out.println("Client ID is " + clientID + ", player num is " + playerNum);
     }

@@ -88,11 +88,11 @@ public class ClientState {
                 int startingIndex = MessageConstants.CURRENT_PLAYERS_HEADER.length();
                 for (; startingIndex < msg.length(); startingIndex++) {
                     if (!Character.isDigit(msg.charAt(startingIndex))) {
-                        throw new IllegalArgumentException("AAAAAAAAA");
+                        continue;
                     }
                     num = Character.digit(msg.charAt(startingIndex), 10) - 1;
                     exists[num] = true;
-                    toggleDrawnImage(num, true);
+                    toggleDrawnImage(num + 1, true);
                 }
             }
         } else if (msg.startsWith(MessageConstants.NEW_PLAYER_HEADER)) {
