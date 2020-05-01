@@ -1,12 +1,12 @@
 package util;
 
-import ui.ServerClientHearts;
+import net.MessageConstants;
 
 import java.util.ArrayList;
 
 public class ClientState {
     private static final int MAX_LENGTH = 100;
-    private static final String CHAT_MSG_FORMAT = ServerClientHearts.OUTGOING_CHAT_MSG;
+    private static final String CHAT_MSG_FORMAT = MessageConstants.OUTGOING_CHAT_MSG;
     Deck deck;
     private int playernum;
     private final ArrayList<ChatMessage> chatMessages = new ArrayList<>(100);

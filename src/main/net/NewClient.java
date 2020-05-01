@@ -7,10 +7,10 @@ import ui.ServerClientHeartsClient;
 // Represents the game client
 public class NewClient extends Client {
     public static final String CLIENT_ID_MSG = "P\\dID:(.+)";
-    public static final String TOO_MANY_PLAYERS = ServerClientHearts.ERR_TOO_MANY_PLAYERS;
-    public static final String ERR_INVALID_MSG = ServerClientHearts.ERR_INVALID_MSG;
+    public static final String TOO_MANY_PLAYERS = MessageConstants.ERR_TOO_MANY_PLAYERS;
+    public static final String ERR_INVALID_MSG = MessageConstants.ERR_INVALID_MSG;
     public static final String ERR_KICKED = "Kicked";
-    private static final String ERROR = ServerClientHearts.ERROR;
+    private static final String ERROR = MessageConstants.ERROR;
     private static final int PORT = ServerClientHearts.PORT;
     public boolean actuallyInitialized = false;
     private ServerClientHeartsClient caller;
@@ -60,7 +60,7 @@ public class NewClient extends Client {
     // EFFECTS: disconnects client from the server and stops the client.
     public void stop() {
         lastMessage = readString();
-        if (lastMessage != null && lastMessage.matches(ServerClientHearts.ERROR_FORMAT))
+        if (lastMessage != null && lastMessage.matches(MessageConstants.ERROR_FORMAT))
             caller.updateErrorMessage(lastMessage);
         super.stop();
     }

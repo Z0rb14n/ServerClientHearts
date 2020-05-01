@@ -8,6 +8,7 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PVector;
 
+import java.awt.*;
 import java.util.Scanner;
 
 // Represents Client + GUI
@@ -25,10 +26,11 @@ public class ServerClientHeartsClient extends PApplet {
     private static PImage CAT_FACE_LEFT;
     private static PImage CAT_FACE_RIGHT;
     private static PImage CAT_BACK_ONLY;
+    private static PImage CAT_OUTLINE;
     private final int CHAT_GREY = color(150);
     private final int CHAT_DARK_GREY = color(50);
-    private static final int CAT_WIDTH = 200;
-    private static final int CAT_HEIGHT = 200;
+    private static final int CAT_WIDTH = 150;
+    private static final int CAT_HEIGHT = 150;
     private static PVector topLeftIPEnter;
     private final ServerClientHeartsClient actualClient = this;
     private NewClient client;
@@ -45,7 +47,9 @@ public class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: sets size of window (see Processing for details)
     public void settings() {
-        size(960, 720);
+        int screenWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+        int screenHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+        size(screenWidth, screenHeight - 60);
     }
 
     @Override
@@ -67,10 +71,12 @@ public class ServerClientHeartsClient extends PApplet {
         CAT_FACE_LEFT = loadImage("./data/Symmetrical Miaow Face Left.png");
         CAT_FACE_RIGHT = loadImage("./data/Symmetrical Miaow Face Right.png");
         CAT_BACK_ONLY = loadImage("./data/Symmetrical Miaow Background.png");
+        CAT_OUTLINE = loadImage("./data/Symmetrical Miaow Outline.png");
         CAT_DEFAULT.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_FACE_LEFT.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_FACE_RIGHT.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_BACK_ONLY.resize(CAT_WIDTH, CAT_HEIGHT);
+        CAT_OUTLINE.resize(CAT_WIDTH, CAT_HEIGHT);
     }
 
     private static String errorDisplayed = "";
@@ -85,8 +91,10 @@ public class ServerClientHeartsClient extends PApplet {
             thread.start();
             final long time = System.nanoTime();
             thread.join(10000);
+
             if (System.nanoTime() - time > (9000000) && client == null) {
                 failed = true;
+                // thread.interrupt();   // ??? do I need this?
                 errorDisplayed = CONNECTION_TIMEOUT;
             }
         } catch (ConnectionException e) {
@@ -112,6 +120,8 @@ public class ServerClientHeartsClient extends PApplet {
     private boolean isClientInactive() {
         return client == null || !client.active();
     }
+
+    //<editor-fold desc="Opening Menu">
 
     // MODIFIES: this
     // EFFECTS: draws the IP enter text
@@ -156,15 +166,6 @@ public class ServerClientHeartsClient extends PApplet {
         }
     }
 
-    @Override
-    // MODIFIES: this
-    // EFFECTS: code run when a key is pressed (see Processing)
-    public void keyPressed() {
-        if (isClientInactive()) {
-            modifyIPEnterBox();
-        }
-    }
-
     // MODIFIES: this
     // EFFECTS: add/removes/returns characters for the IP Enter Box
     private void modifyIPEnterBox() {
@@ -186,6 +187,17 @@ public class ServerClientHeartsClient extends PApplet {
             }
         } else if (key == RETURN || key == ENTER) {
             tryLoadClient();
+        }
+    }
+
+    //</editor-fold>
+
+    @Override
+    // MODIFIES: this
+    // EFFECTS: code run when a key is pressed (see Processing)
+    public void keyPressed() {
+        if (isClientInactive()) {
+            modifyIPEnterBox();
         }
     }
 
@@ -222,6 +234,10 @@ public class ServerClientHeartsClient extends PApplet {
             if (client.available() > 0) {
                 System.out.println(client.readString());
             }
+            image(CAT_DEFAULT, 300, 30);
+            image(CAT_FACE_RIGHT, 30, 200);
+            image(CAT_FACE_LEFT, 600, 200);
+            image(CAT_BACK_ONLY, 300, 300);
         }
     }
 
