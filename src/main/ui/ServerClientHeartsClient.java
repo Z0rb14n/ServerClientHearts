@@ -7,12 +7,13 @@ import net.NewClient;
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.core.PVector;
+import util.ClientState;
 
 import java.awt.*;
 import java.util.Scanner;
 
 // Represents Client + GUI
-public class ServerClientHeartsClient extends PApplet {
+public final class ServerClientHeartsClient extends PApplet {
     private final static int WHITE = 0xffffffff;
     private final static int BLACK = 0xff000000;
     private final static int RED = 0xffff0000;
@@ -33,9 +34,9 @@ public class ServerClientHeartsClient extends PApplet {
     private static final int CAT_HEIGHT = 150;
     private static PVector topLeftIPEnter;
     private final ServerClientHeartsClient actualClient = this;
+    private final static int MAX_CHAT_MSG_LEN = 128;
+    private ClientState clientState;
     private NewClient client;
-    private int ipEnterPosition = 0;
-    private String ip = "";
 
     // Main function to run
     public static void main(String[] args) {
@@ -57,6 +58,7 @@ public class ServerClientHeartsClient extends PApplet {
     // EFFECTS: initializes variables
     public void setup() {
         topLeftIPEnter = new PVector(width / 2.0f - IPENTERWIDTH / 2.0f, 100);
+        clientState = new ClientState();
         frameRate(30);
         surface.setTitle("Server Hearts Client!");
         TerminalMessageSender tms = new TerminalMessageSender();
@@ -79,6 +81,13 @@ public class ServerClientHeartsClient extends PApplet {
         CAT_OUTLINE.resize(CAT_WIDTH, CAT_HEIGHT);
     }
 
+    // EFFECTS: determines whether the client is active
+    private boolean isClientInactive() {
+        return client == null || !client.active();
+    }
+
+    //<editor-fold desc="Opening Menu">
+
     private static String errorDisplayed = "";
 
     // MODIFIES: this
@@ -96,6 +105,9 @@ public class ServerClientHeartsClient extends PApplet {
                 failed = true;
                 // thread.interrupt();   // ??? do I need this?
                 errorDisplayed = CONNECTION_TIMEOUT;
+            }
+            if (client != null && client.actuallyInitialized) {
+                clientState.setPlayerNum(client.getPlayerNum());
             }
         } catch (ConnectionException e) {
             System.out.print("HI");
@@ -116,12 +128,8 @@ public class ServerClientHeartsClient extends PApplet {
         }
     }
 
-    // EFFECTS: determines whether the client is active
-    private boolean isClientInactive() {
-        return client == null || !client.active();
-    }
-
-    //<editor-fold desc="Opening Menu">
+    private int ipEnterPosition = 0;
+    private String ip = "";
 
     // MODIFIES: this
     // EFFECTS: draws the IP enter text
@@ -225,19 +233,26 @@ public class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: runs FPS times a second to draw to a screen
     public void draw() {
-        background(255);
+        background(WHITE);
         if (isClientInactive()) {
             drawIPEnterText();
             drawIPEnterBox();
         } else {
             drawChatWindow();
             if (client.available() > 0) {
-                System.out.println(client.readString());
+                String clientMessage = client.readString();
+                System.out.println(clientMessage);
+
             }
-            image(CAT_DEFAULT, 300, 30);
-            image(CAT_FACE_RIGHT, 30, 200);
-            image(CAT_FACE_LEFT, 600, 200);
-            image(CAT_BACK_ONLY, 300, 300);
+            if (clientState.getPlayerNum() == 1) {
+                fill(RED);
+                textAlign(CENTER);
+                text("YOU", 375, 80);
+            }
+            image(CAT_DEFAULT, 300, 80);
+            image(CAT_FACE_RIGHT, 30, 250);
+            image(CAT_FACE_LEFT, 600, 250);
+            image(CAT_BACK_ONLY, 300, 350);
         }
     }
 

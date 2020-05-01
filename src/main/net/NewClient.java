@@ -5,24 +5,23 @@ import ui.ServerClientHearts;
 import ui.ServerClientHeartsClient;
 
 // Represents the game client
-public class NewClient extends Client {
-    public static final String CLIENT_ID_MSG = "P\\dID:(.+)";
+public final class NewClient extends Client {
+    public static final String CLIENT_ID_MSG = MessageConstants.CLIENT_ID_MESSAGE;
     public static final String TOO_MANY_PLAYERS = MessageConstants.ERR_TOO_MANY_PLAYERS;
     public static final String ERR_INVALID_MSG = MessageConstants.ERR_INVALID_MSG;
-    public static final String ERR_KICKED = "Kicked";
+    public static final String ERR_KICKED = MessageConstants.KICK_DEFAULT_MSG;
     private static final String ERROR = MessageConstants.ERROR;
     private static final int PORT = ServerClientHearts.PORT;
-    public boolean actuallyInitialized = false;
+    public boolean actuallyInitialized;
     private ServerClientHeartsClient caller;
-    private String lastMessage;
-    String clientID;
+    private String clientID;
     private int playerNum;
 
     // EFFECTS: initializes client with params of Processing's Client parameters
     public NewClient(ServerClientHeartsClient pa, String ip) {
         super(pa, ip, PORT);
         caller = pa;
-        if (active()) getClientID();
+        if (active()) getClientIDFromServer();
         else {
             stop();
             System.out.println("Could not connect to ip: " + ip + ", port: " + PORT);
@@ -34,7 +33,7 @@ public class NewClient extends Client {
     // MODIFIES: this
     // EFFECTS: gets the client ID from the server
     //          throws ConnectionException if kicked from the server?
-    private void getClientID() {
+    private void getClientIDFromServer() {
         String idString = null;
         while (idString == null) {
             idString = readString();
@@ -50,6 +49,11 @@ public class NewClient extends Client {
         System.out.println("Client ID is " + clientID + ", player num is " + playerNum);
     }
 
+    // EFFECTS: gets current client ID
+    public String getClientID() {
+        return clientID;
+    }
+
     // EFFECTS: returns the player number
     public int getPlayerNum() {
         return playerNum;
@@ -59,7 +63,7 @@ public class NewClient extends Client {
     // MODIFIES: this
     // EFFECTS: disconnects client from the server and stops the client.
     public void stop() {
-        lastMessage = readString();
+        String lastMessage = readString();
         if (lastMessage != null && lastMessage.matches(MessageConstants.ERROR_FORMAT))
             caller.updateErrorMessage(lastMessage);
         super.stop();

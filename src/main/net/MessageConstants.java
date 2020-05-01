@@ -1,6 +1,6 @@
 package net;
 
-public class MessageConstants {
+public final class MessageConstants {
     //<editor-fold desc="MESSAGE HEADERS">
     public final static String ERROR = "ERR: ";
     public final static String NEW_PLAYER_HEADER = "NEW PLAYER:";
@@ -15,6 +15,7 @@ public class MessageConstants {
     //<editor-fold desc="MESSAGE FORMATS">
     public final static String ERROR_FORMAT = "ERR: .+";
     public final static String CARD_DELIMITER = ",";
+    public final static String CLIENT_ID_MESSAGE = "P\\dID:(.+)";
     public final static String REQUEST_CARD_MSG = REQUEST_CARD_HEADER + ".+";
     public final static String PREVIOUS_CARD_MSG = PREVIOUS_CARD_HEADER + "\\d,.+";
     public final static String ROUND_WINNER = ROUND_WINNER_HEADER + "\\d.*";

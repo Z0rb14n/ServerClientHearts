@@ -16,7 +16,7 @@ import java.util.*;
 import static net.MessageConstants.*;
 
 // Represents the server application
-public class ServerClientHearts extends PApplet {
+public final class ServerClientHearts extends PApplet {
     private Server server;
     private LinkedHashMap<String, Client> clients;
     public final static int PORT = 5204;

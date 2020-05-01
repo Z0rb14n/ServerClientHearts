@@ -2,7 +2,7 @@ package net;
 
 import processing.net.Client;
 
-public class MessagePair {
+public final class MessagePair {
     public Client client;
     public String message;
 
