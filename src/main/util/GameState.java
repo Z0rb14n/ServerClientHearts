@@ -236,7 +236,7 @@ public class GameState {
 
     // EFFECTS: returns current winner
     private int gameWinner() {
-        int minimum = Math.min(Math.min(hands[0].penaltyPoints(), hands[1].penaltyPoints()), Math.min(hands[2].penaltyPoints(), hands[3].penaltyPoints()));
+        int minimum = gameWinnerPoints();
         if (minimum == hands[0].penaltyPoints()) return 1;
         if (minimum == hands[1].penaltyPoints()) return 2;
         if (minimum == hands[2].penaltyPoints()) return 3;

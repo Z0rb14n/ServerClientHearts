@@ -23,11 +23,16 @@ public final class ServerClientHeartsClient extends PApplet {
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
     private final static String INVALID_MSG = "Invalid message sent to server.";
-    private static PImage CAT_DEFAULT;
-    private static PImage CAT_FACE_LEFT;
-    private static PImage CAT_FACE_RIGHT;
-    private static PImage CAT_BACK_ONLY;
-    private static PImage CAT_OUTLINE;
+    public static PImage CAT_DEFAULT;
+    public static PImage CAT_FACE_LEFT;
+    public static PImage CAT_FACE_RIGHT;
+    public static PImage CAT_BACK_ONLY;
+    public static PImage CAT_OUTLINE;
+    public final static String DEFAULT_CAT_FILE = "./data/Symmetrical Miaow.png";
+    public final static String CAT_LEFT_FILE = "./data/Symmetrical Miaow Face Left.png";
+    public final static String CAT_RIGHT_FILE = "./data/Symmetrical Miaow Face Right.png";
+    public final static String CAT_BACK_FILE = "./data/Symmetrical Miaow Background.png";
+    public final static String CAT_OUTLINE_FILE = "./data/Symmetrical Miaow Outline.png";
     private final int CHAT_GREY = color(150);
     private final int CHAT_DARK_GREY = color(50);
     private static final int CAT_WIDTH = 150;
@@ -57,18 +62,18 @@ public final class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: initializes variables
     public void setup() {
+        initCats();
         topLeftIPEnter = new PVector(width / 2.0f - IPENTERWIDTH / 2.0f, 100);
         clientState = new ClientState();
         frameRate(30);
         surface.setTitle("Server Hearts Client!");
         TerminalMessageSender tms = new TerminalMessageSender();
         tms.start();
-        initCats();
     }
 
     // MODIFIES: this
     // EFFECTS: initializes the cat images
-    private void initCats() {
+    public void initCats() {
         CAT_DEFAULT = loadImage("./data/Symmetrical Miaow.png");
         CAT_FACE_LEFT = loadImage("./data/Symmetrical Miaow Face Left.png");
         CAT_FACE_RIGHT = loadImage("./data/Symmetrical Miaow Face Right.png");
@@ -241,6 +246,7 @@ public final class ServerClientHeartsClient extends PApplet {
             drawChatWindow();
             if (client.available() > 0) {
                 String clientMessage = client.readString();
+                clientState.processNewMessage(clientMessage);
                 System.out.println(clientMessage);
 
             }
@@ -249,10 +255,10 @@ public final class ServerClientHeartsClient extends PApplet {
                 textAlign(CENTER);
                 text("YOU", 375, 80);
             }
-            image(CAT_DEFAULT, 300, 80);
-            image(CAT_FACE_RIGHT, 30, 250);
-            image(CAT_FACE_LEFT, 600, 250);
-            image(CAT_BACK_ONLY, 300, 350);
+            image(clientState.getDrawnImages()[0], 300, 80);
+            image(clientState.getDrawnImages()[3], 30, 250);
+            image(clientState.getDrawnImages()[1], 600, 250);
+            image(clientState.getDrawnImages()[2], 300, 350);
         }
     }
 

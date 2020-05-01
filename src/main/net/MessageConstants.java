@@ -5,7 +5,7 @@ public final class MessageConstants {
     public final static String ERROR = "ERR: ";
     public final static String NEW_PLAYER_HEADER = "NEW PLAYER:";
     public final static String DISCONNECT_PLAYER_HEADER = "DISCONNECT:";
-    public final static String CURRENT_PLAYERS_HEADER = "CURRENT PLAYERS:";
+    public final static String CURRENT_PLAYERS_HEADER = "CURRENT_PLAYERS:";
     public final static String REQUEST_CARD_HEADER = "PLAY:";
     public final static String PREVIOUS_CARD_HEADER = "PLAYED:";
     public final static String PLAY_MSG_HEADER = "CARDS:";
