@@ -43,4 +43,14 @@ public final class MessageConstants {
     public final static String END_GAME = "END GAME";
     public final static String START_3C = "START_3C";
     //</editor-fold>
+
+    public final static char SPADE_UNICODE = '♠';
+    public final static char SPADE_UNICODE_OUTLINE = '♤';
+    public final static char CLUB_UNICODE = '♣';
+    public final static char CLUB_UNICODE_OUTLINE = '♧';
+    public final static char DIAMOND_UNICODE = '♦';
+    public final static char DIAMOND_UNICODE_OUTLINE = '♢';
+    public final static char HEART_UNICODE = '♥';
+    public final static char HEART_UNICODE_OUTLINE = '♡';
+    public final static char NEGATIVE_ONE = (char) -1;
 }

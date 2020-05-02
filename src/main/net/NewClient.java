@@ -55,7 +55,7 @@ public final class NewClient extends Client {
                 }
             }
         }
-        playerNum = idString.charAt(1) - '0';
+        playerNum = Character.digit(idString.charAt(1), 10);
         System.out.println("Client ID is " + clientID + ", player num is " + playerNum);
     }
 

@@ -116,15 +116,10 @@ public final class ServerClientHearts extends PApplet {
     private void startGame() {
         gameState.startGame();
         server.write(START_GAME_MSG);
-        try {
-            getNthClient(1).write(STARTING_HAND + gameState.getPlayerOneHand().toString());
-            getNthClient(2).write(STARTING_HAND + gameState.getPlayerTwoHand().toString());
-            getNthClient(3).write(STARTING_HAND + gameState.getPlayerThreeHand().toString());
-            getNthClient(4).write(STARTING_HAND + gameState.getPlayerFourHand().toString());
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
+        clients.get(IDS[0]).write(STARTING_HAND + gameState.getPlayerOneHand().toString());
+        clients.get(IDS[1]).write(STARTING_HAND + gameState.getPlayerTwoHand().toString());
+        clients.get(IDS[2]).write(STARTING_HAND + gameState.getPlayerThreeHand().toString());
+        clients.get(IDS[3]).write(STARTING_HAND + gameState.getPlayerFourHand().toString());
     }
 
     // MODIFIES: this
@@ -132,7 +127,7 @@ public final class ServerClientHearts extends PApplet {
     private void handleChatMessage(String msg, Client sender) {
         int clientNum = getClientNumber(sender);
         final String header = "CHAT" + clientNum + ":";
-        for(int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             if (IDS[i] != null) clients.get(IDS[i]).write(header + msg.substring(CHAT_MSG_INDEX));
         }
     }
@@ -150,6 +145,7 @@ public final class ServerClientHearts extends PApplet {
     // MODIFIES: this
     // EFFECTS: asks player to play 3C
     public void startFirstTurn(int starter) {
+        if (starter < 1 || starter > 4) throw new IllegalArgumentException("Invalid argument: " + starter);
         sendNthClientMessage(1, NEW_HAND + gameState.getPlayerOneHand().toString());
         sendNthClientMessage(2, NEW_HAND + gameState.getPlayerTwoHand().toString());
         sendNthClientMessage(3, NEW_HAND + gameState.getPlayerThreeHand().toString());
@@ -274,7 +270,7 @@ public final class ServerClientHearts extends PApplet {
     // MODIFIES: this
     // EFFECTS: kicks the client
     public void kick(Client c) {
-        kick(c,KICK_DEFAULT_MSG);
+        kick(c, KICK_DEFAULT_MSG);
     }
 
     // MODIFIES: this
@@ -291,7 +287,7 @@ public final class ServerClientHearts extends PApplet {
     private void removeClientFromEntries(Client c) {
         if (!clients.containsValue(c)) return;
         String toRemove = null;
-        for(String s : clients.keySet()) {
+        for (String s : clients.keySet()) {
             if (clients.get(s).equals(c)) {
                 toRemove = s;
                 for (int i = 0; i < 4; i++) {
@@ -303,7 +299,7 @@ public final class ServerClientHearts extends PApplet {
                 break;
             }
         }
-        assert(toRemove != null);
+        assert (toRemove != null);
         clients.remove(toRemove);
         System.out.println("Successfully removed id " + toRemove + ", ip: " + c.ip());
     }
@@ -311,9 +307,9 @@ public final class ServerClientHearts extends PApplet {
     // EFFECTS: gets Client with given client number (1-4)
     private Client getNthClient(int n) {
         if (n < 1 || n > 4) throw new IllegalArgumentException("n must be a number from 1-4");
-        if (IDS[n-1] == null) return null;
-        if (!clients.containsKey(IDS[n-1])) return null;
-        return clients.get(IDS[n-1]);
+        if (IDS[n - 1] == null) return null;
+        if (!clients.containsKey(IDS[n - 1])) return null;
+        return clients.get(IDS[n - 1]);
     }
 
     // EFFECTS: sends Nth client a message

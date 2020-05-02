@@ -49,6 +49,9 @@ public final class ServerClientHeartsClient extends PApplet {
         PApplet.runSketch(new String[]{"lmao"}/*Processing arguments*/, sch);
     }
 
+
+    //<editor-fold desc="Initialization">
+
     @Override
     // MODIFIES: this
     // EFFECTS: sets size of window (see Processing for details)
@@ -85,6 +88,8 @@ public final class ServerClientHeartsClient extends PApplet {
         CAT_BACK_ONLY.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_OUTLINE.resize(CAT_WIDTH, CAT_HEIGHT);
     }
+
+    //</editor-fold>
 
     // EFFECTS: determines whether the client is active
     private boolean isClientInactive() {

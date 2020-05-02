@@ -3,18 +3,18 @@ package util;
 import net.MessageConstants;
 import processing.core.PImage;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 import static ui.ServerClientHeartsClient.*;
 
 public class ClientState {
-    private static final int MAX_LENGTH = 100;
+    public static final int MAX_LENGTH = 100;
     private static final String CHAT_MSG_FORMAT = MessageConstants.OUTGOING_CHAT_MSG;
-    Deck deck;
+    private Deck deck;
     private int playernum;
-    private final ArrayList<ChatMessage> chatMessages = new ArrayList<>(100);
-    boolean[] exists = new boolean[4];
-    PImage[] drawnImages = new PImage[4];
+    private final LinkedList<ChatMessage> chatMessages = new LinkedList<ChatMessage>();
+    private boolean[] exists = new boolean[4];
+    private PImage[] drawnImages = new PImage[4];
     public ClientState() {
         playernum = -1;
         deck = new Deck();
@@ -55,7 +55,7 @@ public class ClientState {
         return playernum;
     }
 
-    public ArrayList<ChatMessage> getChatMessages() {
+    public LinkedList<ChatMessage> getChatMessages() {
         return chatMessages;
     }
 
@@ -66,17 +66,21 @@ public class ClientState {
     // MODIFIES: this
     // EFFECTS: handles incoming messages from server
     public void processNewMessage(String msgFromServer) {
-        if (msgFromServer.matches(CHAT_MSG_FORMAT)) {
-            assert ((msgFromServer.charAt(4) + "").matches("\\d"));
-            ChatMessage cm = new ChatMessage(msgFromServer.charAt(4) - '0', msgFromServer.substring(6));
-            if (chatMessages.size() == MAX_LENGTH) {
-                chatMessages.remove(0);
-            }
-            chatMessages.add(cm);
-            //CHAT <digit> : message
-            return;
-        }
+        handleNewChatMessage(msgFromServer);
         handlePlayerAdditionMessages(msgFromServer);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles player chat message
+    private void handleNewChatMessage(String msg) {
+        if (msg.matches(CHAT_MSG_FORMAT)) {
+            ChatMessage cm = new ChatMessage(msg.charAt(4) - '0', msg.substring(6));
+            if (chatMessages.size() == MAX_LENGTH) {
+                chatMessages.removeLast();
+            }
+            chatMessages.addFirst(cm);
+            //CHAT <digit> : message
+        }
     }
 
     // MODIFIES: this

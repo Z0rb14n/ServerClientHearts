@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static ui.ServerClientHeartsClient.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -75,5 +76,25 @@ public class ClientStateTest {
         assertArrayEquals(new PImage[]{CAT_DEFAULT, CAT_OUTLINE, CAT_OUTLINE, CAT_OUTLINE}, sc.getDrawnImages());
     }
 
+    @Test
+    public void testAddChatMessage() {
+        sc.processNewMessage("CHAT4:HI");
+        assertEquals(1, sc.getChatMessages().size());
+        assertEquals(4, sc.getChatMessages().get(0).playerNumberSender);
+        assertEquals("HI", sc.getChatMessages().get(0).message);
+        sc.processNewMessage("CHAT2:HELLO");
+        assertEquals(2, sc.getChatMessages().size());
+        assertEquals(2, sc.getChatMessages().get(0).playerNumberSender);
+        assertEquals("HELLO", sc.getChatMessages().get(0).message);
+    }
 
+    @Test
+    public void testAddOverMaxCapacity() {
+        for (int i = 0; i < ClientState.MAX_LENGTH; i++) {
+            sc.processNewMessage("CHAT3:" + i);
+        }
+        sc.processNewMessage("CHAT3:" + (ClientState.MAX_LENGTH + 1));
+        assertEquals(3, sc.getChatMessages().getLast().playerNumberSender);
+        assertEquals("1", sc.getChatMessages().getLast().message);
+    }
 }
