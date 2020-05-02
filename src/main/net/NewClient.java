@@ -69,6 +69,12 @@ public final class NewClient extends Client {
         return playerNum;
     }
 
+    // MODIFIES: this
+    // EFFECTS; sends chat message to server
+    public void sendChatMessage(String msg) {
+        write(MessageConstants.CHAT_MSG_HEADER + msg);
+    }
+
     @Override
     // MODIFIES: this
     // EFFECTS: disconnects client from the server and stops the client.

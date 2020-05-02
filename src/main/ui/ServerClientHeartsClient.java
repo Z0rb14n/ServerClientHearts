@@ -6,7 +6,6 @@ import net.ConnectionException;
 import net.NewClient;
 import processing.core.PApplet;
 import processing.core.PImage;
-import processing.core.PVector;
 import util.ClientState;
 
 import java.awt.*;
@@ -17,8 +16,6 @@ public final class ServerClientHeartsClient extends PApplet {
     private final static int WHITE = 0xffffffff;
     private final static int BLACK = 0xff000000;
     private final static int RED = 0xffff0000;
-    private final static float IPENTERWIDTH = 225;
-    private final static float IPENTERHEIGHT = 30;
     private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
@@ -34,10 +31,10 @@ public final class ServerClientHeartsClient extends PApplet {
     public final static String CAT_BACK_FILE = "./data/Symmetrical Miaow Background.png";
     public final static String CAT_OUTLINE_FILE = "./data/Symmetrical Miaow Outline.png";
     private final int CHAT_GREY = color(150);
+    private final int CHAT_INACTIVE_GREY = color(120);
     private final int CHAT_DARK_GREY = color(50);
     private static final int CAT_WIDTH = 150;
     private static final int CAT_HEIGHT = 150;
-    private static PVector topLeftIPEnter;
     private final ServerClientHeartsClient actualClient = this;
     private final static int MAX_CHAT_MSG_LEN = 128;
     private ClientState clientState;
@@ -66,7 +63,6 @@ public final class ServerClientHeartsClient extends PApplet {
     // EFFECTS: initializes variables
     public void setup() {
         initCats();
-        topLeftIPEnter = new PVector(width / 2.0f - IPENTERWIDTH / 2.0f, 100);
         clientState = new ClientState();
         frameRate(30);
         surface.setTitle("Server Hearts Client!");
@@ -97,6 +93,11 @@ public final class ServerClientHeartsClient extends PApplet {
     }
 
     //<editor-fold desc="Opening Menu">
+
+    private final static float IP_ENTER_WIDTH = 225;
+    private final static float IP_ENTER_HEIGHT = 30;
+    private final static float IP_ENTER_BOX_X = (float) Toolkit.getDefaultToolkit().getScreenSize().getWidth() / 2.0f - IP_ENTER_WIDTH / 2.0f;
+    private final static float IP_ENTER_BOX_Y = 100;
 
     private static String errorDisplayed = "";
 
@@ -147,7 +148,7 @@ public final class ServerClientHeartsClient extends PApplet {
         fill(BLACK);
         textAlign(CENTER, CENTER);
         textSize(24);
-        text("Enter IP", topLeftIPEnter.x + IPENTERWIDTH / 2, topLeftIPEnter.y - IPENTERHEIGHT);
+        text("Enter IP", IP_ENTER_BOX_X + IP_ENTER_WIDTH / 2, IP_ENTER_BOX_Y - IP_ENTER_HEIGHT);
     }
 
     // MODIFIES: this
@@ -156,37 +157,37 @@ public final class ServerClientHeartsClient extends PApplet {
         fill(WHITE);
         stroke(BLACK);
         strokeWeight(3);
-        rect(topLeftIPEnter.x, topLeftIPEnter.y, IPENTERWIDTH, IPENTERHEIGHT);
+        rect(IP_ENTER_BOX_X, IP_ENTER_BOX_Y, IP_ENTER_WIDTH, IP_ENTER_HEIGHT);
         fill(BLACK);
         textAlign(LEFT, TOP);
         textSize(24);
         String displayedIP = ip;
-        while (textWidth(displayedIP) > IPENTERWIDTH) {
+        while (textWidth(displayedIP) > IP_ENTER_WIDTH) {
             displayedIP = displayedIP.substring(0, displayedIP.length() - 1);
         }
-        text(displayedIP, topLeftIPEnter.x, topLeftIPEnter.y);
-        if (textWidth(ip.substring(0, ipEnterPosition)) <= IPENTERWIDTH && frameCount % 30 < 15) {
+        text(displayedIP, IP_ENTER_BOX_X + 2, IP_ENTER_BOX_Y);
+        if (textWidth(ip.substring(0, ipEnterPosition)) <= IP_ENTER_WIDTH && frameCount % 30 < 15) {
             fill(BLACK);
             noStroke();
-            float xpos = topLeftIPEnter.x;
+            float xpos = IP_ENTER_BOX_X;
             if (ipEnterPosition != 0) {
                 xpos += textWidth(ip.substring(0, ipEnterPosition));
             } else {
                 xpos += 2;
             }
-            rect(xpos, topLeftIPEnter.y + 2, 2, IPENTERHEIGHT - 4);
+            rect(xpos, IP_ENTER_BOX_Y + 2, 2, IP_ENTER_HEIGHT - 4);
         }
         if (!"".equals(errorDisplayed)) {
             textAlign(CENTER, CENTER);
             textSize(12);
             fill(RED);
-            text(errorDisplayed, topLeftIPEnter.x + IPENTERWIDTH / 2, topLeftIPEnter.y + IPENTERHEIGHT + 20);
+            text(errorDisplayed, IP_ENTER_BOX_X + IP_ENTER_WIDTH / 2, IP_ENTER_BOX_Y + IP_ENTER_HEIGHT + 20);
         }
     }
 
     // MODIFIES: this
     // EFFECTS: add/removes/returns characters for the IP Enter Box
-    private void modifyIPEnterBox() {
+    private void onKeyIPEnter() {
         if (key != CODED && key != BACKSPACE && key != RETURN && key != ENTER && key != TAB && key != ESC) {
             ip = ip.substring(0, ipEnterPosition) + key + ip.substring(ipEnterPosition);
             ipEnterPosition++;
@@ -222,7 +223,11 @@ public final class ServerClientHeartsClient extends PApplet {
     // EFFECTS: code run when a key is pressed (see Processing)
     public void keyPressed() {
         if (isClientInactive()) {
-            modifyIPEnterBox();
+            onKeyIPEnter();
+        } else {
+            if (isChatActive) {
+                onKeyChatActive();
+            }
         }
     }
 
@@ -237,14 +242,158 @@ public final class ServerClientHeartsClient extends PApplet {
 
     }
 
+    @Override
+    // MODIFIES: this
+    // EFFECTS: code run when mouse button is pressed
+    public void mousePressed() {
+        if (mouseHeldDown) return;
+        mouseHeldDown = true;
+        mouseFirstPressed();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: code run at the instant the mouse button is pressed, but not afterwards
+    private void mouseFirstPressed() {
+        updateChatWindowActivity();
+    }
+
+    @Override
+    // MODIFIES: this
+    // EFFECTS: code run when the mouse is released - detects when the mouse is held down
+    public void mouseReleased() {
+        mouseHeldDown = false;
+    }
+
+    //<editor-fold desc="Chat window">
+    private boolean isChatActive = true;
+
+    private final static float outerChatWindowX = 850;
+    private final static float outerChatWindowY = 0;
+    private final static float outerChatWindowWidth = 250;
+    private final static float outerChatWindowHeight = 600;
+
+    private final static float innerChatWindowWidth = outerChatWindowWidth - (10 * 2);
+    private final static float innerChatWindowHeight = 25;
+    private final static float innerChatWindowX = outerChatWindowX + 10;
+    private final static float innerChatWindowY = outerChatWindowY + outerChatWindowHeight - innerChatWindowHeight - 20;
+
+    private boolean mouseHeldDown = false;
+
+    private String newChatMessage = "";
+    private int chatWindowIndexPosition = 0;
+
+    private int firstVisibleChar = 0;
+    private int lastVisibleChar = 0;
+    private int bottomLineNum = 0;
+
+    // You could write the chat window as a PGraphics object and simply call image(PGraphics, x, y);, but that's big brain
+
+    // MODIFIES: this
+    // EFFECTS: updates whether the chat window is active
+    private void updateChatWindowActivity() {
+        if (isChatActive) {
+            if ((mouseX < outerChatWindowX || mouseX > outerChatWindowX + outerChatWindowWidth) || (mouseY < outerChatWindowY || mouseY > outerChatWindowY + outerChatWindowHeight)) {
+                isChatActive = false;
+            }
+        } else {
+            if (mouseX > innerChatWindowX && mouseX < innerChatWindowX + innerChatWindowWidth && mouseY > innerChatWindowY && mouseY < innerChatWindowHeight + mouseY) {
+                isChatActive = true;
+            }
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: adjusts values of first visible and last visible character
+    private void onKeyAdjustVisibleCharacters() {
+        // bounds check
+        if (chatWindowIndexPosition < firstVisibleChar) {
+            firstVisibleChar = chatWindowIndexPosition;
+            while (lastVisibleChar > newChatMessage.length() || (textWidth(newChatMessage.substring(firstVisibleChar, lastVisibleChar)) > innerChatWindowWidth)) {
+                lastVisibleChar--;
+            }
+        }
+        if (chatWindowIndexPosition > lastVisibleChar) {
+            lastVisibleChar = chatWindowIndexPosition;
+            while (textWidth(newChatMessage.substring(firstVisibleChar, lastVisibleChar)) > innerChatWindowWidth) {
+                firstVisibleChar++;
+            }
+        }
+        if (lastVisibleChar > newChatMessage.length()) {
+            lastVisibleChar = newChatMessage.length();
+            while (textWidth(newChatMessage.substring(firstVisibleChar, lastVisibleChar)) > innerChatWindowWidth) {
+                firstVisibleChar++;
+            }
+        }
+    }
+
+    // MODIFIES; this
+    // EFFECTS: code that is run when user types a key when chat window is active
+    private void onKeyChatActive() {
+        if (key != CODED && key != BACKSPACE && key != RETURN && key != ENTER && key != TAB && key != ESC) {
+            if (newChatMessage.length() < MAX_CHAT_MSG_LEN) {
+                newChatMessage = newChatMessage.substring(0, chatWindowIndexPosition) + key + newChatMessage.substring(chatWindowIndexPosition);
+                chatWindowIndexPosition++;
+                onKeyAdjustVisibleCharacters();
+            }
+        } else if (key == BACKSPACE) {
+            if (newChatMessage.length() != 0 && chatWindowIndexPosition != 0) {
+                newChatMessage = newChatMessage.substring(0, chatWindowIndexPosition - 1) + newChatMessage.substring(chatWindowIndexPosition);
+                chatWindowIndexPosition--;
+                onKeyAdjustVisibleCharacters();
+            }
+        } else if (keyCode == LEFT) {
+            if (chatWindowIndexPosition > 0) {
+                chatWindowIndexPosition--;
+                onKeyAdjustVisibleCharacters();
+            }
+        } else if (keyCode == RIGHT) {
+            if (chatWindowIndexPosition < newChatMessage.length()) {
+                chatWindowIndexPosition++;
+                onKeyAdjustVisibleCharacters();
+            }
+        } else if (key == RETURN || key == ENTER) {
+            if (newChatMessage.length() != 0) {
+                client.sendChatMessage(newChatMessage);
+                newChatMessage = "";
+                chatWindowIndexPosition = 0;
+                lastVisibleChar = 0;
+                firstVisibleChar = 0;
+            }
+        }
+    }
+
     // MODIFIES: this
     // EFFECTS: draws the chat window
     private void drawChatWindow() {
+        noStroke();
         fill(CHAT_GREY);
-        rect(50, height - 200, 200, 150);
-        fill(CHAT_DARK_GREY);
-        rect(60, height - 90, 180, 25);
+        rect(outerChatWindowX, outerChatWindowY, outerChatWindowWidth, outerChatWindowHeight);
+        if (isChatActive) {
+            fill(CHAT_DARK_GREY);
+        } else {
+            fill(CHAT_INACTIVE_GREY);
+        }
+        textSize(innerChatWindowHeight - 4);
+        rect(innerChatWindowX, innerChatWindowY, innerChatWindowWidth, innerChatWindowHeight);
+        textAlign(LEFT, TOP);
+        fill(WHITE);
+        if (newChatMessage.length() != 0)
+            text(newChatMessage.substring(firstVisibleChar, lastVisibleChar), innerChatWindowX + 2, innerChatWindowY);
+        if (frameCount % 30 < 15) drawChatCursor();
     }
+
+    // MODIFIES: this
+    // EFFECTS: draws the chat cursor
+    private void drawChatCursor() {
+        fill(WHITE);
+        noStroke();
+        if (firstVisibleChar == lastVisibleChar) {
+            rect(innerChatWindowX + 2, innerChatWindowY + 2, 2, innerChatWindowHeight - 4);
+        } else {
+            rect(innerChatWindowX + textWidth(newChatMessage.substring(firstVisibleChar, chatWindowIndexPosition)), innerChatWindowY + 2, 2, innerChatWindowHeight - 4);
+        }
+    }
+    //</editor-fold>
 
     @Override
     // MODIFIES: this
@@ -259,7 +408,7 @@ public final class ServerClientHeartsClient extends PApplet {
             if (client.available() > 0) {
                 String clientMessage = client.readString();
                 clientState.processNewMessage(clientMessage);
-                System.out.println("HI" + clientMessage);
+                System.out.println("New Message from Server: " + clientMessage);
 
             }
             if (clientState.getPlayerNum() == 1) {
@@ -277,13 +426,13 @@ public final class ServerClientHeartsClient extends PApplet {
                     text("YOU", 675, 250);
                     break;
                 case 3:
-                    text("YOU", 375, 250);
+                    text("YOU", 375, 350);
                     break;
                 case 4:
                     text("YOU", 105, 250);
                     break;
                 default:
-                    text("Umm...", width / 2, height / 2);
+                    text("Umm...", (float) width / 2, (float) height / 2);
             }
             image(clientState.getDrawnImages()[0], 300, 80);
             image(clientState.getDrawnImages()[3], 30, 250);
