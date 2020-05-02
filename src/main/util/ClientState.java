@@ -2,6 +2,7 @@ package util;
 
 import net.MessageConstants;
 import processing.core.PImage;
+import ui.ServerClientHeartsClient;
 
 import java.util.LinkedList;
 
@@ -76,20 +77,21 @@ public class ClientState {
 
     // MODIFIES: this
     // EFFECTS: handles incoming messages from server
-    public void processNewMessage(String msgFromServer) {
-        handleNewChatMessage(msgFromServer);
+    public void processNewMessage(ServerClientHeartsClient caller, String msgFromServer) {
+        handleNewChatMessage(caller, msgFromServer);
         handlePlayerAdditionMessages(msgFromServer);
     }
 
     // MODIFIES: this
     // EFFECTS: handles player chat message
-    private void handleNewChatMessage(String msg) {
+    private void handleNewChatMessage(ServerClientHeartsClient caller, String msg) {
         if (msg.matches(CHAT_MSG_FORMAT)) {
             ChatMessage cm = new ChatMessage(msg.charAt(4) - '0', msg.substring(6));
             if (chatMessages.size() == MAX_LENGTH) {
                 chatMessages.removeLast();
             }
             chatMessages.addFirst(cm);
+            caller.addNewMessages("Player " + cm.playerNumberSender + ": " + cm.message);
             //CHAT <digit> : message
         }
     }

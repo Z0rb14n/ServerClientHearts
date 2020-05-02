@@ -5,10 +5,14 @@ package ui;
 import net.ConnectionException;
 import net.NewClient;
 import processing.core.PApplet;
+import processing.core.PGraphics;
 import processing.core.PImage;
+import processing.event.MouseEvent;
 import util.ClientState;
 
 import java.awt.*;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 // Represents Client + GUI
@@ -36,7 +40,7 @@ public final class ServerClientHeartsClient extends PApplet {
     private static final int CAT_WIDTH = 150;
     private static final int CAT_HEIGHT = 150;
     private final ServerClientHeartsClient actualClient = this;
-    private final static int MAX_CHAT_MSG_LEN = 128;
+    private final static int MAX_CHAT_MSG_LEN = 128; // arbitrary
     private ClientState clientState;
     private NewClient client;
 
@@ -213,7 +217,7 @@ public final class ServerClientHeartsClient extends PApplet {
     // EFFECTS: gets the CURRENT_PLAYERS message if the client accidentally gets it
     public void catchAccidentalCurrentPlayersMessage(String msg) {
         System.out.println("Accidental CurrentPlayers message found in ID string: " + msg);
-        clientState.processNewMessage(msg);
+        clientState.processNewMessage(this, msg);
     }
 
     //</editor-fold>
@@ -264,6 +268,13 @@ public final class ServerClientHeartsClient extends PApplet {
         mouseHeldDown = false;
     }
 
+    @Override
+    // MODIFIES: this
+    // EFFECTS: code run when the mouse wheel is moved
+    public void mouseWheel(MouseEvent event) {
+        if (isChatActive) scrollChat(event.getCount());
+    }
+
     //<editor-fold desc="Chat window">
     private boolean isChatActive = true;
 
@@ -284,9 +295,96 @@ public final class ServerClientHeartsClient extends PApplet {
 
     private int firstVisibleChar = 0;
     private int lastVisibleChar = 0;
-    private int bottomLineNum = 0;
+    private int YCoordinateOfGraphic = 0;
 
-    // You could write the chat window as a PGraphics object and simply call image(PGraphics, x, y);, but that's big brain
+    private final static int MAX_LINES_CHAT_RECORDED = 200;
+
+    private LinkedList<String> chatMessageRender = new LinkedList<String>();
+    private PGraphics textInChat;
+
+    // MODIFIES: this
+    // EFFECTS: adds additional strings to chat message list
+    public void addNewMessages(String msg) {
+        if (textWidth(msg) < outerChatWindowWidth - 20) {
+            chatMessageRender.addFirst(msg);
+        } else {
+            LinkedList<String> incomingMessage = new LinkedList<String>();
+            int beginIndex = 0;
+            int endIndex = 0;
+            while (endIndex != msg.length()) {
+                while (textWidth(msg.substring(beginIndex, endIndex)) < outerChatWindowWidth - 20) {
+                    endIndex++;
+                    if (endIndex == msg.length()) break;
+                }
+                if (textWidth(msg.substring(beginIndex, endIndex)) > outerChatWindowWidth - 20)
+                    incomingMessage.addFirst(msg.substring(beginIndex, endIndex - 1));
+                else incomingMessage.addFirst(msg.substring(beginIndex));
+                beginIndex = endIndex - 1;
+            }
+            chatMessageRender.addAll(0, incomingMessage);
+        }
+        while (chatMessageRender.size() > MAX_LINES_CHAT_RECORDED) {
+            chatMessageRender.removeLast();
+        }
+        recreatePGraphicsChat();
+    }
+
+    private int minHeight = Math.round(innerChatWindowY - outerChatWindowY - 20);
+    private int heightOffset = 30;
+
+    private boolean isAtBottom = false;
+
+    // MODIFIES: this
+    // EFFECTS: redraws the pgraphics for the internal chat window
+    private void recreatePGraphicsChat() {
+        final float textHeight = textAscent() - textDescent();
+        textInChat = createGraphics(Math.round(outerChatWindowWidth), Math.max(minHeight, Math.round(textHeight * chatMessageRender.size()) + heightOffset));
+        Iterator<String> iterator = chatMessageRender.descendingIterator();
+        textInChat.beginDraw();
+        textInChat.fill(BLACK);
+        textInChat.textSize(15);
+        textInChat.textAlign(LEFT, TOP);
+        for (int i = 0; iterator.hasNext(); i++) {
+            String lol = iterator.next();
+            textInChat.text(lol, 10, (i * textHeight));
+        }
+        textInChat.endDraw();
+        if (isAtBottom) scrollChatToBottom();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: scrolls the chat
+    private void scrollChat(float amt) {
+        YCoordinateOfGraphic += amt;
+        if (YCoordinateOfGraphic < 0) {
+            YCoordinateOfGraphic = 0;
+            isAtBottom = false;
+        } else {
+            if (textInChat.height == minHeight) {
+                YCoordinateOfGraphic = 0;
+                isAtBottom = false;
+            } else if (YCoordinateOfGraphic + minHeight + heightOffset > textInChat.height) {
+                YCoordinateOfGraphic = Math.round(textInChat.height - minHeight - heightOffset);
+                isAtBottom = true;
+            } else {
+                isAtBottom = false;
+            }
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: brings the chat window to the bottom
+    private void scrollChatToBottom() {
+        isAtBottom = true;
+        if (textInChat == null) {
+            YCoordinateOfGraphic = 0;
+            return;
+        }
+        if (textInChat.height == minHeight) YCoordinateOfGraphic = 0;
+        else {
+            YCoordinateOfGraphic = Math.round(textInChat.height - minHeight - heightOffset);
+        }
+    }
 
     // MODIFIES: this
     // EFFECTS: updates whether the chat window is active
@@ -294,6 +392,7 @@ public final class ServerClientHeartsClient extends PApplet {
         if (isChatActive) {
             if ((mouseX < outerChatWindowX || mouseX > outerChatWindowX + outerChatWindowWidth) || (mouseY < outerChatWindowY || mouseY > outerChatWindowY + outerChatWindowHeight)) {
                 isChatActive = false;
+                scrollChatToBottom();
             }
         } else {
             if (mouseX > innerChatWindowX && mouseX < innerChatWindowX + innerChatWindowWidth && mouseY > innerChatWindowY && mouseY < innerChatWindowHeight + mouseY) {
@@ -358,6 +457,7 @@ public final class ServerClientHeartsClient extends PApplet {
                 chatWindowIndexPosition = 0;
                 lastVisibleChar = 0;
                 firstVisibleChar = 0;
+                scrollChatToBottom();
             }
         }
     }
@@ -380,6 +480,8 @@ public final class ServerClientHeartsClient extends PApplet {
         if (newChatMessage.length() != 0)
             text(newChatMessage.substring(firstVisibleChar, lastVisibleChar), innerChatWindowX + 2, innerChatWindowY);
         if (frameCount % 30 < 15) drawChatCursor();
+        if (textInChat != null)
+            image(textInChat.get(0, YCoordinateOfGraphic, Math.round(outerChatWindowWidth), minHeight + heightOffset), outerChatWindowX, outerChatWindowY);
     }
 
     // MODIFIES: this
@@ -407,16 +509,12 @@ public final class ServerClientHeartsClient extends PApplet {
             drawChatWindow();
             if (client.available() > 0) {
                 String clientMessage = client.readString();
-                clientState.processNewMessage(clientMessage);
+                clientState.processNewMessage(this, clientMessage);
                 System.out.println("New Message from Server: " + clientMessage);
 
             }
-            if (clientState.getPlayerNum() == 1) {
-                fill(RED);
-                textAlign(CENTER);
-                text("YOU", 375, 80);
-            }
             fill(RED);
+            textSize(20);
             textAlign(CENTER);
             switch (clientState.getPlayerNum()) {
                 case 1:
