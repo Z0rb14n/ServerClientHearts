@@ -52,5 +52,9 @@ public final class MessageConstants {
     public final static char DIAMOND_UNICODE_OUTLINE = '♢';
     public final static char HEART_UNICODE = '♥';
     public final static char HEART_UNICODE_OUTLINE = '♡';
-    public final static char NEGATIVE_ONE = (char) -1;
+    public final static char COMMAND_SEP = '\0';
+    // TODO : COMMAND SEPARATION
+    // TWO METHODS:
+    //       -    send the length of the command
+    //      -     add a command separator
 }

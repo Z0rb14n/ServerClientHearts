@@ -2,8 +2,6 @@ import org.junit.jupiter.api.Test;
 import util.Card;
 import util.Suit;
 
-import java.util.Scanner;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CardTest {
@@ -156,10 +154,6 @@ public class CardTest {
 
     @Test
     public void lol() {
-        String input = "CARDS:3C,4C,5C".substring(6);
-        Scanner scanner = new Scanner(input).useDelimiter(",");
-        while (scanner.hasNext()) {
-            System.out.println(scanner.next());
-        }
+        System.out.print('\0');
     }
 }
