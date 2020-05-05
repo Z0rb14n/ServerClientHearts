@@ -2,6 +2,8 @@ package ui;
 
 // TODO: DO THIS FIRST BEFORE WORKING ON CLIENT
 
+// TODO: Use ClientToServerMessages and ServerToClient messages
+
 import net.MessagePair;
 import net.NewServer;
 import processing.core.PApplet;

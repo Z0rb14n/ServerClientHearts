@@ -7,6 +7,7 @@ import util.Card;
 import util.Deck;
 import util.Suit;
 
+import java.io.*;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
@@ -179,6 +180,26 @@ public class NewServer extends Server {
     // EFFECTS: kicks the client
     public void kick(Client c) {
         kick(c, KICK_DEFAULT_MSG);
+    }
+
+    public void write(ServerToClientMessage msg) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(msg);
+            oos.flush();
+            byte[] bytes = bos.toByteArray();
+            write(bytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public ClientToServerMessage byteToClientToServerMessage(byte[] bytes) {
+        ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+        try (ObjectInputStream in = new ObjectInputStream(bis)) {
+            return (ClientToServerMessage) in.readObject();
+        } catch (IOException | ClassNotFoundException | ClassCastException e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     // MODIFIES: this

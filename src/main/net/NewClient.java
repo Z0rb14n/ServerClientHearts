@@ -3,6 +3,8 @@ package net;
 import processing.net.Client;
 import ui.ServerClientHeartsClient;
 
+import java.io.*;
+
 // Represents the game client
 public final class NewClient extends Client {
     public static final String CLIENT_ID_MSG = MessageConstants.CLIENT_ID_MESSAGE;
@@ -56,6 +58,27 @@ public final class NewClient extends Client {
         }
         playerNum = Character.digit(idString.charAt(1), 10);
         System.out.println("Client ID is " + clientID + ", player num is " + playerNum);
+    }
+
+    public ServerToClientMessage readServerToClientMessage() {
+        byte[] byteArr = readBytes();
+        ByteArrayInputStream bis = new ByteArrayInputStream(byteArr);
+        try (ObjectInputStream in = new ObjectInputStream(bis)) {
+            return (ServerToClientMessage) in.readObject();
+        } catch (IOException | ClassNotFoundException | ClassCastException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public void write(ClientToServerMessage msg) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(msg);
+            out.flush();
+            byte[] yourBytes = bos.toByteArray();
+            write(yourBytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     // EFFECTS: gets current client ID
