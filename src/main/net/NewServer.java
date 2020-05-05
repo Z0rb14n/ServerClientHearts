@@ -18,6 +18,7 @@ public class NewServer extends Server {
     private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
     private final ChatMessageHandler cmh = new ChatMessageHandler();
     private ServerClientHearts sch;
+    public static final int MAX_MSG_LENGTH = 0x0FFFFFFF;
     public static final int PORT = 5204;
     public final String[] IDS = new String[4];
 
@@ -187,8 +188,31 @@ public class NewServer extends Server {
             oos.writeObject(msg);
             oos.flush();
             byte[] bytes = bos.toByteArray();
+            if (bytes.length > MAX_MSG_LENGTH) throw new RuntimeException("AAAAAAAAAAAAAAAAAAA");
+            write(bytes.length);
             write(bytes);
         } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    // EFFECTS: reads a ClientToServer message from a client
+    //    NOTE: THIS WILL COMPLETELY FREEZE EXECUTION UNTIL THIS THING RECEIVES THE WHOLE MESSAGE
+    public ClientToServerMessage readClientToServerMessage(Client c) {
+        if (c.available() <= 0) throw new IllegalArgumentException("Client has not written to server.");
+        int length = c.read();
+        if (length < 0) throw new RuntimeException("NEGATIVE LENGTH OF MESSAGE?");
+        byte[] msgBuffer = new byte[length];
+        int bytesRead = 0;
+        while (bytesRead < msgBuffer.length) {
+            byte[] arr = c.readBytes(msgBuffer.length - bytesRead);
+            System.arraycopy(arr, 0, msgBuffer, bytesRead, arr.length);
+            bytesRead += arr.length;
+        }
+        ByteArrayInputStream bis = new ByteArrayInputStream(msgBuffer);
+        try (ObjectInputStream in = new ObjectInputStream(bis)) {
+            return (ClientToServerMessage) in.readObject();
+        } catch (IOException | ClassNotFoundException | ClassCastException e) {
             throw new RuntimeException(e.getMessage());
         }
     }

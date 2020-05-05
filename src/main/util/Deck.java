@@ -9,13 +9,11 @@ import java.util.Random;
 public class Deck implements Iterable<Card>, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private SuitOrder order;
-    private final ArrayList<Card> cards;
+    private SuitOrder order = new SuitOrder();
+    private final ArrayList<Card> cards = new ArrayList<>(13);
 
     // EFFECTS: Initializes the deck of cards with default suit order
     public Deck() {
-        order = new SuitOrder();
-        cards = new ArrayList<>(13);
     }
 
     // EFFECTS: gets the suit order of the deck
@@ -26,6 +24,7 @@ public class Deck implements Iterable<Card>, Serializable {
     // MODIFIES: this
     // EFFECTS: sets the suit order to given suit order
     public void setOrder(SuitOrder so) {
+        if (so == null) throw new IllegalArgumentException("Cannot set to null.");
         order = so;
     }
 
@@ -63,7 +62,7 @@ public class Deck implements Iterable<Card>, Serializable {
     // EFFECTS: adds a card to the deck
     //          does not make a complete copy of the added card
     public void addCard(Card a) {
-        cards.add(a);
+        cards.add(a.copy());
     }
 
     // MODIFIES: this

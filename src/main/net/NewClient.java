@@ -60,9 +60,25 @@ public final class NewClient extends Client {
         System.out.println("Client ID is " + clientID + ", player num is " + playerNum);
     }
 
+    private boolean msgFinished = true;
+
+    // EFFECTS: returns the message sent by the server
+    //    NOTE: THIS WILL COMPLETELY FREEZE EXECUTION UNTIL THE MESSAGE IS FULLY SENT.
     public ServerToClientMessage readServerToClientMessage() {
-        byte[] byteArr = readBytes();
-        ByteArrayInputStream bis = new ByteArrayInputStream(byteArr);
+        if (!msgFinished)
+            throw new RuntimeException("AAAA UR INTERNET IS SLOW AAAAA - tried to read a new message when one was already being read");
+        msgFinished = false;
+        int bytesRead = 0;
+        int arrLength = read();
+        if (arrLength < 0) throw new RuntimeException("NEGATIVE SIZE OF MESSAGE");
+        byte[] msgBuffer = new byte[arrLength];
+        while (bytesRead < msgBuffer.length) {
+            byte[] arr = readBytes(msgBuffer.length - bytesRead);
+            System.arraycopy(arr, 0, msgBuffer, bytesRead, arr.length);
+            bytesRead += arr.length;
+        }
+        msgFinished = true;
+        ByteArrayInputStream bis = new ByteArrayInputStream(msgBuffer);
         try (ObjectInputStream in = new ObjectInputStream(bis)) {
             return (ServerToClientMessage) in.readObject();
         } catch (IOException | ClassNotFoundException | ClassCastException e) {
