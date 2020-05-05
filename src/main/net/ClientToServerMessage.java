@@ -15,4 +15,11 @@ public class ClientToServerMessage implements Serializable {
     Deck cards = new Deck(); // send first three cards
 
     Card card; // future cards played
+
+    private ClientToServerMessage() {
+    }
+
+    public static ClientToServerMessage createNewChatMessage(String msgContents) {
+        return null;
+    }
 }
