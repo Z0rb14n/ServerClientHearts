@@ -1,12 +1,15 @@
 package util;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
 
 import static util.Suit.*;
 
 // Represents an ordering of cards
-public class SuitOrder implements Comparator<Card> {
+public class SuitOrder implements Comparator<Card>, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private boolean sortByValue;
     public static final Suit[] DEFAULT = new Suit[]{Heart, Diamond, Spade, Club};
     //{top,secondTop,secondBottom,bottom};

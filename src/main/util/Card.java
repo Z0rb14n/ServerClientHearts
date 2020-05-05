@@ -1,9 +1,13 @@
 package util;
 
+import java.io.Serializable;
+
 import static util.Face.*;
 
 // Represents a singular card
-public final class Card {
+public final class Card implements Serializable {
+    private static final long serialVersionUID = 2L;
+
     private Suit suit;
     private int number; // -1 if faceCard
     private Face face;

@@ -1,7 +1,6 @@
 package ui;
 
 // TODO: DO THIS FIRST BEFORE WORKING ON CLIENT
-// TODO: MESSAGE SEPARATORS
 
 import net.MessagePair;
 import processing.core.PApplet;

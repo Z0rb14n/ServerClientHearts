@@ -1,11 +1,14 @@
 package util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
 
 // Represents a deck of cards
-public class Deck implements Iterable<Card> {
+public class Deck implements Iterable<Card>, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private SuitOrder order;
     private final ArrayList<Card> cards;
 
@@ -267,6 +270,21 @@ public class Deck implements Iterable<Card> {
             deck.addCard(a);
         }
         return deck;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Deck)) return false;
+        Deck deck = (Deck) o;
+        return deck.cards.equals(this.cards) && this.order.equals(deck.order);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+        result = 31 * result + order.hashCode();
+        result = 31 * result + cards.hashCode();
+        return result;
     }
 
     @Override
