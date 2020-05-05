@@ -1,7 +1,6 @@
 package net;
 
 import processing.net.Client;
-import ui.ServerClientHearts;
 import ui.ServerClientHeartsClient;
 
 // Represents the game client
@@ -11,7 +10,7 @@ public final class NewClient extends Client {
     public static final String ERR_INVALID_MSG = MessageConstants.ERR_INVALID_MSG;
     public static final String ERR_KICKED = MessageConstants.KICK_DEFAULT_MSG;
     private static final String ERROR = MessageConstants.ERROR;
-    private static final int PORT = ServerClientHearts.PORT;
+    private static final int PORT = NewServer.PORT;
     public boolean actuallyInitialized;
     private ServerClientHeartsClient caller;
     private String clientID;

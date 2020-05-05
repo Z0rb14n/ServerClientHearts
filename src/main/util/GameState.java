@@ -70,6 +70,10 @@ public class GameState {
         temp.randomlyDistribute(hands[0], hands[1], hands[2], hands[3]);
     }
 
+    public Deck[] getHandsInOrder() {
+        return hands;
+    }
+
     //<editor-fold desc="Getters for individual hands">
     // EFFECTS: gets player one's hand
     public Deck getPlayerOneHand() {
@@ -133,14 +137,14 @@ public class GameState {
     // MODIFIES: this, server
     // EFFECTS: receives the card played and updates game state, kicks player if invalid
     public void playCard(int playerNum, ServerClientHearts server, Card a, Card... c) {
-        if (isInvalidPlay(a, playerNum)) server.kickInvalid(playerNum);
+        if (isInvalidPlay(a, playerNum)) server.requestKickInvalidMessage(playerNum);
         for (Card card1 : c) {
-            if (isInvalidPlay(card1, playerNum)) server.kickInvalid(playerNum);
+            if (isInvalidPlay(card1, playerNum)) server.requestKickInvalidMessage(playerNum);
         }
         if (!allCardsPassed) {
-            if (c.length != 2) server.kickInvalid(playerNum); // you must be passing exactly three cards
+            if (c.length != 2) server.requestKickInvalidMessage(playerNum); // you must be passing exactly three cards
             else if (!passingHands[playerNum - 1].isEmpty())
-                server.kickInvalid(playerNum); // you can't pass cards twice
+                server.requestKickInvalidMessage(playerNum); // you can't pass cards twice
             else {
                 Deck newDeck = new Deck();
                 newDeck.addCard(a);
@@ -149,12 +153,15 @@ public class GameState {
                 checkPassCards(server);
             }
         } else {
-            if (c.length != 0) server.kickInvalid(playerNum); // you should not be playing more than one card
+            if (c.length != 0)
+                server.requestKickInvalidMessage(playerNum); // you should not be playing more than one card
             else if (!matchesCurrentSuit(a, playerNum))
-                server.kickInvalid(playerNum); // can't play clubs if suit is hearts, etc.
-            else if (hasPlayedCard(playerNum)) server.kickInvalid(playerNum); // you can't play twice
-            else if (threeOfClubsNeeded && !a.is3C()) server.kickInvalid(playerNum); // you have to play 3C if starting
-            else if (isPlayingOutOfOrder(playerNum)) server.kickInvalid(playerNum); // can't play out of order
+                server.requestKickInvalidMessage(playerNum); // can't play clubs if suit is hearts, etc.
+            else if (hasPlayedCard(playerNum)) server.requestKickInvalidMessage(playerNum); // you can't play twice
+            else if (threeOfClubsNeeded && !a.is3C())
+                server.requestKickInvalidMessage(playerNum); // you have to play 3C if starting
+            else if (isPlayingOutOfOrder(playerNum))
+                server.requestKickInvalidMessage(playerNum); // can't play out of order
             else {
                 center.addCard(a);
                 if (threeOfClubsNeeded) threeOfClubsNeeded = false;
