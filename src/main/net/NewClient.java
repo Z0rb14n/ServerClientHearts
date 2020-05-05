@@ -69,7 +69,7 @@ public final class NewClient extends Client {
             throw new RuntimeException("AAAA UR INTERNET IS SLOW AAAAA - tried to read a new message when one was already being read");
         msgFinished = false;
         int bytesRead = 0;
-        int arrLength = read();
+        int arrLength = read(); //TODO -- WOULD NOT WORK - MAX LENGTH IS 255
         if (arrLength < 0) throw new RuntimeException("NEGATIVE SIZE OF MESSAGE");
         byte[] msgBuffer = new byte[arrLength];
         while (bytesRead < msgBuffer.length) {
@@ -91,6 +91,7 @@ public final class NewClient extends Client {
             out.writeObject(msg);
             out.flush();
             byte[] yourBytes = bos.toByteArray();
+            write(yourBytes.length); //TODO -- WOULD NOT WORK - MAX LENGTH IS 255
             write(yourBytes);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());

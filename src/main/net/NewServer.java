@@ -189,7 +189,7 @@ public class NewServer extends Server {
             oos.flush();
             byte[] bytes = bos.toByteArray();
             if (bytes.length > MAX_MSG_LENGTH) throw new RuntimeException("AAAAAAAAAAAAAAAAAAA");
-            write(bytes.length);
+            write(bytes.length); //TODO -- WOULD NOT WORK - MAX LENGTH IS 255
             write(bytes);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
@@ -200,7 +200,7 @@ public class NewServer extends Server {
     //    NOTE: THIS WILL COMPLETELY FREEZE EXECUTION UNTIL THIS THING RECEIVES THE WHOLE MESSAGE
     public ClientToServerMessage readClientToServerMessage(Client c) {
         if (c.available() <= 0) throw new IllegalArgumentException("Client has not written to server.");
-        int length = c.read();
+        int length = c.read(); //TODO -- WOULD NOT WORK - MAX LENGTH IS 255
         if (length < 0) throw new RuntimeException("NEGATIVE LENGTH OF MESSAGE?");
         byte[] msgBuffer = new byte[length];
         int bytesRead = 0;
