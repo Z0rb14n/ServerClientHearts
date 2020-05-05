@@ -61,14 +61,18 @@ public class Deck implements Iterable<Card>, Serializable {
 
     // MODIFIES: this
     // EFFECTS: adds a card to the deck
+    //          does not make a complete copy of the added card
     public void addCard(Card a) {
         cards.add(a);
     }
 
     // MODIFIES: this
     // EFFECTS: adds the contents of the other deck to this deck
+    //          makes a complete copy of all the cards
     public void addAll(Deck a) {
-        cards.addAll(a.cards);
+        for (Card c : a.cards) {
+            cards.add(c.copy());
+        }
     }
 
     // MODIFIES: this
@@ -263,12 +267,13 @@ public class Deck implements Iterable<Card>, Serializable {
         return index;
     }
 
-    // EFFECTS: returns a copy of the deck
+    // EFFECTS: returns a copy of the deck (i.e. all internal components are new copies)
     public Deck copy() {
         Deck deck = new Deck();
         for (Card a : cards) {
-            deck.addCard(a);
+            deck.addCard(a.copy());
         }
+        deck.setOrder(this.order.copy());
         return deck;
     }
 
