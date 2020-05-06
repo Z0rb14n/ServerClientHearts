@@ -8,6 +8,7 @@ import util.Deck;
 import util.Suit;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
@@ -189,7 +190,7 @@ public class NewServer extends Server {
             oos.flush();
             byte[] bytes = bos.toByteArray();
             if (bytes.length > MAX_MSG_LENGTH) throw new RuntimeException("AAAAAAAAAAAAAAAAAAA");
-            write(bytes.length); //TODO -- WOULD NOT WORK - MAX LENGTH IS 255
+            writeInt(bytes.length);
             write(bytes);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
@@ -200,7 +201,13 @@ public class NewServer extends Server {
     //    NOTE: THIS WILL COMPLETELY FREEZE EXECUTION UNTIL THIS THING RECEIVES THE WHOLE MESSAGE
     public ClientToServerMessage readClientToServerMessage(Client c) {
         if (c.available() <= 0) throw new IllegalArgumentException("Client has not written to server.");
-        int length = c.read(); //TODO -- WOULD NOT WORK - MAX LENGTH IS 255
+        while (c.available() < 4) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ignored) {
+            }
+        }
+        int length = readInt(c);
         if (length < 0) throw new RuntimeException("NEGATIVE LENGTH OF MESSAGE?");
         byte[] msgBuffer = new byte[length];
         int bytesRead = 0;
@@ -215,6 +222,16 @@ public class NewServer extends Server {
         } catch (IOException | ClassNotFoundException | ClassCastException e) {
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    private int readInt(Client c) {
+        byte[] bytes = c.readBytes(4);
+        return ByteBuffer.wrap(bytes).getInt();
+    }
+
+    private void writeInt(int a) {
+        byte[] bytes = ByteBuffer.allocate(4).putInt(a).array();
+        write(bytes);
     }
 
     public ClientToServerMessage byteToClientToServerMessage(byte[] bytes) {

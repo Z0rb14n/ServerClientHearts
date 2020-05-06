@@ -4,6 +4,7 @@ import processing.net.Client;
 import ui.ServerClientHeartsClient;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 
 // Represents the game client
 public final class NewClient extends Client {
@@ -69,7 +70,13 @@ public final class NewClient extends Client {
             throw new RuntimeException("AAAA UR INTERNET IS SLOW AAAAA - tried to read a new message when one was already being read");
         msgFinished = false;
         int bytesRead = 0;
-        int arrLength = read(); //TODO -- WOULD NOT WORK - MAX LENGTH IS 255
+        while (available() < 4) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ignored) {
+            }
+        }
+        int arrLength = readInt();
         if (arrLength < 0) throw new RuntimeException("NEGATIVE SIZE OF MESSAGE");
         byte[] msgBuffer = new byte[arrLength];
         while (bytesRead < msgBuffer.length) {
@@ -91,11 +98,21 @@ public final class NewClient extends Client {
             out.writeObject(msg);
             out.flush();
             byte[] yourBytes = bos.toByteArray();
-            write(yourBytes.length); //TODO -- WOULD NOT WORK - MAX LENGTH IS 255
+            writeInt(yourBytes.length);
             write(yourBytes);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
+    }
+
+    private int readInt() {
+        byte[] bytes = readBytes(4);
+        return ByteBuffer.wrap(bytes).getInt();
+    }
+
+    private void writeInt(int a) {
+        byte[] bytes = ByteBuffer.allocate(4).putInt(a).array();
+        write(bytes);
     }
 
     // EFFECTS: gets current client ID

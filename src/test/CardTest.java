@@ -2,6 +2,8 @@ import org.junit.jupiter.api.Test;
 import util.Card;
 import util.Suit;
 
+import java.nio.ByteBuffer;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CardTest {
@@ -155,5 +157,9 @@ public class CardTest {
     @Test
     public void lol() {
         System.out.print('\0');
+        final int desiredInt = 512;
+        byte[] lol = ByteBuffer.allocate(4).putInt(desiredInt).array();
+        for (byte b : lol) System.out.print(b);
+        assertEquals(ByteBuffer.wrap(lol).getInt(), desiredInt);
     }
 }
