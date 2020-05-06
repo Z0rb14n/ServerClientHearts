@@ -4,6 +4,7 @@ package ui;
 
 // TODO: Use ClientToServerMessages and ServerToClient messages
 
+import net.ClientToServerMessage;
 import net.MessagePair;
 import net.NewServer;
 import processing.core.PApplet;
@@ -26,6 +27,7 @@ public final class ServerClientHearts extends PApplet {
     private final static int FPS = 30;
     private GameState gameState;
     private final ArrayDeque<MessagePair> clientMessages = new ArrayDeque<>();
+    private final ArrayDeque<ClientToServerMessage> clientServerMessages = new ArrayDeque<>();
 
     public static void main(String[] args) {
         ServerClientHearts sch = new ServerClientHearts();
@@ -66,6 +68,10 @@ public final class ServerClientHearts extends PApplet {
 
     public void addNewMessage(MessagePair mp) {
         clientMessages.add(mp);
+    }
+
+    public void addNewMessage(ClientToServerMessage scm) {
+        clientServerMessages.add(scm);
     }
 
     // EFFECTS: determines whether there is a new non-chat message to process

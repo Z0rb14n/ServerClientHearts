@@ -36,6 +36,12 @@ public final class ClientToServerMessage implements Serializable {
         return isChatMessage;
     }
 
+    // EFFECTS: returns the chat message;
+    public String getChatMessage() {
+        if (!isChatMessage) throw new IllegalArgumentException();
+        return chatMessage;
+    }
+
     private boolean isFirstThreeCards = false;
     private Deck cards = new Deck(); // send first three cards
 

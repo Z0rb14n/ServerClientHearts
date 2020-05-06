@@ -173,6 +173,14 @@ public class NewServer extends Server {
     }
 
     // MODIFIES: this
+    // EFFECTS: handles this chat message
+    private void handleChatMessage(ClientToServerMessage csm, Client sender) {
+        if (!csm.isChatMessage()) throw new IllegalArgumentException("Called handleChatMessage on non-chat message");
+        ServerToClientMessage scm = ServerToClientMessage.createChatMessage(csm.getChatMessage(), getClientNumber(sender));
+        write(scm);
+    }
+
+    // MODIFIES: this
     // EFFECTS: kicks the client of given number (1-4)
     public void kickInvalid(int playerNum) {
         kick(clients.get(IDS[playerNum - 1]), ERR_INVALID_MSG);
@@ -219,7 +227,10 @@ public class NewServer extends Server {
         ByteArrayInputStream bis = new ByteArrayInputStream(msgBuffer);
         try (ObjectInputStream in = new ObjectInputStream(bis)) {
             return (ClientToServerMessage) in.readObject();
-        } catch (IOException | ClassNotFoundException | ClassCastException e) {
+        } catch (ClassNotFoundException | InvalidClassException | ClassCastException e) {
+            kickInvalid(getClientNumber(c));
+            return null;
+        } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
     }
@@ -232,15 +243,6 @@ public class NewServer extends Server {
     private void writeInt(int a) {
         byte[] bytes = ByteBuffer.allocate(4).putInt(a).array();
         write(bytes);
-    }
-
-    public ClientToServerMessage byteToClientToServerMessage(byte[] bytes) {
-        ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-        try (ObjectInputStream in = new ObjectInputStream(bis)) {
-            return (ClientToServerMessage) in.readObject();
-        } catch (IOException | ClassNotFoundException | ClassCastException e) {
-            throw new RuntimeException(e.getMessage());
-        }
     }
 
     // MODIFIES: this
@@ -297,7 +299,7 @@ public class NewServer extends Server {
     }
 
     // EFFECTS: returns whether a message is a chat message
-    public static boolean isChatMessage(String msg) {
+    private static boolean isChatMessage(String msg) {
         return msg.matches(CHAT_MSG);
     }
 
@@ -318,6 +320,18 @@ public class NewServer extends Server {
             while (!stop) {
                 Client c = available();
                 while (c != null) {
+                    /*
+                    ClientToServerMessage csm = readClientToServerMessage(c);
+                    if (csm == null) continue;
+                    if (!csm.isValidMessage()) {
+                        kickInvalid(getClientNumber(c));
+                        continue;
+                    } else if (csm.isChatMessage()) {
+                        handleChatMessage(csm,c);
+                    } else {
+                        sch.addNewMessage(csm);
+                    }
+                    */
                     String sent = c.readString();
                     System.out.println("Client number " + getClientNumber(c) + " has sent " + sent);
                     boolean result = checkValidMessage(sent, c);
