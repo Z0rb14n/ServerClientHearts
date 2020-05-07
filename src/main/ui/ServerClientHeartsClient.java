@@ -32,11 +32,11 @@ public final class ServerClientHeartsClient extends PApplet {
     public static PImage CAT_FACE_RIGHT;
     public static PImage CAT_BACK_ONLY;
     public static PImage CAT_OUTLINE;
-    public final static String DEFAULT_CAT_FILE = "./data/Symmetrical Miaow.png";
-    public final static String CAT_LEFT_FILE = "./data/Symmetrical Miaow Face Left.png";
-    public final static String CAT_RIGHT_FILE = "./data/Symmetrical Miaow Face Right.png";
-    public final static String CAT_BACK_FILE = "./data/Symmetrical Miaow Background.png";
-    public final static String CAT_OUTLINE_FILE = "./data/Symmetrical Miaow Outline.png";
+    private final static String DEFAULT_CAT_FILE = "./data/Symmetrical Miaow.png";
+    private final static String CAT_LEFT_FILE = "./data/Symmetrical Miaow Face Left.png";
+    private final static String CAT_RIGHT_FILE = "./data/Symmetrical Miaow Face Right.png";
+    private final static String CAT_BACK_FILE = "./data/Symmetrical Miaow Background.png";
+    private final static String CAT_OUTLINE_FILE = "./data/Symmetrical Miaow Outline.png";
     private final int CHAT_GREY = color(150);
     private final int CHAT_INACTIVE_GREY = color(120);
     private final int CHAT_DARK_GREY = color(50);
@@ -79,12 +79,12 @@ public final class ServerClientHeartsClient extends PApplet {
 
     // MODIFIES: this
     // EFFECTS: initializes the cat images
-    public void initCats() {
-        CAT_DEFAULT = loadImage("./data/Symmetrical Miaow.png");
-        CAT_FACE_LEFT = loadImage("./data/Symmetrical Miaow Face Left.png");
-        CAT_FACE_RIGHT = loadImage("./data/Symmetrical Miaow Face Right.png");
-        CAT_BACK_ONLY = loadImage("./data/Symmetrical Miaow Background.png");
-        CAT_OUTLINE = loadImage("./data/Symmetrical Miaow Outline.png");
+    private void initCats() {
+        CAT_DEFAULT = loadImage(DEFAULT_CAT_FILE);
+        CAT_FACE_LEFT = loadImage(CAT_LEFT_FILE);
+        CAT_FACE_RIGHT = loadImage(CAT_RIGHT_FILE);
+        CAT_BACK_ONLY = loadImage(CAT_BACK_FILE);
+        CAT_OUTLINE = loadImage(CAT_OUTLINE_FILE);
         CAT_DEFAULT.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_FACE_LEFT.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_FACE_RIGHT.resize(CAT_WIDTH, CAT_HEIGHT);
@@ -110,7 +110,7 @@ public final class ServerClientHeartsClient extends PApplet {
 
     // MODIFIES: this
     // EFFECTS: attempts to load the client
-    public void tryLoadClient() {
+    private void tryLoadClient() {
         errorDisplayed = "";
         boolean failed = false;
         try {
@@ -303,7 +303,7 @@ public final class ServerClientHeartsClient extends PApplet {
 
     private final static int MAX_LINES_CHAT_RECORDED = 200;
 
-    private LinkedList<String> chatMessageRender = new LinkedList<String>();
+    private LinkedList<String> chatMessageRender = new LinkedList<>();
     private PGraphics textInChat;
 
     // MODIFIES: this
@@ -312,7 +312,7 @@ public final class ServerClientHeartsClient extends PApplet {
         if (textWidth(msg) < outerChatWindowWidth - 20) {
             chatMessageRender.addFirst(msg);
         } else {
-            LinkedList<String> incomingMessage = new LinkedList<String>();
+            LinkedList<String> incomingMessage = new LinkedList<>();
             int beginIndex = 0;
             int endIndex = 0;
             while (endIndex != msg.length()) {
