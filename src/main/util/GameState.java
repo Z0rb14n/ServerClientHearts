@@ -137,18 +137,34 @@ public class GameState {
     // MODIFIES: this, server
     // EFFECTS: receives the card played and updates game state, kicks player if invalid
     public void playCard(int playerNum, ServerClientHearts server, Card a, Card... c) {
-        if (isInvalidPlay(a, playerNum)) server.requestKickInvalidMessage(playerNum);
+        if (isInvalidPlay(a, playerNum)) {
+            server.requestKickInvalidMessage(playerNum);
+            return;
+        }
+        if (!isGameStarted) {
+            server.requestKickInvalidMessage(playerNum);
+            return;
+        }
         for (Card card1 : c) {
-            if (isInvalidPlay(card1, playerNum)) server.requestKickInvalidMessage(playerNum);
+            if (isInvalidPlay(card1, playerNum)) {
+                server.requestKickInvalidMessage(playerNum);
+                return;
+            }
         }
         if (!allCardsPassed) {
-            if (c.length != 2) server.requestKickInvalidMessage(playerNum); // you must be passing exactly three cards
-            else if (!passingHands[playerNum - 1].isEmpty())
+            if (c.length != 2) {
+                server.requestKickInvalidMessage(playerNum); // you must be passing exactly three cards
+                return;
+            } else if (!passingHands[playerNum - 1].isEmpty()) {
                 server.requestKickInvalidMessage(playerNum); // you can't pass cards twice
-            else {
+                return;
+            } else {
                 Deck newDeck = new Deck();
                 newDeck.addCard(a);
-                for (Card card : c) newDeck.addCard(card);
+                for (Card card : c) {
+                    newDeck.addCard(card);
+                    hands[playerNum - 1].removeCard(card);
+                }
                 passingHands[playerNum - 1] = newDeck;
                 checkPassCards(server);
             }

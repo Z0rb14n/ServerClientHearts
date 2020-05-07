@@ -1,6 +1,10 @@
 package net;
 
 public final class MessageConstants {
+    public final static boolean USE_FANCY_SERIALIZATION = false;
+
+    public static final int MAX_LENGTH = 0x0FFFFFFF;
+
     //<editor-fold desc="MESSAGE HEADERS">
     public final static String ERROR = "ERR: ";
     public final static String NEW_PLAYER_HEADER = "NEW PLAYER:";

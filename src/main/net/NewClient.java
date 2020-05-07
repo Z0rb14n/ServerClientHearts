@@ -6,6 +6,10 @@ import ui.ServerClientHeartsClient;
 import java.io.*;
 import java.nio.ByteBuffer;
 
+// TO UPDATE THE CODE TO USE ClientToServerMessage...
+// modify getClientIDFromServer to use commented out code and delete the previous code
+// modify sendChatMessage to use commented out code and delete previous code
+
 // Represents the game client
 public final class NewClient extends Client {
     public static final String CLIENT_ID_MSG = MessageConstants.CLIENT_ID_MESSAGE;
@@ -23,12 +27,17 @@ public final class NewClient extends Client {
     public NewClient(ServerClientHeartsClient pa, String ip) {
         super(pa, ip, PORT);
         caller = pa;
-        if (active()) getClientIDFromServer();
-        else {
+        if (!active()) {
             stop();
             System.out.println("Could not connect to ip: " + ip + ", port: " + PORT);
             throw new ConnectionException();
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: initializes client ID
+    public void initialize() {
+        getClientIDFromServer();
         actuallyInitialized = true;
     }
 
@@ -36,6 +45,15 @@ public final class NewClient extends Client {
     // EFFECTS: gets the client ID from the server
     //          throws ConnectionException if kicked from the server?
     private void getClientIDFromServer() {
+        /*
+        ServerToClientMessage msg = readServerToClientMessage();
+        if (msg.isKickMessage()) {
+            throw new ConnectionException(msg.getKickMessage());
+        } else {
+            clientID = msg.getID();
+            caller.catchExtraMessages(msg);
+        }
+        */
         String idString = null;
         while (idString == null) {
             idString = readString();
@@ -89,6 +107,7 @@ public final class NewClient extends Client {
         try (ObjectInputStream in = new ObjectInputStream(bis)) {
             return (ServerToClientMessage) in.readObject();
         } catch (IOException | ClassNotFoundException | ClassCastException e) {
+            System.err.println("Are you sure this is an actual server?");
             throw new RuntimeException(e.getMessage());
         }
     }
@@ -129,6 +148,7 @@ public final class NewClient extends Client {
     // EFFECTS; sends chat message to server
     public void sendChatMessage(String msg) {
         write(MessageConstants.CHAT_MSG_HEADER + msg);
+        // write(ClientToServerMessage.createNewChatMessage(msg));
     }
 
     @Override

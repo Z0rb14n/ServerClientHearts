@@ -6,11 +6,43 @@ import util.Card;
 import util.Deck;
 import util.Suit;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 
 // Represents the message sent from server to client
 public final class ServerToClientMessage implements Serializable {
     private static final long serialVersionUID = 1L;
+
+    public static final String INVALID_MSG = "INVALID MESSAGE";
+    public static final String KICK_HEADER = "KICK:";
+    public static final String ID_HEADER = "ID:";
+    public static final String CHAT_HEADER = "CHAT:"; // "CHAT:\\d,.*"
+    public static final String PLAYER_CONNECT_HEADER = "CONNECT:";
+    public static final String PLAYER_DISCONNECT_HEADER = "DISCONNECT:";
+    public static final String GAME_START_HEADER = "GAME_START:";
+    public static final String FIRST_TURN_HEADER = "FIRST TURN:";
+    public static final String NEXT_CARD_HEADER = "NEXT CARD:";
+    public static final String NEXT_TURN_HEADER = "NEXT TURN:";
+    public static final String GAME_END_HEADER = "GAME END:";
+    public static final String RESET_MSG = "RESET";
+
+    public byte[] toByteArr() {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            oos.writeObject(this);
+            oos.flush();
+            byte[] bytes = bos.toByteArray();
+            if (bytes.length > MessageConstants.MAX_LENGTH) throw new RuntimeException("AAAAAAAAAAAAAAAAAAA");
+            ByteBuffer bb = ByteBuffer.allocate(4 + bytes.length);
+            bb.putInt(bytes.length);
+            bb.put(bytes);
+            return bb.array();
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 
     // EFFECTS: throws IllegalArgumentException if player number is out of range
     private static void verifyPlayerNumber(int playerNum) {
@@ -35,7 +67,7 @@ public final class ServerToClientMessage implements Serializable {
 
     // You have been kicked from connecting
     private boolean isKickMessage = false;
-    private String kickMessage = "";
+    private String kickMessage = null;
 
     // EFFECTS: creates a blank server to client message (invalid one)
     private static ServerToClientMessage createBlankMessage() {
@@ -43,6 +75,7 @@ public final class ServerToClientMessage implements Serializable {
     }
 
     public static ServerToClientMessage createKickMessage(String msg) {
+        if (msg == null) throw new IllegalArgumentException();
         final ServerToClientMessage scm = createBlankMessage();
         scm.isKickMessage = true;
         scm.kickMessage = msg;
@@ -50,11 +83,15 @@ public final class ServerToClientMessage implements Serializable {
     }
 
     public boolean isKickMessage() {
-        return isKickMessage;
+        return isKickMessage && kickMessage != null;
+    }
+
+    public String getKickMessage() {
+        return kickMessage;
     }
 
     // ID string + player number
-    private String ID = "";
+    private String ID = null;
     private int playerNumber = 0;
     private boolean[] existingPlayers = new boolean[4];
 
@@ -71,7 +108,15 @@ public final class ServerToClientMessage implements Serializable {
     }
 
     public boolean isIDMessage() {
-        return ID.length() > 0 && playerNumber != 0;
+        return ID != null && ID.length() > 0 && playerNumber != 0;
+    }
+
+    public String getID() {
+        return ID;
+    }
+
+    public boolean[] getExistingPlayers() {
+        return existingPlayers;
     }
 
     // Chat message
@@ -91,6 +136,14 @@ public final class ServerToClientMessage implements Serializable {
         return playerChatSender != 0;
     }
 
+    public String getChatMessage() {
+        return chatMessage;
+    }
+
+    public int getChatMessageSender() {
+        return playerChatSender;
+    }
+
     // New player connection
     private boolean playerConnect = false;
     private int newPlayerNumber = 0;
@@ -107,6 +160,10 @@ public final class ServerToClientMessage implements Serializable {
         return playerConnect && newPlayerNumber != 0;
     }
 
+    public int getNewConnectedPlayer() {
+        return newPlayerNumber;
+    }
+
     // Player disconnected
     private boolean playerDisconnect = false;
     private int disconnectedPlayerNumber = 0;
@@ -117,6 +174,14 @@ public final class ServerToClientMessage implements Serializable {
         scm.playerDisconnect = true;
         scm.disconnectedPlayerNumber = playerNum;
         return scm;
+    }
+
+    public boolean isPlayerDisconnectMessage() {
+        return playerDisconnect && disconnectedPlayerNumber != 0;
+    }
+
+    public int getDisconnectedPlayerNumber() {
+        return disconnectedPlayerNumber;
     }
 
     // Starting the game -> pass 3 cards and here's ur hand
@@ -224,5 +289,34 @@ public final class ServerToClientMessage implements Serializable {
 
     public boolean isResetMessage() {
         return isReset;
+    }
+
+    @Override
+    public String toString() {
+        if (!isValidMessage()) return INVALID_MSG;
+        if (isKickMessage()) {
+            return KICK_HEADER + getKickMessage();
+        } else if (isIDMessage()) {
+            return ID_HEADER + getID() + "," + existingPlayers[0] + existingPlayers[1] + existingPlayers[2] + existingPlayers[3];
+        } else if (isChatMessage()) {
+            return CHAT_HEADER + getChatMessageSender() + "," + getChatMessage();
+        } else if (isPlayerConnectionMessage()) {
+            return PLAYER_CONNECT_HEADER + getNewConnectedPlayer();
+        } else if (isPlayerDisconnectMessage()) {
+            return PLAYER_DISCONNECT_HEADER + getDisconnectedPlayerNumber();
+        } else if (isGameStartingMessage()) {
+            return GAME_START_HEADER + clientHand.toString();
+        } else if (isStartingFirstTurnMessage()) {
+            return FIRST_TURN_HEADER + threeNewCards.toString() + "," + whichClientStarts[0] + whichClientStarts[1] + whichClientStarts[2] + whichClientStarts[3];
+        } else if (isNextCardMessage()) {
+            return NEXT_CARD_HEADER + previouslyPlayed.toString() + "," + playerNumJustPlayed + "," + expectedSuit.toString() + "," + nextPlayerNumber;
+        } else if (isStartingNewTurnMessage()) {
+            return NEXT_TURN_HEADER + newPenaltyCards.toString() + "," + playerWhoStartsNext;
+        } else if (isGameEndingMessage()) {
+            return GAME_END_HEADER + winners[0] + winners[1] + winners[2] + winners[3] + penaltyHands[0].toString() + penaltyHands[1].toString() + penaltyHands[2].toString() + penaltyHands[3].toString();
+        } else if (isResetMessage()) {
+            return RESET_MSG;
+        }
+        return INVALID_MSG;
     }
 }

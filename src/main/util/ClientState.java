@@ -1,6 +1,7 @@
 package util;
 
 import net.MessageConstants;
+import net.ServerToClientMessage;
 import processing.core.PImage;
 import ui.ServerClientHeartsClient;
 
@@ -55,6 +56,15 @@ public class ClientState {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: updates the drawn images of player numbers
+    private void updateDrawnImages() {
+        drawnImages[0] = exists[0] ? CAT_DEFAULT : CAT_OUTLINE;
+        drawnImages[1] = exists[1] ? CAT_FACE_LEFT : CAT_OUTLINE;
+        drawnImages[2] = exists[2] ? CAT_BACK_ONLY : CAT_OUTLINE;
+        drawnImages[3] = exists[3] ? CAT_FACE_RIGHT : CAT_OUTLINE;
+    }
+
     // EFFECTS: gets the images to draw
     public PImage[] getDrawnImages() {
         return drawnImages;
@@ -83,10 +93,31 @@ public class ClientState {
     }
 
     // MODIFIES: this
+    // EFFECTS: handles incoming messages from server
+    public void processNewMessage(ServerClientHeartsClient caller, ServerToClientMessage msgFromServer) {
+        handleNewChatMessage(caller, msgFromServer);
+        handlePlayerAdditionMessages(msgFromServer);
+    }
+
+    // MODIFIES: this
     // EFFECTS: handles player chat message
     private void handleNewChatMessage(ServerClientHeartsClient caller, String msg) {
         if (msg.matches(CHAT_MSG_FORMAT)) {
             ChatMessage cm = new ChatMessage(msg.charAt(4) - '0', msg.substring(6));
+            if (chatMessages.size() == MAX_LENGTH) {
+                chatMessages.removeLast();
+            }
+            chatMessages.addFirst(cm);
+            caller.addNewMessages("Player " + cm.playerNumberSender + ": " + cm.message);
+            //CHAT <digit> : message
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles player chat message
+    private void handleNewChatMessage(ServerClientHeartsClient caller, ServerToClientMessage msg) {
+        if (msg.isChatMessage()) {
+            ChatMessage cm = new ChatMessage(msg.getChatMessageSender(), msg.getChatMessage());
             if (chatMessages.size() == MAX_LENGTH) {
                 chatMessages.removeLast();
             }
@@ -118,6 +149,24 @@ public class ClientState {
             toggleDrawnImage(num + 1, true);
         } else if (msg.startsWith(MessageConstants.DISCONNECT_PLAYER_HEADER)) {
             num = Character.digit(msg.charAt(MessageConstants.NEW_PLAYER_HEADER.length()), 10) - 1;
+            exists[num] = false;
+            toggleDrawnImage(num + 1, false);
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles new player addition/removal messages
+    private void handlePlayerAdditionMessages(ServerToClientMessage msg) {
+        int num;
+        if (msg.isIDMessage()) {
+            System.arraycopy(msg.getExistingPlayers(), 0, exists, 0, 4);
+            updateDrawnImages();
+        } else if (msg.isPlayerConnectionMessage()) {
+            num = msg.getNewConnectedPlayer();
+            exists[num] = true;
+            toggleDrawnImage(num + 1, true);
+        } else if (msg.isPlayerDisconnectMessage()) {
+            num = msg.getDisconnectedPlayerNumber();
             exists[num] = false;
             toggleDrawnImage(num + 1, false);
         }

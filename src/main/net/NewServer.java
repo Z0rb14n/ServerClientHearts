@@ -7,19 +7,23 @@ import util.Card;
 import util.Deck;
 import util.Suit;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InvalidClassException;
+import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
 import static net.MessageConstants.*;
+import static net.ServerToClientMessage.createStartGameMessage;
 
 public class NewServer extends Server {
     public final LinkedHashMap<String, Client> clients = new LinkedHashMap<>(4);
     private final static String[] ALLOWED_MESSAGES = new String[]{PLAY_MSG, CHAT_MSG};
     private final ChatMessageHandler cmh = new ChatMessageHandler();
     private ServerClientHearts sch;
-    public static final int MAX_MSG_LENGTH = 0x0FFFFFFF;
+    public static final int MAX_MSG_LENGTH = MessageConstants.MAX_LENGTH;
     public static final int PORT = 5204;
     public final String[] IDS = new String[4];
 
@@ -46,10 +50,15 @@ public class NewServer extends Server {
     public void onGameStart(Deck[] decks) {
         if (decks.length != 4) throw new IllegalArgumentException();
         write(START_GAME_MSG);
-        clients.get(IDS[0]).write(STARTING_HAND + decks[0].toString());
-        clients.get(IDS[1]).write(STARTING_HAND + decks[1].toString());
-        clients.get(IDS[2]).write(STARTING_HAND + decks[2].toString());
-        clients.get(IDS[3]).write(STARTING_HAND + decks[3].toString());
+        if (!USE_FANCY_SERIALIZATION) {
+            for (int i = 0; i < 4; i++) {
+                clients.get(IDS[i]).write(STARTING_HAND + decks[i].toString());
+            }
+        } else {
+            for (int i = 0; i < 4; i++) {
+                clients.get(IDS[i]).write(createStartGameMessage(decks[i]).toByteArr());
+            }
+        }
     }
 
     public void startFirstTurn(int starter, Deck[] hands) {
@@ -163,18 +172,21 @@ public class NewServer extends Server {
     }
 
     // MODIFIES: this
-    // EFFECTS: handles all chat messages.
+    // EFFECTS: handle chat message.
     private void handleChatMessage(String msg, Client sender) {
         int clientNum = getClientNumber(sender);
         final String header = "CHAT" + clientNum + ":";
         for (int i = 0; i < 4; i++) {
-            if (IDS[i] != null) clients.get(IDS[i]).write(header + msg.substring(CHAT_MSG_INDEX));
+            if (IDS[i] != null) {
+                clients.get(IDS[i]).write(header + msg.substring(CHAT_MSG_INDEX));
+            }
         }
     }
 
     // MODIFIES: this
     // EFFECTS: handles this chat message
     private void handleChatMessage(ClientToServerMessage csm, Client sender) {
+        if (csm == null) throw new IllegalArgumentException("csm cannot be null");
         if (!csm.isChatMessage()) throw new IllegalArgumentException("Called handleChatMessage on non-chat message");
         ServerToClientMessage scm = ServerToClientMessage.createChatMessage(csm.getChatMessage(), getClientNumber(sender));
         write(scm);
@@ -192,23 +204,26 @@ public class NewServer extends Server {
         kick(c, KICK_DEFAULT_MSG);
     }
 
-    public void write(ServerToClientMessage msg) {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(msg);
-            oos.flush();
-            byte[] bytes = bos.toByteArray();
-            if (bytes.length > MAX_MSG_LENGTH) throw new RuntimeException("AAAAAAAAAAAAAAAAAAA");
-            writeInt(bytes.length);
-            write(bytes);
-        } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
+    // MODIFIES: this
+    // EFFECTS: kicks the client with given message
+    public void kick(Client c, String msg) {
+        if (USE_FANCY_SERIALIZATION) {
+            c.write(ServerToClientMessage.createKickMessage(msg).toByteArr());
+        } else {
+            c.write(msg);
         }
+        disconnect(c);
+        System.out.println("Client kicked: " + c.ip());
+        removeClientFromEntries(c);
+    }
+
+    public void write(ServerToClientMessage msg) {
+        write(msg.toByteArr());
     }
 
     // EFFECTS: reads a ClientToServer message from a client
     //    NOTE: THIS WILL COMPLETELY FREEZE EXECUTION UNTIL THIS THING RECEIVES THE WHOLE MESSAGE
     public ClientToServerMessage readClientToServerMessage(Client c) {
-        if (c.available() <= 0) throw new IllegalArgumentException("Client has not written to server.");
         while (c.available() < 4) {
             try {
                 Thread.sleep(10);
@@ -246,15 +261,6 @@ public class NewServer extends Server {
     }
 
     // MODIFIES: this
-    // EFFECTS: kicks the client with given message
-    public void kick(Client c, String msg) {
-        c.write(msg);
-        disconnect(c);
-        System.out.println("Client kicked: " + c.ip());
-        removeClientFromEntries(c);
-    }
-
-    // MODIFIES: this
     // EFFECTS: removes a client from the list of entries
     private void removeClientFromEntries(Client c) {
         if (!clients.containsValue(c)) return;
@@ -289,6 +295,11 @@ public class NewServer extends Server {
         getNthClient(n).write(msg);
     }
 
+    // EFFECTS: sends Nth client a message
+    private void sendNthClientMessage(int n, ServerToClientMessage scm) {
+        getNthClient(n).write(scm.toByteArr());
+    }
+
     // EFFECTS: returns the first empty index (0-3) for IDs
     private int firstEmptySpace() {
         if (IDS[0] == null) return 0;
@@ -320,24 +331,25 @@ public class NewServer extends Server {
             while (!stop) {
                 Client c = available();
                 while (c != null) {
-                    /*
-                    ClientToServerMessage csm = readClientToServerMessage(c);
-                    if (csm == null) continue;
-                    if (!csm.isValidMessage()) {
-                        kickInvalid(getClientNumber(c));
-                        continue;
-                    } else if (csm.isChatMessage()) {
-                        handleChatMessage(csm,c);
+                    if (USE_FANCY_SERIALIZATION) {
+                        ClientToServerMessage csm = readClientToServerMessage(c);
+                        if (csm == null) continue;
+                        if (!csm.isValidMessage()) {
+                            kickInvalid(getClientNumber(c));
+                            continue;
+                        } else if (csm.isChatMessage()) {
+                            handleChatMessage(csm, c);
+                        } else {
+                            sch.addNewMessage(csm);
+                        }
                     } else {
-                        sch.addNewMessage(csm);
-                    }
-                    */
-                    String sent = c.readString();
-                    System.out.println("Client number " + getClientNumber(c) + " has sent " + sent);
-                    boolean result = checkValidMessage(sent, c);
-                    if (result) {
-                        if (isChatMessage(sent)) handleChatMessage(sent, c);
-                        else sch.addNewMessage(new MessagePair(c, sent));
+                        String sent = c.readString();
+                        System.out.println("Client number " + getClientNumber(c) + " has sent " + sent);
+                        boolean result = checkValidMessage(sent, c);
+                        if (result) {
+                            if (isChatMessage(sent)) handleChatMessage(sent, c);
+                            else sch.addNewMessage(new MessagePair(c, sent));
+                        }
                     }
                     c = available(); // get next client
                 }

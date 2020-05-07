@@ -4,6 +4,7 @@ package ui;
 
 import net.ConnectionException;
 import net.NewClient;
+import net.ServerToClientMessage;
 import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
@@ -121,7 +122,8 @@ public final class ServerClientHeartsClient extends PApplet {
                 // thread.interrupt();   // ??? do I need this?
                 errorDisplayed = CONNECTION_TIMEOUT;
             }
-            if (client != null && client.actuallyInitialized) {
+            if (client != null) {
+                client.initialize();
                 clientState.setPlayerNum(client.getPlayerNum());
             }
         } catch (ConnectionException e) {
@@ -217,6 +219,12 @@ public final class ServerClientHeartsClient extends PApplet {
     // EFFECTS: gets the CURRENT_PLAYERS message if the client accidentally gets it
     public void catchAccidentalCurrentPlayersMessage(String msg) {
         System.out.println("Accidental CurrentPlayers message found in ID string: " + msg);
+        clientState.processNewMessage(this, msg);
+    }
+
+    // MODIFIES: this
+    // EFFECTS: feeds any messages from NewClient to clientState
+    public void catchExtraMessages(ServerToClientMessage msg) {
         clientState.processNewMessage(this, msg);
     }
 
@@ -497,6 +505,13 @@ public final class ServerClientHeartsClient extends PApplet {
     }
     //</editor-fold>
 
+    private final static float[][] YOU_TEXT_POSITIONS = new float[][]{
+            {375, 80},
+            {675, 250},
+            {375, 350},
+            {105, 250}
+    };
+
     @Override
     // MODIFIES: this
     // EFFECTS: runs FPS times a second to draw to a screen
@@ -507,6 +522,13 @@ public final class ServerClientHeartsClient extends PApplet {
             drawIPEnterBox();
         } else {
             drawChatWindow();
+            /*
+            if (client.available() > 0) {
+                ServerToClientMessage scm = client.readServerToClientMessage();
+                clientState.processNewMessage(this,scm);
+                System.out.println("New Message from Server: " + scm);
+            }
+            */
             if (client.available() > 0) {
                 String clientMessage = client.readString();
                 clientState.processNewMessage(this, clientMessage);
@@ -516,22 +538,8 @@ public final class ServerClientHeartsClient extends PApplet {
             fill(RED);
             textSize(20);
             textAlign(CENTER);
-            switch (clientState.getPlayerNum()) {
-                case 1:
-                    text("YOU", 375, 80);
-                    break;
-                case 2:
-                    text("YOU", 675, 250);
-                    break;
-                case 3:
-                    text("YOU", 375, 350);
-                    break;
-                case 4:
-                    text("YOU", 105, 250);
-                    break;
-                default:
-                    text("Umm...", (float) width / 2, (float) height / 2);
-            }
+            final float[] coords = YOU_TEXT_POSITIONS[clientState.getPlayerNum() - 1];
+            text("YOU", coords[0], coords[1]);
             image(clientState.getDrawnImages()[0], 300, 80);
             image(clientState.getDrawnImages()[3], 30, 250);
             image(clientState.getDrawnImages()[1], 600, 250);
