@@ -3,7 +3,6 @@ package ui;
 // TODO FINISH GUI AFTER FINALIZING SERVER
 
 import net.ConnectionException;
-import net.MessageConstants;
 import net.NewClient;
 import net.ServerToClientMessage;
 import processing.core.PApplet;
@@ -16,6 +15,8 @@ import java.awt.*;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Scanner;
+
+import static net.MessageConstants.*;
 
 // Represents Client + GUI
 public final class ServerClientHeartsClient extends PApplet {
@@ -128,8 +129,9 @@ public final class ServerClientHeartsClient extends PApplet {
                 clientState.setPlayerNum(client.getPlayerNum());
             }
         } catch (ConnectionException e) {
-            System.out.print("HI");
-            if (NewClient.TOO_MANY_PLAYERS.equals(e.getMessage())) {
+            if (e.getMessage().equals(ERR_TIMED_OUT)) {
+                errorDisplayed = CONNECTION_TIMEOUT;
+            } else if (e.getMessage().equals(ERR_TOO_MANY_PLAYERS)) {
                 errorDisplayed = TOO_MANY_PLAYERS_MSG;
             }
             failed = true;
@@ -247,7 +249,7 @@ public final class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: updates error message with given message
     public void updateErrorMessage(String msg) {
-        if (msg.equals(NewClient.ERR_INVALID_MSG)) {
+        if (msg.equals(ERR_INVALID_MSG)) {
             errorDisplayed = INVALID_MSG;
         } else {
             errorDisplayed = msg;
@@ -524,15 +526,9 @@ public final class ServerClientHeartsClient extends PApplet {
         } else {
             drawChatWindow();
             if (client.available() > 0) {
-                if (MessageConstants.USE_FANCY_SERIALIZATION) {
-                    ServerToClientMessage scm = client.readServerToClientMessage();
-                    clientState.processNewMessage(this, scm);
-                    System.out.println("New Message from Server: " + scm);
-                } else {
-                    String clientMessage = client.readString();
-                    clientState.processNewMessage(this, clientMessage);
-                    System.out.println("New Message from Server: " + clientMessage);
-                }
+                ServerToClientMessage scm = client.readServerToClientMessage();
+                clientState.processNewMessage(this, scm);
+                System.out.println("New Message from Server: " + scm);
             }
             fill(RED);
             textSize(20);

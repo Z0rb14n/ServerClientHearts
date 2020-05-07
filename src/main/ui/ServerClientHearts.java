@@ -16,10 +16,8 @@ import util.GameState;
 import util.Suit;
 
 import java.util.ArrayDeque;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
-import static net.MessageConstants.*;
+import static net.MessageConstants.ERR_INVALID_MSG;
 
 // Represents the server application
 public final class ServerClientHearts extends PApplet {
@@ -139,37 +137,26 @@ public final class ServerClientHearts extends PApplet {
         while (!clientMessages.isEmpty()) {
             MessagePair msg = clientMessages.poll();
             // ASSUMES THERE'S ONLY PLAY MESSAGES
-            System.out.print(msg.message + msg.message.matches(PLAY_MSG));
-            if (!msg.message.matches(PLAY_MSG)) server.kick(msg.client, ERR_INVALID_MSG);
-            String payload = msg.message.substring(PLAY_MSG_INDEX);
-            payload = payload.trim();
-            System.out.print(payload + payload.contains(","));
-            if (payload.contains(",")) {
-                // parse as 3 cards (e.g. CARDS:3C,4C,5C)
-                try (Scanner scanner = new Scanner(payload).useDelimiter(CARD_DELIMITER)) {
-                    String l1, l2, l3;
-                    l1 = scanner.next();
-                    l2 = scanner.next();
-                    l3 = scanner.next();
-                    System.out.print(l1 + l2 + l3);
-                    Card card1 = new Card(l1);
-                    Card card2 = new Card(l2);
-                    Card card3 = new Card(l3);
-                    int clientnum = server.getClientNumber(msg.client);
-                    if (clientnum != 0) {
-                        gameState.playCard(clientnum, this, card1, card2, card3);
-                    } // else ignore
-                } catch (IllegalArgumentException | NoSuchElementException e) {
+            if (!msg.msg.isValidMessage() || !msg.msg.isNewCardPlayedMessage() || !msg.msg.isFirstThreeCardsMessage()) {
+                server.kick(msg.client, ERR_INVALID_MSG); // this only accepts play messages
+            }
+            if (msg.msg.isFirstThreeCardsMessage()) {
+                try {
+                    int clientNum = server.getClientNumber(msg.client);
+                    if (clientNum != 0) {
+                        Deck deck = msg.msg.getThreeCards();
+                        gameState.playCard(clientNum, this, deck.get(0), deck.get(1), deck.get(2));
+                    }
+                } catch (IllegalArgumentException e) {
                     server.kick(msg.client, ERR_INVALID_MSG);
                 }
-            } else {
-                // parse as one card (e.g. CARDS:3C)
+            } else if (msg.msg.isNewCardPlayedMessage()) {
                 try {
-                    Card card = new Card(payload);
-                    int clientnum = server.getClientNumber(msg.client);
-                    if (clientnum != 0) {
-                        gameState.playCard(clientnum, this, card);
-                    } // else ignore
+                    int clientNum = server.getClientNumber(msg.client);
+                    if (clientNum != 0) {
+                        Card card = msg.msg.getCard();
+                        gameState.playCard(clientNum, this, card);
+                    }
                 } catch (IllegalArgumentException e) {
                     server.kick(msg.client, ERR_INVALID_MSG);
                 }

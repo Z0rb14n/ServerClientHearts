@@ -36,6 +36,10 @@ public class Deck implements Iterable<Card>, Serializable {
         return true;
     }
 
+    public Card get(int i) {
+        return cards.get(i);
+    }
+
     // MODIFIES: this
     // EFFECTS: clears the deck
     public void clear() {

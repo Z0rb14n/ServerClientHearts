@@ -76,6 +76,10 @@ public final class ClientToServerMessage implements Serializable {
         return isFirstThreeCards;
     }
 
+    public Deck getThreeCards() {
+        return cards;
+    }
+
     private Card card; // future cards played
 
     // EFFECTS: creates a new ClientToServerMessage in the format of a card played message
@@ -89,6 +93,10 @@ public final class ClientToServerMessage implements Serializable {
     // EFFECTS: determines whether this message is a card-played message
     public boolean isNewCardPlayedMessage() {
         return card != null;
+    }
+
+    public Card getCard() {
+        return card;
     }
 
     @Override
