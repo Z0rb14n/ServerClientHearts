@@ -98,4 +98,14 @@ public final class ClientToServerMessage implements Serializable {
         if (isNewCardPlayedMessage()) return NEW_CARD_HEADER + card.toString();
         return INVALID_MSG;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ClientToServerMessage)) return false;
+        ClientToServerMessage newO = (ClientToServerMessage) o;
+        if (newO.isChatMessage()) return isChatMessage() && newO.getChatMessage().equals(getChatMessage());
+        if (newO.isFirstThreeCardsMessage()) return isFirstThreeCardsMessage() && cards.equals(newO.cards);
+        if (newO.isNewCardPlayedMessage()) return isNewCardPlayedMessage() && card.equals(newO.card);
+        return isValidMessage() == newO.isValidMessage();
+    }
 }
