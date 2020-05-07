@@ -219,13 +219,6 @@ public final class ServerClientHeartsClient extends PApplet {
     }
 
     // MODIFIES: this
-    // EFFECTS: gets the CURRENT_PLAYERS message if the client accidentally gets it
-    public void catchAccidentalCurrentPlayersMessage(String msg) {
-        System.out.println("Accidental CurrentPlayers message found in ID string: " + msg);
-        clientState.processNewMessage(this, msg);
-    }
-
-    // MODIFIES: this
     // EFFECTS: feeds any messages from NewClient to clientState
     public void catchExtraMessages(ServerToClientMessage msg) {
         clientState.processNewMessage(this, msg);

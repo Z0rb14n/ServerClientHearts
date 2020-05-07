@@ -90,7 +90,7 @@ public class NewServer extends Server {
             // get existing players
             boolean[] existing = new boolean[4];
             for (int i = 0; i < IDS.length; i++) {
-                if (IDS[i] != null && i != spot) {
+                if (IDS[i] != null && spot != i) {
                     existing[i] = true;
                 }
             }
@@ -225,20 +225,6 @@ public class NewServer extends Server {
         assert (toRemove != null);
         clients.remove(toRemove);
         System.out.println("Successfully removed id " + toRemove + ", ip: " + c.ip());
-    }
-
-    // EFFECTS: gets Client with given client number (1-4)
-    private Client getNthClient(int n) {
-        if (n < 1 || n > 4) throw new IllegalArgumentException("n must be a number from 1-4");
-        if (IDS[n - 1] == null) return null;
-        if (!clients.containsKey(IDS[n - 1])) return null;
-        return clients.get(IDS[n - 1]);
-    }
-
-    // EFFECTS: sends Nth client a message
-    private void sendNthClientMessage(int n, String msg) {
-        if (IDS[n - 1] == null) return;
-        clients.get(IDS[n - 1]).write(msg);
     }
 
     // EFFECTS: sends Nth client a message
