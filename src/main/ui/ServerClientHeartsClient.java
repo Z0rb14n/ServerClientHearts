@@ -3,6 +3,7 @@ package ui;
 // TODO FINISH GUI AFTER FINALIZING SERVER
 
 import net.ConnectionException;
+import net.MessageConstants;
 import net.NewClient;
 import net.ServerToClientMessage;
 import processing.core.PApplet;
@@ -522,18 +523,16 @@ public final class ServerClientHeartsClient extends PApplet {
             drawIPEnterBox();
         } else {
             drawChatWindow();
-            /*
             if (client.available() > 0) {
-                ServerToClientMessage scm = client.readServerToClientMessage();
-                clientState.processNewMessage(this,scm);
-                System.out.println("New Message from Server: " + scm);
-            }
-            */
-            if (client.available() > 0) {
-                String clientMessage = client.readString();
-                clientState.processNewMessage(this, clientMessage);
-                System.out.println("New Message from Server: " + clientMessage);
-
+                if (MessageConstants.USE_FANCY_SERIALIZATION) {
+                    ServerToClientMessage scm = client.readServerToClientMessage();
+                    clientState.processNewMessage(this, scm);
+                    System.out.println("New Message from Server: " + scm);
+                } else {
+                    String clientMessage = client.readString();
+                    clientState.processNewMessage(this, clientMessage);
+                    System.out.println("New Message from Server: " + clientMessage);
+                }
             }
             fill(RED);
             textSize(20);

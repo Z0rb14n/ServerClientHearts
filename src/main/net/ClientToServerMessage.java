@@ -8,6 +8,10 @@ import java.io.Serializable;
 // Represents a message sent from a client to the server
 public final class ClientToServerMessage implements Serializable {
     private static final long serialVersionUID = 1L;
+    public static final String INVALID_MSG = "INVALID MSG";
+    public static final String CHAT_MSG_HEADER = "CHAT MSG:";
+    public static final String FIRST_THREE_HEADER = "FIRST THREE:";
+    public static final String NEW_CARD_HEADER = "NEW CARD:";
 
     private boolean isChatMessage = false;
     private String chatMessage = ""; // send new messages
@@ -18,7 +22,7 @@ public final class ClientToServerMessage implements Serializable {
 
     // EFFECTS: determines whether this message is valid
     public boolean isValidMessage() {
-        return !isChatMessage() && !isFirstThreeCardsMessage() && !isNewCardPlayedMessage();
+        return isChatMessage() || isFirstThreeCardsMessage() || isNewCardPlayedMessage();
     }
 
     // EFFECTS: creates a new ClientToServerMessage in the format of a chat message
@@ -85,5 +89,13 @@ public final class ClientToServerMessage implements Serializable {
     // EFFECTS: determines whether this message is a card-played message
     public boolean isNewCardPlayedMessage() {
         return card != null;
+    }
+
+    @Override
+    public String toString() {
+        if (isChatMessage()) return CHAT_MSG_HEADER + getChatMessage();
+        if (isFirstThreeCardsMessage()) return FIRST_THREE_HEADER + cards.toString();
+        if (isNewCardPlayedMessage()) return NEW_CARD_HEADER + card.toString();
+        return INVALID_MSG;
     }
 }

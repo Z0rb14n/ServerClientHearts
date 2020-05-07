@@ -62,7 +62,7 @@ public final class ServerToClientMessage implements Serializable {
 
     // EFFECTS: determines whether this message is valid
     public boolean isValidMessage() {
-        return !isKickMessage && !isIDMessage() && !isChatMessage() && !isPlayerConnectionMessage() && !isGameStartingMessage() && !isStartingFirstTurnMessage() && !isStartingNewTurnMessage() && !isNextCardMessage() && !isGameEndingMessage() && !isResetMessage();
+        return isKickMessage || isIDMessage() || isChatMessage() || isPlayerConnectionMessage() || isGameStartingMessage() || isStartingFirstTurnMessage() || isStartingNewTurnMessage() || isNextCardMessage() || isGameEndingMessage() || isResetMessage();
     }
 
     // You have been kicked from connecting
@@ -99,12 +99,14 @@ public final class ServerToClientMessage implements Serializable {
         final ServerToClientMessage scm = createBlankMessage();
         verifyPlayerNumber(playerNum);
         if (UUID == null || UUID.length() < 1 || existingPlayers.length != 4) throw new IllegalArgumentException();
-        if (!existingPlayers[0] && !existingPlayers[1] && !existingPlayers[2] && !existingPlayers[3])
-            throw new IllegalArgumentException();
         scm.ID = UUID;
         scm.playerNumber = playerNum;
         scm.existingPlayers = existingPlayers;
         return scm;
+    }
+
+    public int getPlayerNumber() {
+        return playerNumber;
     }
 
     public boolean isIDMessage() {

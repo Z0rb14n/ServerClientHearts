@@ -6,10 +6,6 @@ import ui.ServerClientHeartsClient;
 import java.io.*;
 import java.nio.ByteBuffer;
 
-// TO UPDATE THE CODE TO USE ClientToServerMessage...
-// modify getClientIDFromServer to use commented out code and delete the previous code
-// modify sendChatMessage to use commented out code and delete previous code
-
 // Represents the game client
 public final class NewClient extends Client {
     public static final String CLIENT_ID_MSG = MessageConstants.CLIENT_ID_MESSAGE;
@@ -45,37 +41,39 @@ public final class NewClient extends Client {
     // EFFECTS: gets the client ID from the server
     //          throws ConnectionException if kicked from the server?
     private void getClientIDFromServer() {
-        /*
-        ServerToClientMessage msg = readServerToClientMessage();
-        if (msg.isKickMessage()) {
-            throw new ConnectionException(msg.getKickMessage());
+        if (MessageConstants.USE_FANCY_SERIALIZATION) {
+            ServerToClientMessage msg = readServerToClientMessage();
+            if (msg.isKickMessage()) {
+                throw new ConnectionException(msg.getKickMessage());
+            } else {
+                clientID = msg.getID();
+                playerNum = msg.getPlayerNumber();
+                caller.catchExtraMessages(msg);
+            }
         } else {
-            clientID = msg.getID();
-            caller.catchExtraMessages(msg);
-        }
-        */
-        String idString = null;
-        while (idString == null) {
-            idString = readString();
-        }
-        if (idString.matches(TOO_MANY_PLAYERS)) {
-            throw new ConnectionException(TOO_MANY_PLAYERS);
-        }
-        if (!idString.matches(CLIENT_ID_MSG)) {
-            throw new ConnectionException(ERR_INVALID_MSG);
-        }
-        clientID = idString.substring(5);
-        if (clientID.contains(MessageConstants.CURRENT_PLAYERS_HEADER)) {
-            for (int i = clientID.length() - 1; i > 0; i--) {
-                if (clientID.charAt(i) == MessageConstants.CURRENT_PLAYERS_HEADER.charAt(1)) {
-                    int index = i - 1;
-                    caller.catchAccidentalCurrentPlayersMessage(clientID.substring(index).trim());
-                    clientID = clientID.substring(0, index);
-                    break;
+            String idString = null;
+            while (idString == null) {
+                idString = readString();
+            }
+            if (idString.matches(TOO_MANY_PLAYERS)) {
+                throw new ConnectionException(TOO_MANY_PLAYERS);
+            }
+            if (!idString.matches(CLIENT_ID_MSG)) {
+                throw new ConnectionException(ERR_INVALID_MSG);
+            }
+            clientID = idString.substring(5);
+            if (clientID.contains(MessageConstants.CURRENT_PLAYERS_HEADER)) {
+                for (int i = clientID.length() - 1; i > 0; i--) {
+                    if (clientID.charAt(i) == MessageConstants.CURRENT_PLAYERS_HEADER.charAt(1)) {
+                        int index = i - 1;
+                        caller.catchAccidentalCurrentPlayersMessage(clientID.substring(index).trim());
+                        clientID = clientID.substring(0, index);
+                        break;
+                    }
                 }
             }
+            playerNum = Character.digit(idString.charAt(1), 10);
         }
-        playerNum = Character.digit(idString.charAt(1), 10);
         System.out.println("Client ID is " + clientID + ", player num is " + playerNum);
     }
 
@@ -147,17 +145,27 @@ public final class NewClient extends Client {
     // MODIFIES: this
     // EFFECTS; sends chat message to server
     public void sendChatMessage(String msg) {
-        write(MessageConstants.CHAT_MSG_HEADER + msg);
-        // write(ClientToServerMessage.createNewChatMessage(msg));
+        if (!MessageConstants.USE_FANCY_SERIALIZATION) {
+            write(MessageConstants.CHAT_MSG_HEADER + msg);
+        } else {
+            write(ClientToServerMessage.createNewChatMessage(msg));
+        }
     }
 
     @Override
     // MODIFIES: this
     // EFFECTS: disconnects client from the server and stops the client.
     public void stop() {
-        String lastMessage = readString();
-        if (lastMessage != null && lastMessage.matches(MessageConstants.ERROR_FORMAT))
-            caller.updateErrorMessage(lastMessage);
+        if (!MessageConstants.USE_FANCY_SERIALIZATION) {
+            String lastMessage = readString();
+            if (lastMessage != null && lastMessage.matches(MessageConstants.ERROR_FORMAT))
+                caller.updateErrorMessage(lastMessage);
+        } else {
+            ServerToClientMessage lastMessage = readServerToClientMessage();
+            if (lastMessage.isKickMessage()) {
+                caller.updateErrorMessage(lastMessage.getKickMessage());
+            }
+        }
         super.stop();
     }
 }

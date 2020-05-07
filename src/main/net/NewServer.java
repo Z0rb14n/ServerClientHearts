@@ -16,7 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.UUID;
 
 import static net.MessageConstants.*;
-import static net.ServerToClientMessage.createStartGameMessage;
+import static net.ServerToClientMessage.*;
 
 public class NewServer extends Server {
     public final LinkedHashMap<String, Client> clients = new LinkedHashMap<>(4);
@@ -37,7 +37,11 @@ public class NewServer extends Server {
     // MODIFIES: this
     // EFFECTS: resets the server (i.e. clears all remaining messages and writes out a reset message)
     public void reset() {
-        write(RESET);
+        if (USE_FANCY_SERIALIZATION) {
+            write(createResetMessage());
+        } else {
+            write(RESET);
+        }
     }
 
     // EFFECTS: determines whether there is not enough space for other players
@@ -49,45 +53,64 @@ public class NewServer extends Server {
     // EFFECTS: runs when the game has started
     public void onGameStart(Deck[] decks) {
         if (decks.length != 4) throw new IllegalArgumentException();
-        write(START_GAME_MSG);
         if (!USE_FANCY_SERIALIZATION) {
+            write(START_GAME_MSG);
             for (int i = 0; i < 4; i++) {
-                clients.get(IDS[i]).write(STARTING_HAND + decks[i].toString());
+                sendNthClientMessage(i + 1, STARTING_HAND + decks[i].toString());
             }
         } else {
             for (int i = 0; i < 4; i++) {
-                clients.get(IDS[i]).write(createStartGameMessage(decks[i]).toByteArr());
+                sendNthClientMessage(i + 1, createStartGameMessage(decks[i]));
             }
         }
     }
 
-    public void startFirstTurn(int starter, Deck[] hands) {
+    public void startFirstTurn(int starter, Deck[] hands, Deck[] newCards) {
         if (starter < 1 || starter > 4) throw new IllegalArgumentException("Invalid argument: " + starter);
         if (hands.length != 4) throw new IllegalArgumentException();
-        sendNthClientMessage(1, NEW_HAND + hands[0].toString());
-        sendNthClientMessage(2, NEW_HAND + hands[1].toString());
-        sendNthClientMessage(3, NEW_HAND + hands[2].toString());
-        sendNthClientMessage(4, NEW_HAND + hands[3].toString());
-        write(START_ROUND);
-        sendNthClientMessage(starter, START_3C);
+        if (!USE_FANCY_SERIALIZATION) {
+            sendNthClientMessage(1, NEW_HAND + hands[0].toString());
+            sendNthClientMessage(2, NEW_HAND + hands[1].toString());
+            sendNthClientMessage(3, NEW_HAND + hands[2].toString());
+            sendNthClientMessage(4, NEW_HAND + hands[3].toString());
+            write(START_ROUND);
+            sendNthClientMessage(starter, START_3C);
+        } else {
+            sendNthClientMessage(1, createStartFirstTurnMessage(newCards[0], starter));
+            sendNthClientMessage(2, createStartFirstTurnMessage(newCards[1], starter));
+            sendNthClientMessage(3, createStartFirstTurnMessage(newCards[2], starter));
+            sendNthClientMessage(4, createStartFirstTurnMessage(newCards[3], starter));
+        }
     }
 
     public void requestNextCard(int justPlayed, int nextPlayerNum, Deck center, Card played, Suit required) {
-        write(PREVIOUS_CARD_HEADER + justPlayed + "," + played.toString());
-        write(CENTER_HAND + center.toString());
-        getNthClient(nextPlayerNum - 1).write(REQUEST_CARD_HEADER + required.toString());
+        if (!USE_FANCY_SERIALIZATION) {
+            write(PREVIOUS_CARD_HEADER + justPlayed + "," + played.toString());
+            write(CENTER_HAND + center.toString());
+            getNthClient(nextPlayerNum - 1).write(REQUEST_CARD_HEADER + required.toString());
+        } else {
+            write(createRequestNextCardMessage(played, justPlayed, nextPlayerNum, required));
+        }
     }
 
     public void startNewTurn(int winner, Deck addedPenalties) {
-        write(END_ROUND);
-        write(ROUND_WINNER + winner + addedPenalties.toString());
-        write(START_ROUND);
+        if (!USE_FANCY_SERIALIZATION) {
+            write(END_ROUND);
+            write(ROUND_WINNER + winner + addedPenalties.toString());
+            write(START_ROUND);
+        } else {
+            write(createStartNextTurnMessage(winner, addedPenalties));
+        }
     }
 
-    public void endGame(int winner, int points) {
-        write(END_ROUND);
-        write(END_GAME);
-        write(GAME_WINNER_HEADER + winner + ",POINTS:" + points);
+    public void endGame(boolean[] winners, int points, Deck[] penaltyHands) {
+        if (!USE_FANCY_SERIALIZATION) {
+            write(END_ROUND);
+            write(END_GAME);
+            write(GAME_WINNER_HEADER + winners[0] + winners[1] + winners[2] + winners[3] + ",DECKS:" + penaltyHands[0].toString() + ";" + penaltyHands[1].toString() + ";" + penaltyHands[2].toString() + ";" + penaltyHands[3].toString());
+        } else {
+            write(createGameEndMessage(winners, penaltyHands));
+        }
     }
 
     // MODIFIES: this
@@ -96,14 +119,38 @@ public class NewServer extends Server {
         System.out.println("New client " + c.ip() + " connected to server  " + Server.ip());
         int spot = firstEmptySpace();
         if (spot == -1) {
-            c.write(ERR_TOO_MANY_PLAYERS);
+            if (!USE_FANCY_SERIALIZATION) {
+                c.write(ERR_TOO_MANY_PLAYERS);
+            } else {
+                c.write(createKickMessage(ERR_TOO_MANY_PLAYERS).toByteArr());
+            }
             disconnect(c);
         } else {
             String id = UUID.randomUUID().toString();
-            c.write("P" + (spot + 1) + "ID:" + id);
+            if (!USE_FANCY_SERIALIZATION) {
+                c.write("P" + (spot + 1) + "ID:" + id);
+
+                // Inform new player game details
+                StringBuilder sb = new StringBuilder(CURRENT_PLAYERS_HEADER);
+                for (int i = 0; i < IDS.length; i++) {
+                    if (IDS[i] != null && i != spot) {
+                        sb.append((i + 1));
+                    }
+                }
+                if (sb.toString().equals(CURRENT_PLAYERS_HEADER)) sb.append("NONE");
+                clients.get(IDS[spot]).write(sb.toString());
+            } else {
+                // inform new player game details
+                boolean[] existing = new boolean[4];
+                for (int i = 0; i < IDS.length; i++) {
+                    if (IDS[i] != null && i != spot) {
+                        existing[i] = true;
+                    }
+                }
+                c.write(createIDMessage(id, (spot + 1), existing).toByteArr());
+            }
             clients.put(id, c);
             IDS[spot] = id;
-            informNewPlayerGameDetails(spot + 1);
             informPlayersPlayerJoined(spot + 1);
             System.out.println(clientCount);
         }
@@ -119,23 +166,20 @@ public class NewServer extends Server {
 
     // EFFECTS: messages all other clients that a player has joined
     private void informPlayersPlayerJoined(int playerNumber) {
-        for (int i = 0; i < IDS.length; i++) {
-            if (IDS[i] != null && clients.get(IDS[i]) != null && i != playerNumber - 1) {
-                clients.get(IDS[i]).write(NEW_PLAYER_HEADER + playerNumber);
+        if (!USE_FANCY_SERIALIZATION) {
+            for (int i = 0; i < IDS.length; i++) {
+                if (IDS[i] != null && i != playerNumber - 1) {
+                    clients.get(IDS[i]).write(NEW_PLAYER_HEADER + playerNumber);
+                }
+            }
+        } else {
+            ServerToClientMessage scm = createConnectionMessage(playerNumber);
+            for (int i = 0; i < IDS.length; i++) {
+                if (IDS[i] != null && i != playerNumber - 1) {
+                    sendNthClientMessage(i + 1, scm);
+                }
             }
         }
-    }
-
-    // EFFECTS: messages new player about who's around
-    private void informNewPlayerGameDetails(int playerNumber) {
-        StringBuilder sb = new StringBuilder(CURRENT_PLAYERS_HEADER);
-        for (int i = 0; i < IDS.length; i++) {
-            if (IDS[i] != null && i != playerNumber - 1) {
-                sb.append((i + 1));
-            }
-        }
-        if (sb.toString().equals(CURRENT_PLAYERS_HEADER)) sb.append("NONE");
-        clients.get(IDS[playerNumber - 1]).write(sb.toString());
     }
 
     // MODIFIES: this
@@ -143,7 +187,11 @@ public class NewServer extends Server {
     private void informPlayersOnDisconnect(Client c) {
         int playerNum = getClientNumber(c);
         if (playerNum == 0) return;
-        write(DISCONNECT_PLAYER_HEADER + playerNum);
+        if (!USE_FANCY_SERIALIZATION) {
+            write(DISCONNECT_PLAYER_HEADER + playerNum);
+        } else {
+            write(createDisconnectMessage(playerNum));
+        }
     }
 
     // EFFECTS: returns client number (1-4), 0 if non-existent
@@ -199,12 +247,6 @@ public class NewServer extends Server {
     }
 
     // MODIFIES: this
-    // EFFECTS: kicks the client
-    public void kick(Client c) {
-        kick(c, KICK_DEFAULT_MSG);
-    }
-
-    // MODIFIES: this
     // EFFECTS: kicks the client with given message
     public void kick(Client c, String msg) {
         if (USE_FANCY_SERIALIZATION) {
@@ -255,11 +297,6 @@ public class NewServer extends Server {
         return ByteBuffer.wrap(bytes).getInt();
     }
 
-    private void writeInt(int a) {
-        byte[] bytes = ByteBuffer.allocate(4).putInt(a).array();
-        write(bytes);
-    }
-
     // MODIFIES: this
     // EFFECTS: removes a client from the list of entries
     private void removeClientFromEntries(Client c) {
@@ -292,12 +329,14 @@ public class NewServer extends Server {
 
     // EFFECTS: sends Nth client a message
     private void sendNthClientMessage(int n, String msg) {
-        getNthClient(n).write(msg);
+        if (IDS[n - 1] == null) return;
+        clients.get(IDS[n - 1]).write(msg);
     }
 
     // EFFECTS: sends Nth client a message
     private void sendNthClientMessage(int n, ServerToClientMessage scm) {
-        getNthClient(n).write(scm.toByteArr());
+        if (IDS[n - 1] == null) return;
+        clients.get(IDS[n - 1]).write(scm.toByteArr());
     }
 
     // EFFECTS: returns the first empty index (0-3) for IDs
@@ -331,9 +370,11 @@ public class NewServer extends Server {
             while (!stop) {
                 Client c = available();
                 while (c != null) {
+                    System.out.print("MESSAGE IS BEING RECEIVED.");
                     if (USE_FANCY_SERIALIZATION) {
                         ClientToServerMessage csm = readClientToServerMessage(c);
                         if (csm == null) continue;
+                        System.out.print(csm.isChatMessage());
                         if (!csm.isValidMessage()) {
                             kickInvalid(getClientNumber(c));
                             continue;

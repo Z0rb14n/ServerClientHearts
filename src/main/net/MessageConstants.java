@@ -1,7 +1,7 @@
 package net;
 
 public final class MessageConstants {
-    public final static boolean USE_FANCY_SERIALIZATION = false;
+    public final static boolean USE_FANCY_SERIALIZATION = true;
 
     public static final int MAX_LENGTH = 0x0FFFFFFF;
 

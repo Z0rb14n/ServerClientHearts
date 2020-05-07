@@ -74,6 +74,10 @@ public class GameState {
         return hands;
     }
 
+    public Deck[] getPassingHands() {
+        return passingHands;
+    }
+
     //<editor-fold desc="Getters for individual hands">
     // EFFECTS: gets player one's hand
     public Deck getPlayerOneHand() {
@@ -254,17 +258,18 @@ public class GameState {
     private void checkGameEnd(ServerClientHearts caller) {
         if (numTurns != 14) return;
         gameEnded = true;
-        caller.endGame(gameWinner(), gameWinnerPoints());
+        caller.endGame(gameWinner(), gameWinnerPoints(), penalties);
     }
 
     // EFFECTS: returns current winner
-    private int gameWinner() {
+    private boolean[] gameWinner() {
+        boolean[] result = new boolean[4];
         int minimum = gameWinnerPoints();
-        if (minimum == hands[0].penaltyPoints()) return 1;
-        if (minimum == hands[1].penaltyPoints()) return 2;
-        if (minimum == hands[2].penaltyPoints()) return 3;
-        if (minimum == hands[3].penaltyPoints()) return 4;
-        throw new IllegalArgumentException("AAAAAAAAAA");
+        if (minimum == hands[0].penaltyPoints()) result[0] = true;
+        if (minimum == hands[1].penaltyPoints()) result[1] = true;
+        if (minimum == hands[2].penaltyPoints()) result[2] = true;
+        if (minimum == hands[3].penaltyPoints()) result[3] = true;
+        return result;
     }
 
     // EFFECTS: returns point count of current winner

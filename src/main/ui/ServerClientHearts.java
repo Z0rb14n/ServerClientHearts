@@ -108,7 +108,7 @@ public final class ServerClientHearts extends PApplet {
     // MODIFIES: this
     // EFFECTS: asks player to play 3C
     public void startFirstTurn(int starter) {
-        server.startFirstTurn(starter, gameState.getHandsInOrder());
+        server.startFirstTurn(starter, gameState.getHandsInOrder(), gameState.getPassingHands());
     }
 
     // MODIFIES: this
@@ -125,8 +125,8 @@ public final class ServerClientHearts extends PApplet {
 
     // MODIFIES: this
     // EFFECTS: when game has ended - writes messages to players (who won, etc.)
-    public void endGame(int winner, int points) {
-        server.endGame(winner, points);
+    public void endGame(boolean[] winner, int points, Deck[] penaltyHands) {
+        server.endGame(winner, points, penaltyHands);
     }
 
     public void requestKickInvalidMessage(int playerNum) {
