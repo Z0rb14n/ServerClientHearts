@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static ui.ServerClientHeartsClient.*;
 
-
-// DOES NOT WORK!!!!!
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ClientStateTest {
     ClientState sc;
@@ -90,6 +88,7 @@ public class ClientStateTest {
     }
 
     @Test
+    // Ignore since it makes calls to processing
     public void testAddChatMessage() {
         ServerClientHeartsClient schc = new ServerClientHeartsClient();
         sc.processNewMessage(schc, createChatMessage("HI", 4));
@@ -103,6 +102,7 @@ public class ClientStateTest {
     }
 
     @Test
+    // Ignore since it makes calls to processing
     public void testAddOverMaxCapacity() {
         ServerClientHeartsClient schc = new ServerClientHeartsClient();
         for (int i = 0; i < ClientState.MAX_LENGTH; i++) {

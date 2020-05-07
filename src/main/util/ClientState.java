@@ -110,15 +110,16 @@ public class ClientState {
         int num;
         if (msg.isIDMessage()) {
             System.arraycopy(msg.getExistingPlayers(), 0, exists, 0, 4);
+            exists[msg.getPlayerNumber() - 1] = true; // just to be sure
             updateDrawnImages();
         } else if (msg.isPlayerConnectionMessage()) {
             num = msg.getNewConnectedPlayer();
-            exists[num] = true;
-            toggleDrawnImage(num + 1, true);
+            exists[num - 1] = true;
+            toggleDrawnImage(num, true);
         } else if (msg.isPlayerDisconnectMessage()) {
             num = msg.getDisconnectedPlayerNumber();
-            exists[num] = false;
-            toggleDrawnImage(num + 1, false);
+            exists[num - 1] = false;
+            toggleDrawnImage(num, false);
         }
     }
 }
