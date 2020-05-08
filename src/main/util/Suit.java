@@ -1,29 +1,30 @@
 package util;
 
+import static net.MessageConstants.*;
+
 // Represents a suit
 public enum Suit {
-    Club {
-        @Override
-        public String toString() {
-            return "C";
-        }
-    },
-    Heart {
-        @Override
-        public String toString() {
-            return "H";
-        }
-    },
-    Diamond {
-        @Override
-        public String toString() {
-            return "D";
-        }
-    },
-    Spade {
-        @Override
-        public String toString() {
-            return "S";
-        }
+    Club(CLUB_UNICODE, "C"),
+    Heart(HEART_UNICODE, "H"),
+    Diamond(DIAMOND_UNICODE, "D"),
+    Spade(SPADE_UNICODE, "S");
+
+    private char rep;
+    private String stringRepresentation;
+
+    Suit(char representation, String str) {
+        rep = representation;
+        stringRepresentation = str;
     }
+
+    @Override
+    public String toString() {
+        return stringRepresentation;
+    }
+
+    public char getCharacter() {
+        return rep;
+    }
+
+
 }

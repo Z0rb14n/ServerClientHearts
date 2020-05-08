@@ -11,7 +11,9 @@ import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.event.MouseEvent;
+import util.Card;
 import util.ClientState;
+import util.Suit;
 
 import java.awt.*;
 import java.util.Iterator;
@@ -510,11 +512,29 @@ public final class ServerClientHeartsClient extends PApplet {
             {105, 250}
     };
 
+    private void drawCard(Card c) {
+        stroke(BLACK);
+        strokeWeight(2);
+        fill(WHITE);
+        rect(0, 0, 100, 150, 20);
+        int textFillColor = c.getSuit() == Suit.Spade || c.getSuit() == Suit.Club ? BLACK : RED;
+
+        textAlign(LEFT, TOP);
+        fill(RED);
+        text(SPADE_UNICODE, 10, 10);
+        textAlign(RIGHT, TOP);
+        pushMatrix();
+        scale(1, -1);
+        text(SPADE_UNICODE, 90, -140);
+        popMatrix();
+    }
+
     @Override
     // MODIFIES: this
     // EFFECTS: runs FPS times a second to draw to a screen
     public void draw() {
         background(WHITE);
+        drawCard(new Card("3C"));
         if (isClientInactive()) {
             drawIPEnterText();
             drawIPEnterBox();

@@ -2,53 +2,24 @@ package util;
 
 // Represents the face value of a card
 public enum Face {
+    Jack(11, "J"),
+    Queen(12, "Q"),
+    King(13, "K"),
+    Ace(14, "A");
+    private int value;
+    private String rep;
 
-    Jack {
-        @Override
-        public String toString() {
-            return "J";
-        }
+    Face(int val, String rep) {
+        this.value = val;
+        this.rep = rep;
+    }
 
-        @Override
-        public int getValue() {
-            return 11;
-        }
-    },
-    Queen {
-        @Override
-        public String toString() {
-            return "Q";
-        }
-
-        @Override
-        public int getValue() {
-            return 12;
-        }
-    },
-    King {
-        @Override
-        public String toString() {
-            return "K";
-        }
-
-        @Override
-        public int getValue() {
-            return 13;
-        }
-    },
-    Ace {
-        @Override
-        public String toString() {
-            return "A";
-        }
-
-        @Override
-        public int getValue() {
-            return 14;
-        }
-    };
+    @Override
+    public String toString() {
+        return rep;
+    }
 
     public int getValue() {
-        return -1;
+        return value;
     }
 }
