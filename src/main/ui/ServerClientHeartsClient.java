@@ -88,10 +88,19 @@ public final class ServerClientHeartsClient extends PApplet {
         CAT_FACE_RIGHT.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_BACK_ONLY.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_OUTLINE.resize(CAT_WIDTH, CAT_HEIGHT);
+        final int BICYCLE_HEIGHT = 294;
+        final int BICYCLE_WIDTH = 192;
         PImage bicycleCat = loadImage(BICYCLE_BACK_FILE);
-        BACK_OF_CARD = createGraphics(480,734); // todo Jon how big do you want ur bicycle cat
+        bicycleCat.resize(192, 294);
+        final float X = (240 - BICYCLE_WIDTH) / 2.0f;
+        final float Y = (380 - BICYCLE_HEIGHT) / 2.0f;
+        BACK_OF_CARD = createGraphics(240, 380);
         BACK_OF_CARD.beginDraw();
-        BACK_OF_CARD.image(bicycleCat, 0, 0);
+        BACK_OF_CARD.stroke(BLACK);
+        BACK_OF_CARD.strokeWeight(2);
+        BACK_OF_CARD.fill(LIGHT_RED);
+        BACK_OF_CARD.rect(0, 0, 240, 380, 30);
+        BACK_OF_CARD.image(bicycleCat, X, Y);
         BACK_OF_CARD.endDraw();
     }
 
@@ -516,7 +525,7 @@ public final class ServerClientHeartsClient extends PApplet {
     // EFFECTS: runs FPS times a second to draw to a screen
     public void draw() {
         background(WHITE);
-        //new Card("10C").draw(this,0,0);
+        image(BACK_OF_CARD, 0, 0);
         if (isClientInactive()) {
             drawIPEnterText();
             drawIPEnterBox();
