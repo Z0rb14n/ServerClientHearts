@@ -19,5 +19,5 @@ public final class Constants {
     public final static int WHITE = 0xffffffff;
     public final static int BLACK = 0xff000000;
     public final static int RED = 0xffff0000;
-    public final static int LIGHT_RED = 0xFFFFAAAA;
+    public final static int LIGHT_RED = 0xFFFF6666;
 }
