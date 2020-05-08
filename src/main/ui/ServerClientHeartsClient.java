@@ -23,8 +23,6 @@ public final class ServerClientHeartsClient extends PApplet {
     private final static int WHITE = 0xffffffff;
     private final static int BLACK = 0xff000000;
     private final static int RED = 0xffff0000;
-    private final static int WINDOW_WIDTH = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
-    private final static int WINDOW_HEIGHT = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
     private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
@@ -62,7 +60,9 @@ public final class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: sets size of window (see Processing for details)
     public void settings() {
-        size(WINDOW_WIDTH, WINDOW_HEIGHT - 20);
+        int screenWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+        int screenHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+        size(screenWidth, screenHeight - 60);
     }
 
     @Override
@@ -101,10 +101,10 @@ public final class ServerClientHeartsClient extends PApplet {
 
     //<editor-fold desc="Opening Menu">
 
-    private final static float IP_ENTER_WIDTH = WINDOW_WIDTH / 6f;
-    private final static float IP_ENTER_HEIGHT = WINDOW_WIDTH / 40f;
-    private final static float IP_ENTER_BOX_X = WINDOW_WIDTH / 2.0f - IP_ENTER_WIDTH / 2.0f;
-    private final static float IP_ENTER_BOX_Y = WINDOW_HEIGHT / 8.0f;
+    private final static float IP_ENTER_WIDTH = 225;
+    private final static float IP_ENTER_HEIGHT = 30;
+    private final static float IP_ENTER_BOX_X = (float) Toolkit.getDefaultToolkit().getScreenSize().getWidth() / 2.0f - IP_ENTER_WIDTH / 2.0f;
+    private final static float IP_ENTER_BOX_Y = 100;
 
     private static String errorDisplayed = "";
 
@@ -282,10 +282,10 @@ public final class ServerClientHeartsClient extends PApplet {
     //<editor-fold desc="Chat window">
     private boolean isChatActive = true;
 
+    private final static float outerChatWindowX = 850;
     private final static float outerChatWindowY = 0;
     private final static float outerChatWindowWidth = 250;
     private final static float outerChatWindowHeight = 600;
-    private final static float outerChatWindowX = WINDOW_WIDTH - outerChatWindowWidth - 100;
 
     private final static float innerChatWindowWidth = outerChatWindowWidth - (10 * 2);
     private final static float innerChatWindowHeight = 25;
