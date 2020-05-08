@@ -23,6 +23,8 @@ public final class ServerClientHeartsClient extends PApplet {
     private final static int WHITE = 0xffffffff;
     private final static int BLACK = 0xff000000;
     private final static int RED = 0xffff0000;
+    private final static int WINDOW_WIDTH = 1200;
+    private final static int WINDOW_HEIGHT = WINDOW_WIDTH * 3/4;
     private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
@@ -40,8 +42,8 @@ public final class ServerClientHeartsClient extends PApplet {
     private final int CHAT_GREY = color(150);
     private final int CHAT_INACTIVE_GREY = color(120);
     private final int CHAT_DARK_GREY = color(50);
-    private static final int CAT_WIDTH = 150;
-    private static final int CAT_HEIGHT = 150;
+    private static final int CAT_WIDTH = 150; // todo make this w/ respect to windowwidth
+    private static final int CAT_HEIGHT = 150; // todo make this w/ respect to windowwidth
     private final ServerClientHeartsClient actualClient = this;
     private final static int MAX_CHAT_MSG_LEN = 128; // arbitrary
     private ClientState clientState;
@@ -60,9 +62,9 @@ public final class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: sets size of window (see Processing for details)
     public void settings() {
-        int screenWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
-        int screenHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-        size(screenWidth, screenHeight - 60);
+        //int screenWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+        //int screenHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
+        size(WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
     @Override
@@ -101,10 +103,10 @@ public final class ServerClientHeartsClient extends PApplet {
 
     //<editor-fold desc="Opening Menu">
 
-    private final static float IP_ENTER_WIDTH = 225;
-    private final static float IP_ENTER_HEIGHT = 30;
-    private final static float IP_ENTER_BOX_X = (float) Toolkit.getDefaultToolkit().getScreenSize().getWidth() / 2.0f - IP_ENTER_WIDTH / 2.0f;
-    private final static float IP_ENTER_BOX_Y = 100;
+    private final static float IP_ENTER_WIDTH = WINDOW_WIDTH / 6;
+    private final static float IP_ENTER_HEIGHT = WINDOW_WIDTH / 40;
+    private final static float IP_ENTER_BOX_X = WINDOW_WIDTH / 2 - WINDOW_WIDTH / 6; //(float) Toolkit.getDefaultToolkit().getScreenSize().getWidth() / 2.0f - IP_ENTER_WIDTH / 2.0f;
+    private final static float IP_ENTER_BOX_Y = WINDOW_WIDTH / 2 - WINDOW_WIDTH / 40;
 
     private static String errorDisplayed = "";
 
