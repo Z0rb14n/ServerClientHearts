@@ -17,7 +17,6 @@ import util.ClientState;
 import java.awt.*;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Scanner;
 
 import static net.Constants.*;
 
@@ -38,6 +37,7 @@ public final class ServerClientHeartsClient extends PApplet {
     private final static String CAT_BACK_FILE = "./data/Symmetrical Miaow Background.png";
     private final static String CAT_OUTLINE_FILE = "./data/Symmetrical Miaow Outline.png";
     private final static float WINDOW_WIDTH = 1366;
+    private final static float WINDOW_HEIGHT = 708;
     private final int CHAT_GREY = color(150);
     private final int CHAT_INACTIVE_GREY = color(120);
     private final int CHAT_DARK_GREY = color(50);
@@ -61,7 +61,7 @@ public final class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: sets size of window (see Processing for details)
     public void settings() {
-        size((int) WINDOW_WIDTH, 708);
+        size((int) WINDOW_WIDTH, (int) WINDOW_WIDTH);
     }
 
     @Override
@@ -72,8 +72,6 @@ public final class ServerClientHeartsClient extends PApplet {
         clientState = new ClientState();
         frameRate(30);
         surface.setTitle("Server Hearts Client!");
-        TerminalMessageSender tms = new TerminalMessageSender();
-        tms.start();
     }
 
     // MODIFIES: this
@@ -512,6 +510,7 @@ public final class ServerClientHeartsClient extends PApplet {
     // EFFECTS: runs FPS times a second to draw to a screen
     public void draw() {
         background(WHITE);
+        //new Card("10C").draw(this,0,0);
         if (isClientInactive()) {
             drawIPEnterText();
             drawIPEnterBox();
@@ -534,22 +533,6 @@ public final class ServerClientHeartsClient extends PApplet {
             if (clientState.isGameStarted()) {
                 for (int i = 0; i < clientState.getDeck().deckSize(); i++) {
                     clientState.getDeck().get(i).draw(this, Card.CARD_WIDTH * i, height - Card.CARD_HEIGHT);
-                }
-            }
-        }
-    }
-
-    // Represents the Terminal I/O that can communicate with the server
-    private class TerminalMessageSender extends Thread {
-        @Override
-        // MODIFIES: this
-        // EFFECTS: when there's contents of the terminal to write, write it to the server
-        public void run() {
-            Scanner scanner = new Scanner(System.in);
-            while (scanner.hasNext()) {
-                String lol = scanner.nextLine();
-                if (client != null) {
-                    client.write(lol);
                 }
             }
         }
