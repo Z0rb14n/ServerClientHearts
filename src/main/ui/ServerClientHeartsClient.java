@@ -282,10 +282,10 @@ public final class ServerClientHeartsClient extends PApplet {
     //<editor-fold desc="Chat window">
     private boolean isChatActive = true;
 
-    private final static float outerChatWindowX = 850;
     private final static float outerChatWindowY = 0;
     private final static float outerChatWindowWidth = 250;
     private final static float outerChatWindowHeight = 600;
+    private final static float outerChatWindowX = WINDOW_WIDTH - outerChatWindowWidth - 100;
 
     private final static float innerChatWindowWidth = outerChatWindowWidth - (10 * 2);
     private final static float innerChatWindowHeight = 25;
