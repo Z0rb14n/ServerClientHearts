@@ -107,7 +107,7 @@ public final class ServerClientHeartsClient extends PApplet {
 
     private final static float IP_ENTER_WIDTH = 225;
     private final static float IP_ENTER_HEIGHT = 30;
-    private final static float IP_ENTER_BOX_X = (float) Toolkit.getDefaultToolkit().getScreenSize().getWidth() / 2.0f - IP_ENTER_WIDTH / 2.0f;
+    private final static float IP_ENTER_BOX_X = 638;
     private final static float IP_ENTER_BOX_Y = 100;
 
     private static String errorDisplayed = "";
