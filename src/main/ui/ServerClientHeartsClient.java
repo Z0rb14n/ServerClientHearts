@@ -37,7 +37,7 @@ public final class ServerClientHeartsClient extends PApplet {
     private final static String CAT_RIGHT_FILE = "./data/Symmetrical Miaow Face Right.png";
     private final static String CAT_BACK_FILE = "./data/Symmetrical Miaow Background.png";
     private final static String CAT_OUTLINE_FILE = "./data/Symmetrical Miaow Outline.png";
-    private final static float WINDOW_WIDTH = (float) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
+    private final static float WINDOW_WIDTH = 1366;
     private final int CHAT_GREY = color(150);
     private final int CHAT_INACTIVE_GREY = color(120);
     private final int CHAT_DARK_GREY = color(50);
@@ -61,9 +61,7 @@ public final class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: sets size of window (see Processing for details)
     public void settings() {
-        int screenHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-        size((int) WINDOW_WIDTH, screenHeight - 60);
-        // size(1366,708);
+        size((int) WINDOW_WIDTH, 708);
     }
 
     @Override
