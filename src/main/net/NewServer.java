@@ -15,15 +15,15 @@ import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
-import static net.MessageConstants.ERR_INVALID_MSG;
-import static net.MessageConstants.ERR_TOO_MANY_PLAYERS;
+import static net.Constants.ERR_INVALID_MSG;
+import static net.Constants.ERR_TOO_MANY_PLAYERS;
 import static net.ServerToClientMessage.*;
 
 public class NewServer extends Server {
     public final LinkedHashMap<String, Client> clients = new LinkedHashMap<>(4);
     private final ChatMessageHandler cmh = new ChatMessageHandler();
     private ServerClientHearts sch;
-    public static final int MAX_MSG_LENGTH = MessageConstants.MAX_LENGTH;
+    public static final int MAX_MSG_LENGTH = Constants.MAX_LENGTH;
     public static final int PORT = 5204;
     public final String[] IDS = new String[4];
 

@@ -17,7 +17,7 @@ import util.Suit;
 
 import java.util.ArrayDeque;
 
-import static net.MessageConstants.ERR_INVALID_MSG;
+import static net.Constants.ERR_INVALID_MSG;
 
 // Represents the server application
 public final class ServerClientHearts extends PApplet {

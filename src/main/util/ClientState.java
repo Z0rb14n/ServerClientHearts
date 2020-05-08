@@ -13,6 +13,7 @@ public class ClientState {
     public static final int MAX_LENGTH = 100;
     private Deck deck;
     private int playernum;
+    private boolean gameStarted = false;
     private final LinkedList<ChatMessage> chatMessages = new LinkedList<>();
     private boolean[] exists = new boolean[4];
     private PImage[] drawnImages = new PImage[4];
@@ -83,11 +84,20 @@ public class ClientState {
         return exists;
     }
 
+    public Deck getDeck() {
+        return deck;
+    }
+
+    public boolean isGameStarted() {
+        return gameStarted;
+    }
+
     // MODIFIES: this
     // EFFECTS: handles incoming messages from server
     public void processNewMessage(ServerClientHeartsClient caller, ServerToClientMessage msgFromServer) {
         handleNewChatMessage(caller, msgFromServer);
         handlePlayerAdditionMessages(msgFromServer);
+        handleGameStartMessages(msgFromServer);
     }
 
     // MODIFIES: this
@@ -120,6 +130,15 @@ public class ClientState {
             num = msg.getDisconnectedPlayerNumber();
             exists[num - 1] = false;
             toggleDrawnImage(num, false);
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: handles gameStarting messages
+    private void handleGameStartMessages(ServerToClientMessage msg) {
+        if (msg.isGameStartingMessage()) {
+            gameStarted = true;
+            this.deck = msg.getStartingHand().copy();
         }
     }
 }

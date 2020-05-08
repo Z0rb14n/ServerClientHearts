@@ -1,6 +1,6 @@
 package util;
 
-import static net.MessageConstants.*;
+import static net.Constants.*;
 
 // Represents a suit
 public enum Suit {

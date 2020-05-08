@@ -6,7 +6,7 @@ import ui.ServerClientHeartsClient;
 import java.io.*;
 import java.nio.ByteBuffer;
 
-import static net.MessageConstants.ERR_TIMED_OUT;
+import static net.Constants.ERR_TIMED_OUT;
 
 // Represents the game client
 public final class NewClient extends Client {

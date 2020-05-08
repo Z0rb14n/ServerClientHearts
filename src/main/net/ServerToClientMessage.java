@@ -34,7 +34,7 @@ public final class ServerToClientMessage implements Serializable {
             oos.writeObject(this);
             oos.flush();
             byte[] bytes = bos.toByteArray();
-            if (bytes.length > MessageConstants.MAX_LENGTH) throw new RuntimeException("AAAAAAAAAAAAAAAAAAA");
+            if (bytes.length > Constants.MAX_LENGTH) throw new RuntimeException("AAAAAAAAAAAAAAAAAAA");
             ByteBuffer bb = ByteBuffer.allocate(4 + bytes.length);
             bb.putInt(bytes.length);
             bb.put(bytes);
@@ -200,6 +200,10 @@ public final class ServerToClientMessage implements Serializable {
 
     public boolean isGameStartingMessage() {
         return gameStarting;
+    }
+
+    public Deck getStartingHand() {
+        return clientHand;
     }
 
     // Start first turn (get 3 cards, and who starts first)

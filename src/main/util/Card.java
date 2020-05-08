@@ -1,12 +1,17 @@
 package util;
 
+import ui.ServerClientHeartsClient;
+
 import java.io.Serializable;
 
+import static net.Constants.*;
 import static util.Face.*;
 
 // Represents a singular card
 public final class Card implements Serializable {
     private static final long serialVersionUID = 2L;
+    public static final float CARD_WIDTH = 80;
+    public static final float CARD_HEIGHT = 150;
 
     private Suit suit;
     private int number; // -1 if faceCard
@@ -15,13 +20,14 @@ public final class Card implements Serializable {
 
     // Card has to be of format <NUM><SUIT>
     public Card(String card) {
-        if (card.length() < 2 || card.length() > 3) throw new IllegalArgumentException("Invalid card length: " + card.length());
+        if (card.length() < 2 || card.length() > 3)
+            throw new IllegalArgumentException("Invalid card length: " + card.length());
         if (card.length() == 3) {
             suit = convertStringToSuit(card.substring(2));
             face = null;
             isFaceCard = false;
             try {
-                number = Integer.parseInt(card.substring(0,2));
+                number = Integer.parseInt(card.substring(0, 2));
                 if (number != 10) throw new NumberFormatException();
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Invalid card number: " + e);
@@ -50,7 +56,7 @@ public final class Card implements Serializable {
                 }
             }
         }
-        assert(isValid());
+        assert (isValid());
     }
 
     public Suit getSuit() {
@@ -67,6 +73,32 @@ public final class Card implements Serializable {
 
     public Face getFace() {
         return face;
+    }
+
+    public void draw(ServerClientHeartsClient applet, float x, float y) {
+        applet.pushStyle();
+        applet.stroke(BLACK);
+        applet.strokeWeight(2);
+        applet.fill(WHITE);
+        applet.textSize(20); // hard coded text size. fite me.
+        applet.textLeading(20);
+        applet.pushMatrix();
+        applet.translate(x, y);
+        applet.rect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20);
+        int textFillColor = getSuit() == Suit.Spade || getSuit() == Suit.Club ? BLACK : RED;
+        String renderedText = "" + getSuit().getCharacter();
+        if (isFaceCard()) {
+            renderedText += "\n" + getFace().toString();
+        } else {
+            renderedText += "\n" + getNumber();
+        }
+        applet.textAlign(applet.CENTER, applet.TOP);
+        applet.fill(textFillColor);
+        applet.text(renderedText, 15, 10);
+        applet.scale(-1, -1);
+        applet.text(renderedText, -CARD_WIDTH + 15, -CARD_HEIGHT + 10);
+        applet.popMatrix();
+        applet.popStyle();
     }
 
     private static Suit convertStringToSuit(String suit) {
@@ -87,7 +119,7 @@ public final class Card implements Serializable {
     }
 
     final public boolean isValid() {
-        return suit != null && ((isFaceCard && face != null && number == -1) || (!isFaceCard && face==null && (number < 11 && number > 1)));
+        return suit != null && ((isFaceCard && face != null && number == -1) || (!isFaceCard && face == null && (number < 11 && number > 1)));
     }
 
     @Override

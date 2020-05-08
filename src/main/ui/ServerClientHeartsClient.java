@@ -13,20 +13,16 @@ import processing.core.PImage;
 import processing.event.MouseEvent;
 import util.Card;
 import util.ClientState;
-import util.Suit;
 
 import java.awt.*;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Scanner;
 
-import static net.MessageConstants.*;
+import static net.Constants.*;
 
 // Represents Client + GUI
 public final class ServerClientHeartsClient extends PApplet {
-    private final static int WHITE = 0xffffffff;
-    private final static int BLACK = 0xff000000;
-    private final static int RED = 0xffff0000;
     private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
@@ -288,7 +284,7 @@ public final class ServerClientHeartsClient extends PApplet {
     private boolean isChatActive = true;
 
     private final static float outerChatWindowWidth = 250;
-    private final static float outerChatWindowX = WINDOW_WIDTH - outerChatWindowWidth - 100;
+    private final static float outerChatWindowX = WINDOW_WIDTH - outerChatWindowWidth - 20;
     private final static float outerChatWindowY = 0;
     private final static float outerChatWindowHeight = 600;
 
@@ -513,38 +509,11 @@ public final class ServerClientHeartsClient extends PApplet {
             {105, 250}
     };
 
-    private void drawCard(Card c) {
-        pushStyle();
-        stroke(BLACK);
-        strokeWeight(2);
-        fill(WHITE);
-        textSize(20); // hard coded text size. fite me.
-        textLeading(20);
-        rect(0, 0, 100, 150, 20);
-        int textFillColor = c.getSuit() == Suit.Spade || c.getSuit() == Suit.Club ? BLACK : RED;
-        String renderedText = "" + c.getSuit().getCharacter();
-        if (c.isFaceCard()) {
-            renderedText += "\n" + c.getFace().toString();
-        } else {
-            renderedText += "\n" + c.getNumber();
-        }
-        textAlign(CENTER, TOP);
-        fill(textFillColor);
-        text(renderedText, 15, 10);
-        textAlign(CENTER, TOP);
-        pushMatrix();
-        scale(-1, -1);
-        text(renderedText, -85, -140);
-        popMatrix();
-        popStyle();
-    }
-
     @Override
     // MODIFIES: this
     // EFFECTS: runs FPS times a second to draw to a screen
     public void draw() {
         background(WHITE);
-        drawCard(new Card("3C"));
         if (isClientInactive()) {
             drawIPEnterText();
             drawIPEnterBox();
@@ -564,6 +533,11 @@ public final class ServerClientHeartsClient extends PApplet {
             image(clientState.getDrawnImages()[3], 30, 250);
             image(clientState.getDrawnImages()[1], 600, 250);
             image(clientState.getDrawnImages()[2], 300, 350);
+            if (clientState.isGameStarted()) {
+                for (int i = 0; i < clientState.getDeck().deckSize(); i++) {
+                    clientState.getDeck().get(i).draw(this, Card.CARD_WIDTH * i, height - Card.CARD_HEIGHT);
+                }
+            }
         }
     }
 
