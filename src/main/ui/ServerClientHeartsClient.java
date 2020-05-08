@@ -14,7 +14,6 @@ import processing.event.MouseEvent;
 import util.Card;
 import util.ClientState;
 
-import java.awt.*;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -107,7 +106,7 @@ public final class ServerClientHeartsClient extends PApplet {
 
     private final static float IP_ENTER_WIDTH = 225;
     private final static float IP_ENTER_HEIGHT = 30;
-    private final static float IP_ENTER_BOX_X = 638;
+    private final static float IP_ENTER_BOX_X = 570.5f;
     private final static float IP_ENTER_BOX_Y = 100;
 
     private static String errorDisplayed = "";
