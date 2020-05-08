@@ -2,6 +2,8 @@ package ui;
 
 // TODO FINISH GUI AFTER FINALIZING SERVER
 
+// TODO RE-FIX CHAT WINDOW AFTER... CERTAIN COMMITS BROKE IT
+
 import net.ConnectionException;
 import net.NewClient;
 import net.ServerToClientMessage;
