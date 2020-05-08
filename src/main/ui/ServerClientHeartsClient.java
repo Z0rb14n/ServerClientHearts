@@ -31,11 +31,13 @@ public final class ServerClientHeartsClient extends PApplet {
     public static PImage CAT_FACE_RIGHT;
     public static PImage CAT_BACK_ONLY;
     public static PImage CAT_OUTLINE;
+    public static PGraphics BACK_OF_CARD;
     private final static String DEFAULT_CAT_FILE = "./data/Symmetrical Miaow.png";
     private final static String CAT_LEFT_FILE = "./data/Symmetrical Miaow Face Left.png";
     private final static String CAT_RIGHT_FILE = "./data/Symmetrical Miaow Face Right.png";
     private final static String CAT_BACK_FILE = "./data/Symmetrical Miaow Background.png";
     private final static String CAT_OUTLINE_FILE = "./data/Symmetrical Miaow Outline.png";
+    private final static String BICYCLE_BACK_FILE = "./data/Bicycle Cat.png";
     private final static float WINDOW_WIDTH = 1366;
     private final static float WINDOW_HEIGHT = 708;
     private final int CHAT_GREY = color(150);
@@ -61,7 +63,7 @@ public final class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: sets size of window (see Processing for details)
     public void settings() {
-        size((int) WINDOW_WIDTH, (int) WINDOW_WIDTH);
+        size((int) WINDOW_WIDTH, (int) WINDOW_HEIGHT);
     }
 
     @Override
@@ -87,6 +89,10 @@ public final class ServerClientHeartsClient extends PApplet {
         CAT_FACE_RIGHT.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_BACK_ONLY.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_OUTLINE.resize(CAT_WIDTH, CAT_HEIGHT);
+        PImage bicycleCat = loadImage(BICYCLE_BACK_FILE);
+        BACK_OF_CARD.beginDraw();
+        BACK_OF_CARD.image(bicycleCat, 0, 0);
+        BACK_OF_CARD.endDraw();
     }
 
     //</editor-fold>
