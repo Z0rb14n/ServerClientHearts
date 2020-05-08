@@ -90,6 +90,7 @@ public final class ServerClientHeartsClient extends PApplet {
         CAT_BACK_ONLY.resize(CAT_WIDTH, CAT_HEIGHT);
         CAT_OUTLINE.resize(CAT_WIDTH, CAT_HEIGHT);
         PImage bicycleCat = loadImage(BICYCLE_BACK_FILE);
+        BACK_OF_CARD = createGraphics(480,734); // todo Jon how big do you want ur bicycle cat
         BACK_OF_CARD.beginDraw();
         BACK_OF_CARD.image(bicycleCat, 0, 0);
         BACK_OF_CARD.endDraw();
