@@ -41,6 +41,7 @@ public final class ServerClientHeartsClient extends PApplet {
     private final static String CAT_RIGHT_FILE = "./data/Symmetrical Miaow Face Right.png";
     private final static String CAT_BACK_FILE = "./data/Symmetrical Miaow Background.png";
     private final static String CAT_OUTLINE_FILE = "./data/Symmetrical Miaow Outline.png";
+    private final static float WINDOW_WIDTH = (float) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
     private final int CHAT_GREY = color(150);
     private final int CHAT_INACTIVE_GREY = color(120);
     private final int CHAT_DARK_GREY = color(50);
@@ -64,9 +65,9 @@ public final class ServerClientHeartsClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: sets size of window (see Processing for details)
     public void settings() {
-        int screenWidth = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
         int screenHeight = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-        size(screenWidth, screenHeight - 60);
+        size((int) WINDOW_WIDTH, screenHeight - 60);
+        // size(1366,708);
     }
 
     @Override
@@ -286,9 +287,9 @@ public final class ServerClientHeartsClient extends PApplet {
     //<editor-fold desc="Chat window">
     private boolean isChatActive = true;
 
-    private final static float outerChatWindowX = 850;
-    private final static float outerChatWindowY = 0;
     private final static float outerChatWindowWidth = 250;
+    private final static float outerChatWindowX = WINDOW_WIDTH - outerChatWindowWidth - 100;
+    private final static float outerChatWindowY = 0;
     private final static float outerChatWindowHeight = 600;
 
     private final static float innerChatWindowWidth = outerChatWindowWidth - (10 * 2);
@@ -513,20 +514,29 @@ public final class ServerClientHeartsClient extends PApplet {
     };
 
     private void drawCard(Card c) {
+        pushStyle();
         stroke(BLACK);
         strokeWeight(2);
         fill(WHITE);
+        textSize(20); // hard coded text size. fite me.
+        textLeading(20);
         rect(0, 0, 100, 150, 20);
         int textFillColor = c.getSuit() == Suit.Spade || c.getSuit() == Suit.Club ? BLACK : RED;
-
-        textAlign(LEFT, TOP);
-        fill(RED);
-        text(SPADE_UNICODE, 10, 10);
-        textAlign(RIGHT, TOP);
+        String renderedText = "" + c.getSuit().getCharacter();
+        if (c.isFaceCard()) {
+            renderedText += "\n" + c.getFace().toString();
+        } else {
+            renderedText += "\n" + c.getNumber();
+        }
+        textAlign(CENTER, TOP);
+        fill(textFillColor);
+        text(renderedText, 15, 10);
+        textAlign(CENTER, TOP);
         pushMatrix();
-        scale(1, -1);
-        text(SPADE_UNICODE, 90, -140);
+        scale(-1, -1);
+        text(renderedText, -85, -140);
         popMatrix();
+        popStyle();
     }
 
     @Override
