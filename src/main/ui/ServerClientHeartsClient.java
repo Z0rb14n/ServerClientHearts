@@ -12,10 +12,7 @@ import processing.core.PImage;
 import processing.event.MouseEvent;
 import util.Card;
 import util.ClientState;
-import util.Deck;
-import util.GameState;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -47,6 +44,7 @@ public final class ServerClientHeartsClient extends PApplet {
     private final int CHAT_DARK_GREY = color(50);
     private static final int CAT_WIDTH = 150;
     private static final int CAT_HEIGHT = 150;
+    private static final int MOVE_SELECTED_CARD_Y = 40;
     private final ServerClientHeartsClient actualClient = this;
     private final static int MAX_CHAT_MSG_LEN = 128; // arbitrary
     private ClientState clientState;
@@ -556,22 +554,20 @@ public final class ServerClientHeartsClient extends PApplet {
         }
     }
 
-    // picks cards to be passed. Selected cards are 10 pixels higher.
+    // picks cards to be passed. Selected cards are MOVE_SELECTED_CARD_Y pixels higher.
     private ArrayList<Card> selectCards() {
         ArrayList<Card> selectedCards = new ArrayList<>();
-        Card selectedCard = null;
+        Card c;
         int numCards = clientState.getDeck().deckSize();
-        while (key != RETURN && key != ENTER) {
-            if (mousePressed && mouseY < (height - Card.CARD_HEIGHT) && mouseX < (Card.CARD_WIDTH * numCards)) {
-                int cardPos = (int) (numCards - (Card.CARD_WIDTH * numCards - mouseX) / Card.CARD_WIDTH + 1);
-                selectedCard = clientState.getDeck().get(cardPos);
-                if (selectedCards.contains(selectedCard)) {
-                    selectedCards.remove(selectedCard);
-                    selectedCard.draw(this, Card.CARD_WIDTH * cardPos, height - Card.CARD_HEIGHT + 10);
-                } else {
-                    selectedCards.add(selectedCard);
-                    selectedCard.draw(this, Card.CARD_WIDTH * cardPos, height - Card.CARD_HEIGHT);
-                }
+        if (mouseY < (height - Card.CARD_HEIGHT) && mouseX < (Card.CARD_WIDTH * numCards)) { // todo
+            int cardPos = (int) (numCards - (Card.CARD_WIDTH * numCards - mouseX) / Card.CARD_WIDTH + 1);
+            c = clientState.getDeck().get(cardPos);
+            if (selectedCards.contains(c)) {
+                selectedCards.remove(c);
+                c.draw(this, Card.CARD_WIDTH * cardPos, height - Card.CARD_HEIGHT + MOVE_SELECTED_CARD_Y);
+            } else {
+                selectedCards.add(c);
+                c.draw(this, Card.CARD_WIDTH * cardPos, height - Card.CARD_HEIGHT);
             }
         }
         return selectedCards;
