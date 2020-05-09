@@ -2,7 +2,6 @@ package ui;
 
 // TODO FINISH GUI AFTER FINALIZING SERVER
 
-// TODO RE-FIX CHAT WINDOW AFTER... CERTAIN COMMITS BROKE IT
 
 import net.ConnectionException;
 import net.NewClient;
@@ -13,7 +12,11 @@ import processing.core.PImage;
 import processing.event.MouseEvent;
 import util.Card;
 import util.ClientState;
+import util.Deck;
+import util.GameState;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -552,4 +555,27 @@ public final class ServerClientHeartsClient extends PApplet {
             }
         }
     }
+
+    // picks cards to be passed. Selected cards are 10 pixels higher.
+    private ArrayList<Card> selectCards() {
+        ArrayList<Card> selectedCards = new ArrayList<>();
+        Card selectedCard = null;
+        int numCards = clientState.getDeck().deckSize();
+        while (key != RETURN && key != ENTER) {
+            if (mousePressed && mouseY < (height - Card.CARD_HEIGHT) && mouseX < (Card.CARD_WIDTH * numCards)) {
+                int cardPos = (int) (numCards - (Card.CARD_WIDTH * numCards - mouseX) / Card.CARD_WIDTH + 1);
+                selectedCard = clientState.getDeck().get(cardPos);
+                if (selectedCards.contains(selectedCard)) {
+                    selectedCards.remove(selectedCard);
+                    selectedCard.draw(this, Card.CARD_WIDTH * cardPos, height - Card.CARD_HEIGHT + 10);
+                } else {
+                    selectedCards.add(selectedCard);
+                    selectedCard.draw(this, Card.CARD_WIDTH * cardPos, height - Card.CARD_HEIGHT);
+                }
+            }
+        }
+        return selectedCards;
+    }
+
+
 }

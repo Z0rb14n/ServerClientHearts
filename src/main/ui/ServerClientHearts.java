@@ -103,6 +103,7 @@ public final class ServerClientHearts extends PApplet {
         server.onGameStart(gameState.getHandsInOrder());
     }
 
+
     // MODIFIES: this
     // EFFECTS: asks player to play 3C
     public void startFirstTurn(int starter) {
