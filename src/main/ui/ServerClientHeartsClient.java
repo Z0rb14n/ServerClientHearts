@@ -2,7 +2,6 @@ package ui;
 
 // TODO FINISH GUI AFTER FINALIZING SERVER
 
-
 import net.ConnectionException;
 import net.NewClient;
 import net.ServerToClientMessage;
@@ -12,8 +11,8 @@ import processing.core.PImage;
 import processing.event.MouseEvent;
 import util.Card;
 import util.ClientState;
+import util.Deck;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -276,6 +275,25 @@ public final class ServerClientHeartsClient extends PApplet {
     // EFFECTS: code run at the instant the mouse button is pressed, but not afterwards
     private void mouseFirstPressed() {
         updateChatWindowActivity();
+        if (clientState.isGameStarted()) {
+
+        }
+    }
+
+    // REQUIRES: cards are drawn from bottom left corner of screen, and increasing index drawn left to right
+    // MODIFIES: this
+    // EFFECTS: updates the list of selected cards to be passed upon a mouse click
+    private void updateSelectedCards() {
+        final int currentDeckSize = clientState.getDeck().deckSize();
+        if (mouseY < (height - Card.CARD_HEIGHT)) return;
+        if (mouseX > (Card.CARD_WIDTH * currentDeckSize)) return;
+        int indexHoveredOver = Math.floorDiv(mouseX, Math.round(Card.CARD_WIDTH));
+        Card hoveredOver = clientState.getDeck().get(indexHoveredOver);
+        if (submittedCards.contains(hoveredOver)) {
+            submittedCards.removeCard(hoveredOver);
+        } else {
+            submittedCards.addCard(hoveredOver);
+        }
     }
 
     @Override
@@ -521,6 +539,8 @@ public final class ServerClientHeartsClient extends PApplet {
             {105, 250}
     };
 
+    private Deck submittedCards = new Deck();
+
     @Override
     // MODIFIES: this
     // EFFECTS: runs FPS times a second to draw to a screen
@@ -548,29 +568,16 @@ public final class ServerClientHeartsClient extends PApplet {
             image(clientState.getDrawnImages()[2], 300, 350);
             if (clientState.isGameStarted()) {
                 for (int i = 0; i < clientState.getDeck().deckSize(); i++) {
-                    clientState.getDeck().get(i).draw(this, Card.CARD_WIDTH * i, height - Card.CARD_HEIGHT);
+                    Card reference = clientState.getDeck().get(i);
+                    float yPos = height - Card.CARD_HEIGHT;
+                    float xPos = Card.CARD_WIDTH * i;
+                    if (submittedCards.contains(reference)) {
+                        yPos -= MOVE_SELECTED_CARD_Y;
+                    }
+                    clientState.getDeck().get(i).draw(this, xPos, yPos);
                 }
             }
         }
-    }
-
-    // picks cards to be passed. Selected cards are MOVE_SELECTED_CARD_Y pixels higher.
-    private ArrayList<Card> selectCards() {
-        ArrayList<Card> selectedCards = new ArrayList<>();
-        Card c;
-        int numCards = clientState.getDeck().deckSize();
-        if (mouseY < (height - Card.CARD_HEIGHT) && mouseX < (Card.CARD_WIDTH * numCards)) { // todo
-            int cardPos = (int) (numCards - (Card.CARD_WIDTH * numCards - mouseX) / Card.CARD_WIDTH + 1);
-            c = clientState.getDeck().get(cardPos);
-            if (selectedCards.contains(c)) {
-                selectedCards.remove(c);
-                c.draw(this, Card.CARD_WIDTH * cardPos, height - Card.CARD_HEIGHT + MOVE_SELECTED_CARD_Y);
-            } else {
-                selectedCards.add(c);
-                c.draw(this, Card.CARD_WIDTH * cardPos, height - Card.CARD_HEIGHT);
-            }
-        }
-        return selectedCards;
     }
 
 
