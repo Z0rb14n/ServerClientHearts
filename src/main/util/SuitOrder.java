@@ -20,7 +20,7 @@ public class SuitOrder implements Comparator<Card>, Serializable {
         reset();
     }
 
-    public SuitOrder copy() {
+    SuitOrder copy() {
         SuitOrder so = new SuitOrder();
         so.sortByValue = this.sortByValue;
         Suit[] suitArray = new Suit[4];

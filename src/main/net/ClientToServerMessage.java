@@ -8,10 +8,10 @@ import java.io.Serializable;
 // Represents a message sent from a client to the server
 public final class ClientToServerMessage implements Serializable {
     private static final long serialVersionUID = 1L;
-    public static final String INVALID_MSG = "INVALID MSG";
-    public static final String CHAT_MSG_HEADER = "CHAT MSG:";
-    public static final String FIRST_THREE_HEADER = "FIRST THREE:";
-    public static final String NEW_CARD_HEADER = "NEW CARD:";
+    private static final String INVALID_MSG = "INVALID MSG";
+    private static final String CHAT_MSG_HEADER = "CHAT MSG:";
+    private static final String FIRST_THREE_HEADER = "FIRST THREE:";
+    private static final String NEW_CARD_HEADER = "NEW CARD:";
 
     private boolean isChatMessage = false;
     private String chatMessage = ""; // send new messages
@@ -26,7 +26,7 @@ public final class ClientToServerMessage implements Serializable {
     }
 
     // EFFECTS: creates a new ClientToServerMessage in the format of a chat message
-    public static ClientToServerMessage createNewChatMessage(String msgContents) {
+    static ClientToServerMessage createNewChatMessage(String msgContents) {
         final ClientToServerMessage csm = new ClientToServerMessage();
         csm.isChatMessage = true;
         csm.chatMessage = msgContents;
@@ -36,12 +36,12 @@ public final class ClientToServerMessage implements Serializable {
     }
 
     // EFFECTS: determines whether this message is a chat message
-    public boolean isChatMessage() {
+    boolean isChatMessage() {
         return isChatMessage;
     }
 
     // EFFECTS: returns the chat message;
-    public String getChatMessage() {
+    String getChatMessage() {
         if (!isChatMessage) throw new IllegalArgumentException();
         return chatMessage;
     }

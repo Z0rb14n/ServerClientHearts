@@ -15,22 +15,19 @@ import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
-import static net.Constants.ERR_INVALID_MSG;
-import static net.Constants.ERR_TOO_MANY_PLAYERS;
+import static net.Constants.*;
 import static net.ServerToClientMessage.*;
 
 public class NewServer extends Server {
-    public final LinkedHashMap<String, Client> clients = new LinkedHashMap<>(4);
-    private final ChatMessageHandler cmh = new ChatMessageHandler();
+    private final LinkedHashMap<String, Client> clients = new LinkedHashMap<>(4);
     private SCHServer sch;
-    public static final int MAX_MSG_LENGTH = Constants.MAX_LENGTH;
-    public static final int PORT = 5204;
-    public final String[] IDS = new String[4];
+    private final String[] IDS = new String[4];
 
     public NewServer(SCHServer parent) {
         super(parent, PORT);
         sch = parent;
         System.out.println("Server started at: " + Server.ip());
+        ChatMessageHandler cmh = new ChatMessageHandler();
         cmh.start();
     }
 
@@ -173,7 +170,7 @@ public class NewServer extends Server {
 
     // EFFECTS: reads a ClientToServer message from a client
     //    NOTE: THIS WILL COMPLETELY FREEZE EXECUTION UNTIL THIS THING RECEIVES THE WHOLE MESSAGE
-    public ClientToServerMessage readClientToServerMessage(Client c) {
+    private ClientToServerMessage readClientToServerMessage(Client c) {
         while (c.available() < 4) {
             try {
                 Thread.sleep(10);

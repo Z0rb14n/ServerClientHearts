@@ -26,7 +26,7 @@ public class Console extends JFrame {
         return singleton;
     }
 
-    public void addCommand(String input) {
+    void addCommand(String input) {
         consolePanel.addCommand(input);
     }
 }

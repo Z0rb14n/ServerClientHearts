@@ -180,7 +180,7 @@ public final class Card implements Serializable {
         return Suit.Club.equals(suit) && number == 10;
     }
 
-    public boolean is3C() {
+    boolean is3C() {
         return Suit.Club.equals(suit) && number == 3;
     }
 

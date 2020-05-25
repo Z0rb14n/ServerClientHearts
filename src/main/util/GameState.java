@@ -158,10 +158,8 @@ public class GameState {
         if (!allCardsPassed) {
             if (c.length != 2) {
                 server.requestKickInvalidMessage(playerNum); // you must be passing exactly three cards
-                return;
             } else if (!passingHands[playerNum - 1].isEmpty()) {
                 server.requestKickInvalidMessage(playerNum); // you can't pass cards twice
-                return;
             } else {
                 Deck newDeck = new Deck();
                 newDeck.addCard(a);

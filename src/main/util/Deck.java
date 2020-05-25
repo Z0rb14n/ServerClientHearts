@@ -92,7 +92,7 @@ public class Deck implements Iterable<Card>, Serializable {
 
     // MODIFIES: this
     // EFFECTS: removes non-penalty cards
-    public void removeNonPenaltyCards() {
+    void removeNonPenaltyCards() {
         cards.removeIf(t -> !t.isPenaltyCard());
     }
 
@@ -122,7 +122,7 @@ public class Deck implements Iterable<Card>, Serializable {
     // REQUIRES: cards.size() == 52 or generate52() has to be called prior
     // MODIFIES: d1, d2, d3, d4, this
     // EFFECTS: distributes all 52 cards in this given deck into d1,d2, d3 and d4,
-    public void randomlyDistribute(Deck d1, Deck d2, Deck d3, Deck d4) {
+    void randomlyDistribute(Deck d1, Deck d2, Deck d3, Deck d4) {
         assert(cards.size() == 52);
         Random random = new Random();
         for(int i = 13; i > 0; i--) {
@@ -256,7 +256,7 @@ public class Deck implements Iterable<Card>, Serializable {
     }
 
     // EFFECTS: returns index of highest value card of given suit
-    public int highestIndexOfSuit(Suit a) {
+    int highestIndexOfSuit(Suit a) {
         int index = -1;
         int value = -1;
         for (int i = 0; i < cards.size(); i++) {

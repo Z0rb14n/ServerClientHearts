@@ -16,20 +16,20 @@ import java.nio.ByteBuffer;
 public final class ServerToClientMessage implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    public static final String INVALID_MSG = "INVALID MESSAGE";
-    public static final String KICK_HEADER = "KICK:";
-    public static final String ID_HEADER = "ID:";
-    public static final String CHAT_HEADER = "CHAT:"; // "CHAT:\\d,.*"
-    public static final String PLAYER_CONNECT_HEADER = "CONNECT:";
-    public static final String PLAYER_DISCONNECT_HEADER = "DISCONNECT:";
-    public static final String GAME_START_HEADER = "GAME_START:";
-    public static final String FIRST_TURN_HEADER = "FIRST TURN:";
-    public static final String NEXT_CARD_HEADER = "NEXT CARD:";
-    public static final String NEXT_TURN_HEADER = "NEXT TURN:";
-    public static final String GAME_END_HEADER = "GAME END:";
-    public static final String RESET_MSG = "RESET";
+    private static final String INVALID_MSG = "INVALID MESSAGE";
+    private static final String KICK_HEADER = "KICK:";
+    private static final String ID_HEADER = "ID:";
+    private static final String CHAT_HEADER = "CHAT:"; // "CHAT:\\d,.*"
+    private static final String PLAYER_CONNECT_HEADER = "CONNECT:";
+    private static final String PLAYER_DISCONNECT_HEADER = "DISCONNECT:";
+    private static final String GAME_START_HEADER = "GAME_START:";
+    private static final String FIRST_TURN_HEADER = "FIRST TURN:";
+    private static final String NEXT_CARD_HEADER = "NEXT CARD:";
+    private static final String NEXT_TURN_HEADER = "NEXT TURN:";
+    private static final String GAME_END_HEADER = "GAME END:";
+    private static final String RESET_MSG = "RESET";
 
-    public byte[] toByteArr() {
+    byte[] toByteArr() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(this);
             oos.flush();
@@ -74,7 +74,7 @@ public final class ServerToClientMessage implements Serializable {
         return new ServerToClientMessage();
     }
 
-    public static ServerToClientMessage createKickMessage(String msg) {
+    static ServerToClientMessage createKickMessage(String msg) {
         if (msg == null) throw new IllegalArgumentException();
         final ServerToClientMessage scm = createBlankMessage();
         scm.isKickMessage = true;
@@ -82,11 +82,11 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
-    public boolean isKickMessage() {
+    boolean isKickMessage() {
         return isKickMessage && kickMessage != null;
     }
 
-    public String getKickMessage() {
+    String getKickMessage() {
         return kickMessage;
     }
 
@@ -113,7 +113,7 @@ public final class ServerToClientMessage implements Serializable {
         return ID != null && ID.length() > 0 && playerNumber != 0;
     }
 
-    public String getID() {
+    String getID() {
         return ID;
     }
 
@@ -190,7 +190,7 @@ public final class ServerToClientMessage implements Serializable {
     private boolean gameStarting = false;
     private Deck clientHand = new Deck();
 
-    public static ServerToClientMessage createStartGameMessage(Deck deck) {
+    static ServerToClientMessage createStartGameMessage(Deck deck) {
         verifyDeckLength(deck, 13);
         final ServerToClientMessage scm = createBlankMessage();
         scm.gameStarting = true;
@@ -211,7 +211,7 @@ public final class ServerToClientMessage implements Serializable {
     private boolean startingFirstTurnMessage = false;
     private boolean[] whichClientStarts = new boolean[4]; // determines who starts as a boolean [p1,p2,p3,p4]
 
-    public static ServerToClientMessage createStartFirstTurnMessage(Deck threeCards, int startingPlayer) {
+    static ServerToClientMessage createStartFirstTurnMessage(Deck threeCards, int startingPlayer) {
         verifyDeckLength(threeCards, 3);
         verifyPlayerNumber(startingPlayer);
         final ServerToClientMessage scm = createBlankMessage();
@@ -231,7 +231,7 @@ public final class ServerToClientMessage implements Serializable {
     private Suit expectedSuit;
     private int nextPlayerNumber = 0;
 
-    public static ServerToClientMessage createRequestNextCardMessage(Card prevPlayed, int justPlayed, int nextToPlay, Suit requiredSuit) {
+    static ServerToClientMessage createRequestNextCardMessage(Card prevPlayed, int justPlayed, int nextToPlay, Suit requiredSuit) {
         verifyPlayerNumber(justPlayed);
         verifyPlayerNumber(nextToPlay);
         if (prevPlayed == null || requiredSuit == null) throw new IllegalArgumentException();
@@ -252,7 +252,7 @@ public final class ServerToClientMessage implements Serializable {
     private Deck newPenaltyCards = new Deck();
     private int playerWhoStartsNext = 0;
 
-    public static ServerToClientMessage createStartNextTurnMessage(int winner, Deck newPenaltyCards) {
+    static ServerToClientMessage createStartNextTurnMessage(int winner, Deck newPenaltyCards) {
         verifyPlayerNumber(winner);
         if (newPenaltyCards.deckSize() > 4) throw new IllegalArgumentException();
         final ServerToClientMessage scm = createBlankMessage();
@@ -271,7 +271,7 @@ public final class ServerToClientMessage implements Serializable {
     private boolean[] winners = new boolean[4];
     private Deck[] penaltyHands = new Deck[4];
 
-    public static ServerToClientMessage createGameEndMessage(boolean[] winners, Deck[] penalties) {
+    static ServerToClientMessage createGameEndMessage(boolean[] winners, Deck[] penalties) {
         if (winners.length != 4 || penalties.length != 4) throw new IllegalArgumentException();
         final ServerToClientMessage scm = createBlankMessage();
         scm.gameEnding = true;
@@ -287,7 +287,7 @@ public final class ServerToClientMessage implements Serializable {
     // Reset
     private boolean isReset = false;
 
-    public static ServerToClientMessage createResetMessage() {
+    static ServerToClientMessage createResetMessage() {
         final ServerToClientMessage scm = createBlankMessage();
         scm.isReset = true;
         return scm;
