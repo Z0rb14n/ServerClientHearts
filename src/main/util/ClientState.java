@@ -2,11 +2,11 @@ package util;
 
 import net.ServerToClientMessage;
 import processing.core.PImage;
-import ui.ServerClientHeartsClient;
+import ui.SCHClient;
 
 import java.util.LinkedList;
 
-import static ui.ServerClientHeartsClient.*;
+import static ui.SCHClient.*;
 
 // Represents the state of the client
 public class ClientState {
@@ -94,7 +94,7 @@ public class ClientState {
 
     // MODIFIES: this
     // EFFECTS: handles incoming messages from server
-    public void processNewMessage(ServerClientHeartsClient caller, ServerToClientMessage msgFromServer) {
+    public void processNewMessage(SCHClient caller, ServerToClientMessage msgFromServer) {
         handleNewChatMessage(caller, msgFromServer);
         handlePlayerAdditionMessages(msgFromServer);
         handleGameStartMessages(msgFromServer);
@@ -102,7 +102,7 @@ public class ClientState {
 
     // MODIFIES: this
     // EFFECTS: handles player chat message
-    private void handleNewChatMessage(ServerClientHeartsClient caller, ServerToClientMessage msg) {
+    private void handleNewChatMessage(SCHClient caller, ServerToClientMessage msg) {
         if (msg.isChatMessage()) {
             ChatMessage cm = new ChatMessage(msg.getChatMessageSender(), msg.getChatMessage());
             if (chatMessages.size() == MAX_LENGTH) {

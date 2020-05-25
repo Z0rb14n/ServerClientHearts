@@ -4,13 +4,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import processing.core.PApplet;
 import processing.core.PImage;
-import ui.ServerClientHeartsClient;
+import ui.SCHClient;
 import util.ClientState;
 
 import static net.ServerToClientMessage.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static ui.ServerClientHeartsClient.*;
+import static ui.SCHClient.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ClientStateTest {
@@ -18,7 +18,7 @@ public class ClientStateTest {
 
     @BeforeAll
     public void runBeforeAll() {
-        ServerClientHeartsClient sch = new ServerClientHeartsClient();
+        SCHClient sch = new SCHClient();
         PApplet.runSketch(new String[]{"lmao"}/*Processing arguments*/, sch);
     }
 
@@ -29,7 +29,7 @@ public class ClientStateTest {
 
     @Test
     public void testConnection() {
-        ServerClientHeartsClient schc = new ServerClientHeartsClient();
+        SCHClient schc = new SCHClient();
         sc.setPlayerNum(1);
         sc.processNewMessage(schc, createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
         assertArrayEquals(new boolean[]{true, false, false, false}, sc.getExistingPlayers());
@@ -38,7 +38,7 @@ public class ClientStateTest {
 
     @Test
     public void testConnectionNonOneStart() {
-        ServerClientHeartsClient schc = new ServerClientHeartsClient();
+        SCHClient schc = new SCHClient();
         sc.setPlayerNum(1);
         sc.processNewMessage(schc, createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
         assertArrayEquals(new boolean[]{true, false, false, false}, sc.getExistingPlayers());
@@ -62,7 +62,7 @@ public class ClientStateTest {
 
     @Test
     public void testAdditionalPlayer() {
-        ServerClientHeartsClient schc = new ServerClientHeartsClient();
+        SCHClient schc = new SCHClient();
         sc.setPlayerNum(1);
         sc.processNewMessage(schc, createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
         assertArrayEquals(new boolean[]{true, false, false, false}, sc.getExistingPlayers());
@@ -74,7 +74,7 @@ public class ClientStateTest {
 
     @Test
     public void testRemovePlayer() {
-        ServerClientHeartsClient schc = new ServerClientHeartsClient();
+        SCHClient schc = new SCHClient();
         sc.setPlayerNum(1);
         sc.processNewMessage(schc, createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
         assertArrayEquals(new boolean[]{true, false, false, false}, sc.getExistingPlayers());
@@ -90,7 +90,7 @@ public class ClientStateTest {
     @Test
     // Ignore since it makes calls to processing
     public void testAddChatMessage() {
-        ServerClientHeartsClient schc = new ServerClientHeartsClient();
+        SCHClient schc = new SCHClient();
         sc.processNewMessage(schc, createChatMessage("HI", 4));
         assertEquals(1, sc.getChatMessages().size());
         assertEquals(4, sc.getChatMessages().get(0).playerNumberSender);
@@ -104,7 +104,7 @@ public class ClientStateTest {
     @Test
     // Ignore since it makes calls to processing
     public void testAddOverMaxCapacity() {
-        ServerClientHeartsClient schc = new ServerClientHeartsClient();
+        SCHClient schc = new SCHClient();
         for (int i = 0; i < ClientState.MAX_LENGTH; i++) {
             sc.processNewMessage(schc, createChatMessage("" + i, 3));
         }

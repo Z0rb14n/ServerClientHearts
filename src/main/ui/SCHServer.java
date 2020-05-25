@@ -20,7 +20,7 @@ import java.util.ArrayDeque;
 import static net.Constants.ERR_INVALID_MSG;
 
 // Represents the server application
-public final class ServerClientHearts extends PApplet {
+public final class SCHServer extends PApplet {
     private NewServer server;
     private final static int FPS = 30;
     private GameState gameState;
@@ -28,8 +28,8 @@ public final class ServerClientHearts extends PApplet {
     private final ArrayDeque<ClientToServerMessage> clientServerMessages = new ArrayDeque<>();
 
     public static void main(String[] args) {
-        ServerClientHearts sch = new ServerClientHearts();
-        PApplet.runSketch(new String[]{"ServerClientHearts"}, sch);
+        SCHServer sch = new SCHServer();
+        PApplet.runSketch(new String[]{"SCHServer"}, sch);
     }
 
     //<editor-fold desc="Processing loop commands (i.e. Settings, Setup, Draw)">

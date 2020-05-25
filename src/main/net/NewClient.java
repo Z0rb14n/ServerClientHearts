@@ -1,7 +1,7 @@
 package net;
 
 import processing.net.Client;
-import ui.ServerClientHeartsClient;
+import ui.SCHClient;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -12,12 +12,12 @@ import static net.Constants.ERR_TIMED_OUT;
 public final class NewClient extends Client {
     private static final int PORT = NewServer.PORT;
     public boolean actuallyInitialized;
-    private ServerClientHeartsClient caller;
+    private SCHClient caller;
     private String clientID;
     private int playerNum;
 
     // EFFECTS: initializes client with params of Processing's Client parameters
-    public NewClient(ServerClientHeartsClient pa, String ip) {
+    public NewClient(SCHClient pa, String ip) {
         super(pa, ip, PORT);
         caller = pa;
         if (!active()) {

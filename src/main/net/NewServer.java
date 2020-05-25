@@ -2,7 +2,7 @@ package net;
 
 import processing.net.Client;
 import processing.net.Server;
-import ui.ServerClientHearts;
+import ui.SCHServer;
 import util.Card;
 import util.Deck;
 import util.Suit;
@@ -22,12 +22,12 @@ import static net.ServerToClientMessage.*;
 public class NewServer extends Server {
     public final LinkedHashMap<String, Client> clients = new LinkedHashMap<>(4);
     private final ChatMessageHandler cmh = new ChatMessageHandler();
-    private ServerClientHearts sch;
+    private SCHServer sch;
     public static final int MAX_MSG_LENGTH = Constants.MAX_LENGTH;
     public static final int PORT = 5204;
     public final String[] IDS = new String[4];
 
-    public NewServer(ServerClientHearts parent) {
+    public NewServer(SCHServer parent) {
         super(parent, PORT);
         sch = parent;
         System.out.println("Server started at: " + Server.ip());

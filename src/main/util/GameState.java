@@ -1,6 +1,6 @@
 package util;
 
-import ui.ServerClientHearts;
+import ui.SCHServer;
 
 import static util.PassOrder.ASCENDING_NUM;
 
@@ -140,7 +140,7 @@ public class GameState {
 
     // MODIFIES: this, server
     // EFFECTS: receives the card played and updates game state, kicks player if invalid
-    public void playCard(int playerNum, ServerClientHearts server, Card a, Card... c) {
+    public void playCard(int playerNum, SCHServer server, Card a, Card... c) {
         if (isInvalidPlay(a, playerNum)) {
             server.requestKickInvalidMessage(playerNum);
             return;
@@ -200,7 +200,7 @@ public class GameState {
     // REQUIRES: center.size == 4
     // MODIFIES: this
     // EFFECTS: ends current turn and starts a new one
-    private void endTurn(ServerClientHearts caller) {
+    private void endTurn(SCHServer caller) {
         assert (center.deckSize() == 4);
         numTurns++;
         startingPlayer = trickWinner(); // set new starting player
@@ -224,7 +224,7 @@ public class GameState {
 
     // MODIFIES: this
     // EFFECTS: checks if all cards are passed. If so, actually pass cards and move on
-    private void checkPassCards(ServerClientHearts caller) {
+    private void checkPassCards(SCHServer caller) {
         for (Deck d : passingHands) {
             if (d.isEmpty()) return;
         }
@@ -255,7 +255,7 @@ public class GameState {
 
     // MODIFIES: this
     // EFFECTS: checks whether the game has ended (i.e. turn number == 13)
-    private void checkGameEnd(ServerClientHearts caller) {
+    private void checkGameEnd(SCHServer caller) {
         if (numTurns != 14) return;
         gameEnded = true;
         caller.endGame(gameWinner(), gameWinnerPoints(), penalties);
@@ -279,7 +279,7 @@ public class GameState {
 
     // MODIFIES: this
     // EFFECTS: starts the first turn - they MUST play three of clubs
-    private void startFirstTurn(ServerClientHearts caller) {
+    private void startFirstTurn(SCHServer caller) {
         threeOfClubsNeeded = true;
         startingPlayer = gameStarter();
         caller.startFirstTurn(startingPlayer);

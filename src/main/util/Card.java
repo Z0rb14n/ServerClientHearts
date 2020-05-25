@@ -1,6 +1,6 @@
 package util;
 
-import ui.ServerClientHeartsClient;
+import ui.SCHClient;
 
 import java.io.Serializable;
 
@@ -75,7 +75,7 @@ public final class Card implements Serializable {
         return face;
     }
 
-    public void draw(ServerClientHeartsClient applet, float x, float y) {
+    public void draw(SCHClient applet, float x, float y) {
         applet.pushStyle();
         applet.stroke(BLACK);
         applet.strokeWeight(2);

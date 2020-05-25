@@ -19,7 +19,7 @@ import java.util.LinkedList;
 import static net.Constants.*;
 
 // Represents Client + GUI
-public final class ServerClientHeartsClient extends PApplet {
+public final class SCHClient extends PApplet {
     private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
@@ -44,14 +44,14 @@ public final class ServerClientHeartsClient extends PApplet {
     private static final int CAT_WIDTH = 150;
     private static final int CAT_HEIGHT = 150;
     private static final int MOVE_SELECTED_CARD_Y = 40;
-    private final ServerClientHeartsClient actualClient = this;
+    private final SCHClient actualClient = this;
     private final static int MAX_CHAT_MSG_LEN = 128; // arbitrary
     private ClientState clientState;
     private NewClient client;
 
     // Main function to run
     public static void main(String[] args) {
-        ServerClientHeartsClient sch = new ServerClientHeartsClient();
+        SCHClient sch = new SCHClient();
         PApplet.runSketch(new String[]{"lmao"}/*Processing arguments*/, sch);
     }
 
