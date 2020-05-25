@@ -9,6 +9,7 @@ import processing.core.PApplet;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.event.MouseEvent;
+import ui.console.Console;
 import util.Card;
 import util.ClientState;
 import util.Deck;
@@ -53,6 +54,7 @@ public final class SCHClient extends PApplet {
     public static void main(String[] args) {
         SCHClient sch = new SCHClient();
         PApplet.runSketch(new String[]{"lmao"}/*Processing arguments*/, sch);
+        Console.getConsole();
     }
 
 
