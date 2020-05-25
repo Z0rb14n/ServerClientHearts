@@ -5,6 +5,7 @@ import java.awt.*;
 
 public class Console extends JFrame {
     private static final Dimension SIZE = new Dimension(600, 600);
+    private ConsolePanel consolePanel;
     private static Console singleton;
 
     private Console() {
@@ -13,7 +14,8 @@ public class Console extends JFrame {
         setPreferredSize(SIZE);
         setSize(SIZE);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        add(new ConsolePanel());
+        consolePanel = new ConsolePanel();
+        add(consolePanel);
         setVisible(true);
     }
 
@@ -22,5 +24,9 @@ public class Console extends JFrame {
             singleton = new Console();
         }
         return singleton;
+    }
+
+    public void addCommand(String input) {
+        consolePanel.addCommand(input);
     }
 }

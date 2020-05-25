@@ -94,22 +94,22 @@ public class ClientState {
 
     // MODIFIES: this
     // EFFECTS: handles incoming messages from server
-    public void processNewMessage(SCHClient caller, ServerToClientMessage msgFromServer) {
-        handleNewChatMessage(caller, msgFromServer);
+    public void processNewMessage(ServerToClientMessage msgFromServer) {
+        handleNewChatMessage(msgFromServer);
         handlePlayerAdditionMessages(msgFromServer);
         handleGameStartMessages(msgFromServer);
     }
 
     // MODIFIES: this
     // EFFECTS: handles player chat message
-    private void handleNewChatMessage(SCHClient caller, ServerToClientMessage msg) {
+    private void handleNewChatMessage(ServerToClientMessage msg) {
         if (msg.isChatMessage()) {
             ChatMessage cm = new ChatMessage(msg.getChatMessageSender(), msg.getChatMessage());
             if (chatMessages.size() == MAX_LENGTH) {
                 chatMessages.removeLast();
             }
             chatMessages.addFirst(cm);
-            caller.addNewMessages("Player " + cm.playerNumberSender + ": " + cm.message);
+            SCHClient.getClient().addNewMessages("Player " + cm.playerNumberSender + ": " + cm.message);
             //CHAT <digit> : message
         }
     }

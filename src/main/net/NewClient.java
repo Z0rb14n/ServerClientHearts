@@ -11,15 +11,12 @@ import static net.Constants.ERR_TIMED_OUT;
 // Represents the game client
 public final class NewClient extends Client {
     private static final int PORT = NewServer.PORT;
-    public boolean actuallyInitialized;
-    private SCHClient caller;
     private String clientID;
     private int playerNum;
 
     // EFFECTS: initializes client with params of Processing's Client parameters
-    public NewClient(SCHClient pa, String ip) {
-        super(pa, ip, PORT);
-        caller = pa;
+    public NewClient(String ip) {
+        super(SCHClient.getClient(), ip, PORT);
         if (!active()) {
             stop();
             System.out.println("Could not connect to ip: " + ip + ", port: " + PORT);
@@ -31,7 +28,6 @@ public final class NewClient extends Client {
     // EFFECTS: initializes client ID
     public void initialize() {
         getClientIDFromServer();
-        actuallyInitialized = true;
     }
 
     // MODIFIES: this
@@ -44,7 +40,7 @@ public final class NewClient extends Client {
         } else {
             clientID = msg.getID();
             playerNum = msg.getPlayerNumber();
-            caller.catchExtraMessages(msg);
+            SCHClient.getClient().catchExtraMessages(msg);
         }
 
         System.out.println("Client ID is " + clientID + ", player num is " + playerNum);
@@ -127,7 +123,7 @@ public final class NewClient extends Client {
     public void stop() {
         ServerToClientMessage lastMessage = readServerToClientMessage();
         if (lastMessage.isKickMessage()) {
-            caller.updateErrorMessage(lastMessage.getKickMessage());
+            SCHClient.getClient().updateErrorMessage(lastMessage.getKickMessage());
         }
 
         super.stop();

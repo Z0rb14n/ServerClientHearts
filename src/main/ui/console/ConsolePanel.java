@@ -1,11 +1,20 @@
 package ui.console;
 
 import javax.swing.*;
+import java.awt.*;
 
-public class ConsolePanel extends JPanel {
+class ConsolePanel extends JPanel {
+    private TextArea ta;
     ConsolePanel() {
         super();
-        add(new TextArea());
-        add(new CommandInput());
+        setLayout(new BorderLayout());
+        ta = new TextArea();
+        add(ta, BorderLayout.CENTER);
+        add(new CommandInput(), BorderLayout.PAGE_END);
+        setVisible(true);
+    }
+
+    void addCommand(String input) {
+        ta.addCommand(input);
     }
 }

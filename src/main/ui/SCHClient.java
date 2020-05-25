@@ -30,7 +30,7 @@ public final class SCHClient extends PApplet {
     public static PImage CAT_FACE_RIGHT;
     public static PImage CAT_BACK_ONLY;
     public static PImage CAT_OUTLINE;
-    public static PGraphics BACK_OF_CARD;
+    private static PGraphics BACK_OF_CARD;
     private final static String DEFAULT_CAT_FILE = "./data/Symmetrical Miaow.png";
     private final static String CAT_LEFT_FILE = "./data/Symmetrical Miaow Face Left.png";
     private final static String CAT_RIGHT_FILE = "./data/Symmetrical Miaow Face Right.png";
@@ -45,16 +45,27 @@ public final class SCHClient extends PApplet {
     private static final int CAT_WIDTH = 150;
     private static final int CAT_HEIGHT = 150;
     private static final int MOVE_SELECTED_CARD_Y = 40;
-    private final SCHClient actualClient = this;
     private final static int MAX_CHAT_MSG_LEN = 128; // arbitrary
+    private static SCHClient singleton;
     private ClientState clientState;
     private NewClient client;
 
+    private SCHClient() {
+        super();
+        clientState = new ClientState();
+    }
+
     // Main function to run
     public static void main(String[] args) {
-        SCHClient sch = new SCHClient();
-        PApplet.runSketch(new String[]{"lmao"}/*Processing arguments*/, sch);
+        PApplet.runSketch(new String[]{"lmao"}/*Processing arguments*/, SCHClient.getClient());
         Console.getConsole();
+    }
+
+    public static SCHClient getClient() {
+        if (singleton == null) {
+            singleton = new SCHClient();
+        }
+        return singleton;
     }
 
 
@@ -72,7 +83,6 @@ public final class SCHClient extends PApplet {
     // EFFECTS: initializes variables
     public void setup() {
         initCats();
-        clientState = new ClientState();
         frameRate(30);
         surface.setTitle("Server Hearts Client!");
     }
@@ -128,7 +138,7 @@ public final class SCHClient extends PApplet {
         errorDisplayed = "";
         boolean failed = false;
         try {
-            Thread thread = new Thread(() -> client = new NewClient(actualClient, ip));
+            Thread thread = new Thread(() -> client = new NewClient(ip));
             thread.start();
             final long time = System.nanoTime();
             thread.join(10000);
@@ -235,7 +245,7 @@ public final class SCHClient extends PApplet {
     // MODIFIES: this
     // EFFECTS: feeds any messages from NewClient to clientState
     public void catchExtraMessages(ServerToClientMessage msg) {
-        clientState.processNewMessage(this, msg);
+        clientState.processNewMessage(msg);
     }
 
     //</editor-fold>
@@ -278,7 +288,7 @@ public final class SCHClient extends PApplet {
     private void mouseFirstPressed() {
         updateChatWindowActivity();
         if (clientState.isGameStarted()) {
-
+            updateSelectedCards();
         }
     }
 
@@ -556,7 +566,7 @@ public final class SCHClient extends PApplet {
             drawChatWindow();
             if (client.available() > 0) {
                 ServerToClientMessage scm = client.readServerToClientMessage();
-                clientState.processNewMessage(this, scm);
+                clientState.processNewMessage(scm);
                 System.out.println("New Message from Server: " + scm);
             }
             fill(RED);
@@ -576,7 +586,7 @@ public final class SCHClient extends PApplet {
                     if (submittedCards.contains(reference)) {
                         yPos -= MOVE_SELECTED_CARD_Y;
                     }
-                    clientState.getDeck().get(i).draw(this, xPos, yPos);
+                    clientState.getDeck().get(i).draw(xPos, yPos);
                 }
             }
         }

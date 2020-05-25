@@ -18,8 +18,8 @@ public class ClientStateTest {
 
     @BeforeAll
     public void runBeforeAll() {
-        SCHClient sch = new SCHClient();
-        PApplet.runSketch(new String[]{"lmao"}/*Processing arguments*/, sch);
+        SCHClient schc = SCHClient.getClient();
+        PApplet.runSketch(new String[]{"lmao"}/*Processing arguments*/, schc);
     }
 
     @BeforeEach
@@ -29,60 +29,58 @@ public class ClientStateTest {
 
     @Test
     public void testConnection() {
-        SCHClient schc = new SCHClient();
         sc.setPlayerNum(1);
-        sc.processNewMessage(schc, createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
+        sc.processNewMessage(createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
         assertArrayEquals(new boolean[]{true, false, false, false}, sc.getExistingPlayers());
         assertArrayEquals(new PImage[]{CAT_DEFAULT, CAT_OUTLINE, CAT_OUTLINE, CAT_OUTLINE}, sc.getDrawnImages());
     }
 
     @Test
     public void testConnectionNonOneStart() {
-        SCHClient schc = new SCHClient();
+        SCHClient.getClient().settings();
+        SCHClient.getClient().setup();
         sc.setPlayerNum(1);
-        sc.processNewMessage(schc, createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
+        sc.processNewMessage(createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
         assertArrayEquals(new boolean[]{true, false, false, false}, sc.getExistingPlayers());
         assertArrayEquals(new PImage[]{CAT_DEFAULT, CAT_OUTLINE, CAT_OUTLINE, CAT_OUTLINE}, sc.getDrawnImages());
         runBefore();
         sc.setPlayerNum(2);
-        sc.processNewMessage(schc, createIDMessage("LMAO", 2, new boolean[]{false, true, false, false}));
+        sc.processNewMessage(createIDMessage("LMAO", 2, new boolean[]{false, true, false, false}));
         assertArrayEquals(new boolean[]{false, true, false, false}, sc.getExistingPlayers());
         assertArrayEquals(new PImage[]{CAT_OUTLINE, CAT_FACE_LEFT, CAT_OUTLINE, CAT_OUTLINE}, sc.getDrawnImages());
         runBefore();
         sc.setPlayerNum(3);
-        sc.processNewMessage(schc, createIDMessage("LMAO", 3, new boolean[]{false, false, true, false}));
+        sc.processNewMessage(createIDMessage("LMAO", 3, new boolean[]{false, false, true, false}));
         assertArrayEquals(new boolean[]{false, false, true, false}, sc.getExistingPlayers());
         assertArrayEquals(new PImage[]{CAT_OUTLINE, CAT_OUTLINE, CAT_BACK_ONLY, CAT_OUTLINE}, sc.getDrawnImages());
         runBefore();
         sc.setPlayerNum(4);
-        sc.processNewMessage(schc, createIDMessage("LMAO", 4, new boolean[]{false, false, false, true}));
+        sc.processNewMessage(createIDMessage("LMAO", 4, new boolean[]{false, false, false, true}));
         assertArrayEquals(new boolean[]{false, false, false, true}, sc.getExistingPlayers());
         assertArrayEquals(new PImage[]{CAT_OUTLINE, CAT_OUTLINE, CAT_OUTLINE, CAT_FACE_RIGHT}, sc.getDrawnImages());
     }
 
     @Test
     public void testAdditionalPlayer() {
-        SCHClient schc = new SCHClient();
         sc.setPlayerNum(1);
-        sc.processNewMessage(schc, createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
+        sc.processNewMessage(createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
         assertArrayEquals(new boolean[]{true, false, false, false}, sc.getExistingPlayers());
         assertArrayEquals(new PImage[]{CAT_DEFAULT, CAT_OUTLINE, CAT_OUTLINE, CAT_OUTLINE}, sc.getDrawnImages());
-        sc.processNewMessage(schc, createConnectionMessage(3));
+        sc.processNewMessage(createConnectionMessage(3));
         assertArrayEquals(new boolean[]{true, false, true, false}, sc.getExistingPlayers());
         assertArrayEquals(new PImage[]{CAT_DEFAULT, CAT_OUTLINE, CAT_BACK_ONLY, CAT_OUTLINE}, sc.getDrawnImages());
     }
 
     @Test
     public void testRemovePlayer() {
-        SCHClient schc = new SCHClient();
         sc.setPlayerNum(1);
-        sc.processNewMessage(schc, createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
+        sc.processNewMessage(createIDMessage("LMAO", 1, new boolean[]{true, false, false, false}));
         assertArrayEquals(new boolean[]{true, false, false, false}, sc.getExistingPlayers());
         assertArrayEquals(new PImage[]{CAT_DEFAULT, CAT_OUTLINE, CAT_OUTLINE, CAT_OUTLINE}, sc.getDrawnImages());
-        sc.processNewMessage(schc, createConnectionMessage(3));
+        sc.processNewMessage(createConnectionMessage(3));
         assertArrayEquals(new boolean[]{true, false, true, false}, sc.getExistingPlayers());
         assertArrayEquals(new PImage[]{CAT_DEFAULT, CAT_OUTLINE, CAT_BACK_ONLY, CAT_OUTLINE}, sc.getDrawnImages());
-        sc.processNewMessage(schc, createDisconnectMessage(3));
+        sc.processNewMessage(createDisconnectMessage(3));
         assertArrayEquals(new boolean[]{true, false, false, false}, sc.getExistingPlayers());
         assertArrayEquals(new PImage[]{CAT_DEFAULT, CAT_OUTLINE, CAT_OUTLINE, CAT_OUTLINE}, sc.getDrawnImages());
     }
@@ -90,12 +88,11 @@ public class ClientStateTest {
     @Test
     // Ignore since it makes calls to processing
     public void testAddChatMessage() {
-        SCHClient schc = new SCHClient();
-        sc.processNewMessage(schc, createChatMessage("HI", 4));
+        sc.processNewMessage(createChatMessage("HI", 4));
         assertEquals(1, sc.getChatMessages().size());
         assertEquals(4, sc.getChatMessages().get(0).playerNumberSender);
         assertEquals("HI", sc.getChatMessages().get(0).message);
-        sc.processNewMessage(schc, createChatMessage("HELLO", 2));
+        sc.processNewMessage(createChatMessage("HELLO", 2));
         assertEquals(2, sc.getChatMessages().size());
         assertEquals(2, sc.getChatMessages().get(0).playerNumberSender);
         assertEquals("HELLO", sc.getChatMessages().get(0).message);
@@ -104,11 +101,10 @@ public class ClientStateTest {
     @Test
     // Ignore since it makes calls to processing
     public void testAddOverMaxCapacity() {
-        SCHClient schc = new SCHClient();
         for (int i = 0; i < ClientState.MAX_LENGTH; i++) {
-            sc.processNewMessage(schc, createChatMessage("" + i, 3));
+            sc.processNewMessage(createChatMessage("" + i, 3));
         }
-        sc.processNewMessage(schc, createChatMessage("" + (ClientState.MAX_LENGTH + 1), 3));
+        sc.processNewMessage(createChatMessage("" + (ClientState.MAX_LENGTH + 1), 3));
         assertEquals(3, sc.getChatMessages().getLast().playerNumberSender);
         assertEquals("1", sc.getChatMessages().getLast().message);
     }

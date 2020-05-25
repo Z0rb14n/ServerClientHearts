@@ -75,7 +75,8 @@ public final class Card implements Serializable {
         return face;
     }
 
-    public void draw(SCHClient applet, float x, float y) {
+    public void draw(float x, float y) {
+        SCHClient applet = SCHClient.getClient();
         applet.pushStyle();
         applet.stroke(BLACK);
         applet.strokeWeight(2);
