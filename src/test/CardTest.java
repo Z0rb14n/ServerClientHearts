@@ -6,11 +6,11 @@ import java.nio.ByteBuffer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class CardTest {
+class CardTest {
     private Card card;
 
     @Test
-    public void testInit() {
+    void testInit() {
         try {
             card = new Card("3C");
             Card card2 = new Card("3C");
@@ -34,7 +34,7 @@ public class CardTest {
     }
 
     @Test
-    public void testGetValue() {
+    void testGetValue() {
         for (int i = 2; i < 11; i++) {
             String name = i + "C";
             assertEquals(i, new Card(name).getValue());
@@ -46,7 +46,7 @@ public class CardTest {
     }
 
     @Test
-    public void testIsFaceCard() {
+    void testIsFaceCard() {
         card = new Card("JH");
         assertTrue(card.isFaceCard());
         card = new Card("3C");
@@ -54,7 +54,7 @@ public class CardTest {
     }
 
     @Test
-    public void testIsPenaltyCard() {
+    void testIsPenaltyCard() {
         card = new Card("2H");
         assertFalse(card.isPenaltyCard());
         card = new Card("5H");
@@ -76,7 +76,7 @@ public class CardTest {
     }
 
     @Test
-    public void testPenaltyPoints() {
+    void testPenaltyPoints() {
         card = new Card("2H");
         assertEquals(0, card.getPenaltyPoints());
         card = new Card("5H");
@@ -98,7 +98,7 @@ public class CardTest {
     }
 
     @Test
-    public void testIsHeart() {
+    void testIsHeart() {
         card = new Card("10H");
         Card card2 = new Card("3H");
         Card card3 = new Card("AH");
@@ -110,7 +110,7 @@ public class CardTest {
     }
 
     @Test
-    public void testIs10C() {
+    void testIs10C() {
         card = new Card("10C");
         Card card2 = new Card("3C");
         assertTrue(card.is10C());
@@ -118,7 +118,7 @@ public class CardTest {
     }
 
     @Test
-    public void testEqualSuit() {
+    void testEqualSuit() {
         card = new Card("3C");
         Card card2 = new Card("JC");
         Card card3 = new Card("3H");
@@ -131,7 +131,7 @@ public class CardTest {
     }
 
     @Test
-    public void testEqualFace() {
+    void testEqualFace() {
         card = new Card("JC");
         Card card2 = new Card("KC");
         Card card3 = new Card("3H");
@@ -144,7 +144,7 @@ public class CardTest {
     }
 
     @Test
-    public void testEqualNumber() {
+    void testEqualNumber() {
         card = new Card("3C");
         Card card2 = new Card("3H");
         Card card3 = new Card("JC");
@@ -155,7 +155,7 @@ public class CardTest {
     }
 
     @Test
-    public void lol() {
+    void lol() {
         System.out.print('\0');
         final int desiredInt = 512;
         byte[] lol = ByteBuffer.allocate(4).putInt(desiredInt).array();

@@ -3,9 +3,9 @@ import util.Face;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class FaceTest {
+class FaceTest {
     @Test
-    public void testToString() {
+    void testToString() {
         assertEquals("J", Face.Jack.toString());
         assertEquals("Q", Face.Queen.toString());
         assertEquals("K", Face.King.toString());
@@ -13,7 +13,7 @@ public class FaceTest {
     }
 
     @Test
-    public void testGetValue() {
+    void testGetValue() {
         assertEquals(11, Face.Jack.getValue());
         assertEquals(12, Face.Queen.getValue());
         assertEquals(13, Face.King.getValue());

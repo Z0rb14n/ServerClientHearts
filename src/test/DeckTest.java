@@ -6,9 +6,9 @@ import java.io.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static util.Suit.*;
 
-public class DeckTest {
+class DeckTest {
     @Test
-    public void testGenerate() {
+    void testGenerate() {
         Deck deck = new Deck();
         deck.generate52();
         assertEquals(52, deck.deckSize());
@@ -26,7 +26,7 @@ public class DeckTest {
     }
 
     @Test
-    public void testSerializable() {
+    void testSerializable() {
         Deck deck = new Deck();
         deck.generate52();
         try {

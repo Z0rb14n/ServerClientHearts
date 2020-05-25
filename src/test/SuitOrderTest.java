@@ -7,7 +7,7 @@ import util.SuitOrder;
 import static org.junit.jupiter.api.Assertions.*;
 import static util.Suit.*;
 
-public class SuitOrderTest {
+class SuitOrderTest {
     private static final Card[] cards = new Card[]{
             new Card("3C"), new Card("4C"),
             new Card("3H"), new Card("4H"),
@@ -17,14 +17,14 @@ public class SuitOrderTest {
     private SuitOrder so;
 
     @BeforeEach
-    public void runBefore() {
+    void runBefore() {
         so = new SuitOrder();
         assertFalse(so.isSortingByValue());
         assertArrayEquals(so.getSuitOrder(), SuitOrder.DEFAULT); // H > D  > S > C
     }
 
     @Test
-    public void testReset() {
+    void testReset() {
         so.setSortByValue(true);
         so.moveSuitToBottom(Heart);
         assertTrue(so.isSortingByValue());
@@ -35,7 +35,7 @@ public class SuitOrderTest {
     }
 
     @Test
-    public void testLocateSuit() {
+    void testLocateSuit() {
         assertEquals(1, so.locateSuit(Heart));
         assertEquals(2, so.locateSuit(Diamond));
         assertEquals(3, so.locateSuit(Spade));
@@ -43,14 +43,14 @@ public class SuitOrderTest {
     }
 
     @Test
-    public void testValueCompare() {
+    void testValueCompare() {
         assertEquals(0, so.valueCompare(cards[0], cards[2]));
         assertEquals(1, so.valueCompare(cards[1], cards[0]));
         assertEquals(-1, so.valueCompare(cards[4], cards[5]));
     }
 
     @Test
-    public void testDefaultSuitCompare() {
+    void testDefaultSuitCompare() {
         assertEquals(0, so.suitCompare(Heart, Heart));
         assertEquals(1, so.suitCompare(Heart, Diamond));
         assertEquals(1, so.suitCompare(Heart, Spade));
@@ -70,7 +70,7 @@ public class SuitOrderTest {
     }
 
     @Test
-    public void testDefaultSuitCompareCards() {
+    void testDefaultSuitCompareCards() {
         assertEquals(0, so.suitCompare(cards[3], cards[3]));
         assertEquals(1, so.suitCompare(cards[3], cards[7]));
         assertEquals(1, so.suitCompare(cards[3], cards[5]));
@@ -90,7 +90,7 @@ public class SuitOrderTest {
     }
 
     @Test
-    public void testCompareDefault() {
+    void testCompareDefault() {
         for (int i = 0; i < cards.length; i++) {
             for (int j = 0; j < cards.length; j++) {
                 if (i == j) {
@@ -107,7 +107,7 @@ public class SuitOrderTest {
     }
 
     @Test
-    public void testMoveSuitToPosition() {
+    void testMoveSuitToPosition() {
         so.moveSuitToLocation(Heart, 1);
         assertArrayEquals(so.getSuitOrder(), SuitOrder.DEFAULT); // H > D > S > C
         so.moveSuitToLocation(Spade, 1);                 // S > H > D > C
@@ -121,11 +121,11 @@ public class SuitOrderTest {
     }
 
     @Test
-    public void testCompareSortValue() {
+    void testCompareSortValue() {
         so.setSortByValue(true);
-        for (int i = 0; i < cards.length; i++) {
-            for (int j = 0; j < cards.length; j++) {
-                assertEquals(so.valueCompare(cards[i], cards[j]), so.compare(cards[i], cards[j]));
+        for (Card card : cards) {
+            for (Card card1 : cards) {
+                assertEquals(so.valueCompare(card, card1), so.compare(card, card1));
             }
         }
     }
