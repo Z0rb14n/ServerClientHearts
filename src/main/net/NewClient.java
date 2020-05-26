@@ -2,6 +2,7 @@ package net;
 
 import processing.net.Client;
 import ui.SCHClient;
+import ui.console.Console;
 import util.Deck;
 
 import java.io.*;
@@ -20,15 +21,11 @@ public final class NewClient extends Client {
         super(SCHClient.getClient(), ip, PORT);
         if (!active()) {
             stop();
-            System.out.println("Could not connect to ip: " + ip + ", port: " + PORT);
+            Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
             throw new ConnectionException(ERR_TIMED_OUT);
+        } else {
+            getClientIDFromServer();
         }
-    }
-
-    // MODIFIES: this
-    // EFFECTS: initializes client ID
-    public void initialize() {
-        getClientIDFromServer();
     }
 
     // MODIFIES: this

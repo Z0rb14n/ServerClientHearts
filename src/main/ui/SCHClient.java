@@ -132,6 +132,23 @@ public final class SCHClient extends PApplet {
 
     private static String errorDisplayed = "";
 
+    private boolean didTimeout = true;
+
+    private class ClientLoader extends Thread {
+        private String loadedIP;
+
+        ClientLoader(String ip) {
+            super();
+            this.loadedIP = ip;
+        }
+
+        @Override
+        public void run() {
+            client = new NewClient(loadedIP);
+            didTimeout = false;
+        }
+    }
+
     // MODIFIES: this
     // EFFECTS: attempts to load the client with given ip
     public void attemptLoadClient(String ip) {
@@ -142,20 +159,16 @@ public final class SCHClient extends PApplet {
         errorDisplayed = "";
         boolean failed = false;
         try {
-            Thread thread = new Thread(() -> client = new NewClient(ip));
-            thread.start();
-            final long time = System.nanoTime();
-            thread.join(10000);
-
-            if (System.nanoTime() - time > (9000000) && client == null) {
+            ClientLoader cl = new ClientLoader(ip);
+            cl.start();
+            cl.join(10000);
+            if (client == null || didTimeout) {
                 failed = true;
-                // thread.interrupt();   // ??? do I need this?
-                Console.getConsole().addMessage("Connection timeout.");
+                Console.getConsole().addMessage("Connection timed out.");
                 errorDisplayed = CONNECTION_TIMEOUT;
-            }
-            if (client != null) {
-                client.initialize();
+            } else {
                 clientState.setPlayerNum(client.getPlayerNum());
+                Console.getConsole().addMessage("Successful connection. Player num: " + client.getPlayerNum() + ", ID: " + client.getClientID());
             }
         } catch (ConnectionException e) {
             if (e.getMessage().equals(ERR_TIMED_OUT)) {
@@ -177,7 +190,6 @@ public final class SCHClient extends PApplet {
             }
         } else if (!failed) {
             errorDisplayed = "";
-            Console.getConsole().addMessage("Successful connection. Player num: " + client.getPlayerNum() + ", ID: " + client.getClientID());
         }
     }
 
