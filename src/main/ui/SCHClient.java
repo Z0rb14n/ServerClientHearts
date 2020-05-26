@@ -623,7 +623,7 @@ public final class SCHClient extends PApplet {
             if (client.available() > 0) {
                 ServerToClientMessage scm = client.readServerToClientMessage();
                 clientState.processNewMessage(scm);
-                System.out.println("New Message from Server: " + scm);
+                Console.getConsole().addMessage("New Message from Server: " + scm);
             }
             fill(RED);
             textSize(20);

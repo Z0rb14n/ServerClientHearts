@@ -40,8 +40,6 @@ public final class NewClient extends Client {
             playerNum = msg.getPlayerNumber();
             SCHClient.getClient().catchExtraMessages(msg);
         }
-
-        System.out.println("Client ID is " + clientID + ", player num is " + playerNum);
     }
 
     private boolean msgFinished = true;
