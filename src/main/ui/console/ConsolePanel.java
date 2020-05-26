@@ -17,4 +17,8 @@ class ConsolePanel extends JPanel {
     void addCommand(String input) {
         ta.addCommand(input);
     }
+
+    void addMessage(String message) {
+        ta.addOutput(message);
+    }
 }

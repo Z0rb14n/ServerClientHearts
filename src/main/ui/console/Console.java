@@ -1,5 +1,7 @@
 package ui.console;
 
+import exception.InvalidCommandException;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -26,7 +28,20 @@ public class Console extends JFrame {
         return singleton;
     }
 
-    void addCommand(String input) {
+    void runCommand(String input) {
+        addCommand(input);
+        try {
+            Command command = new Command(input);
+            command.runCommand();
+        } catch (InvalidCommandException ignored) {
+        }
+    }
+
+    private void addCommand(String input) {
         consolePanel.addCommand(input);
+    }
+
+    public void addMessage(String output) {
+        consolePanel.addMessage(output);
     }
 }

@@ -2,15 +2,16 @@ package net;
 
 import processing.net.Client;
 import ui.SCHClient;
+import util.Deck;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 
 import static net.Constants.ERR_TIMED_OUT;
+import static net.Constants.PORT;
 
 // Represents the game client
 public final class NewClient extends Client {
-    private static final int PORT = NewServer.PORT;
     private String clientID;
     private int playerNum;
 
@@ -112,9 +113,17 @@ public final class NewClient extends Client {
     }
 
     // MODIFIES: this
-    // EFFECTS; sends chat message to server
+    // EFFECTS: sends chat message to server
     public void sendChatMessage(String msg) {
         write(ClientToServerMessage.createNewChatMessage(msg));
+    }
+
+    // MODIFIES: this
+    // EFFECTS: sends a card played message to server
+    public void sendCardsPlayedMessage(Deck cards) {
+        if (cards.deckSize() != 3 && cards.deckSize() != 1) throw new IllegalArgumentException();
+        if (cards.deckSize() == 1) write(ClientToServerMessage.createNewCardPlayedMessage(cards.get(0)));
+        if (cards.deckSize() == 3) write(ClientToServerMessage.createNewSubmitThreeCardMessage(cards));
     }
 
     @Override

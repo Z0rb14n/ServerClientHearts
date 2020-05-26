@@ -133,8 +133,12 @@ public final class SCHClient extends PApplet {
     private static String errorDisplayed = "";
 
     // MODIFIES: this
-    // EFFECTS: attempts to load the client
-    private void tryLoadClient() {
+    // EFFECTS: attempts to load the client with given ip
+    public void attemptLoadClient(String ip) {
+        if (!isClientInactive()) {
+            Console.getConsole().addMessage("Attempted to connect to client when one was already connected");
+            return;
+        }
         errorDisplayed = "";
         boolean failed = false;
         try {
@@ -146,6 +150,7 @@ public final class SCHClient extends PApplet {
             if (System.nanoTime() - time > (9000000) && client == null) {
                 failed = true;
                 // thread.interrupt();   // ??? do I need this?
+                Console.getConsole().addMessage("Connection timeout.");
                 errorDisplayed = CONNECTION_TIMEOUT;
             }
             if (client != null) {
@@ -155,8 +160,10 @@ public final class SCHClient extends PApplet {
         } catch (ConnectionException e) {
             if (e.getMessage().equals(ERR_TIMED_OUT)) {
                 errorDisplayed = CONNECTION_TIMEOUT;
+                Console.getConsole().addMessage("Connection timeout.");
             } else if (e.getMessage().equals(ERR_TOO_MANY_PLAYERS)) {
                 errorDisplayed = TOO_MANY_PLAYERS_MSG;
+                Console.getConsole().addMessage("Too many players.");
             }
             failed = true;
         } catch (InterruptedException e) {
@@ -166,10 +173,18 @@ public final class SCHClient extends PApplet {
         if (client == null) {
             if ("".equals(errorDisplayed)) {
                 errorDisplayed = DEFAULT_COULD_NOT_CONNECT;
+                Console.getConsole().addMessage("Could not connect.");
             }
         } else if (!failed) {
             errorDisplayed = "";
+            Console.getConsole().addMessage("Successful connection. Player num: " + client.getPlayerNum() + ", ID: " + client.getClientID());
         }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: attempts to load the client
+    private void tryLoadClient() {
+        attemptLoadClient(ip);
     }
 
     private int ipEnterPosition = 0;
@@ -506,6 +521,35 @@ public final class SCHClient extends PApplet {
                 firstVisibleChar = 0;
                 scrollChatToBottom();
             }
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: sends a chat message
+    public void sendChatMessage(String msg) {
+        if (!isClientInactive()) {
+            if (msg.length() != 0) {
+                client.sendChatMessage(newChatMessage);
+                newChatMessage = "";
+                chatWindowIndexPosition = 0;
+                lastVisibleChar = 0;
+                firstVisibleChar = 0;
+                scrollChatToBottom();
+            }
+        } else {
+            Console.getConsole().addMessage("Client is not connected.");
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: plays cards
+    public void playCards(Deck d) {
+        if (isClientInactive()) {
+            Console.getConsole().addMessage("Client is not connected.");
+        } else if (d.deckSize() != 1 && d.deckSize() != 3) {
+            Console.getConsole().addMessage("Invalid play.");
+        } else {
+            client.sendCardsPlayedMessage(d);
         }
     }
 

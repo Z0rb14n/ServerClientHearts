@@ -22,7 +22,7 @@ class CommandInput extends JPanel {
         private class Listener extends MouseAdapter {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Console.getConsole().addCommand(jtf.getText());
+                Console.getConsole().runCommand(jtf.getText());
                 jtf.setText("");
             }
         }

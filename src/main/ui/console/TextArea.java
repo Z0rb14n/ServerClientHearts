@@ -9,7 +9,7 @@ class TextArea extends JPanel {
 
     TextArea() {
         super();
-        // text.setEditable(true);
+        text.setEditable(false);
         text.setMargin(new Insets(10, 10, 10, 10));
         JScrollPane jsp = new JScrollPane(text);
         add(jsp);
@@ -21,7 +21,7 @@ class TextArea extends JPanel {
         repaint();
     }
 
-    void addInput(String input) {
+    void addOutput(String input) {
         text.append(input + "\n");
         repaint();
     }
