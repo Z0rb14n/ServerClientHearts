@@ -140,7 +140,8 @@ public class GameState {
 
     // MODIFIES: this, server
     // EFFECTS: receives the card played and updates game state, kicks player if invalid
-    public void playCard(int playerNum, SCHServer server, Card a, Card... c) {
+    public void playCard(int playerNum, Card a, Card... c) {
+        SCHServer server = SCHServer.getServer();
         if (isInvalidPlay(a, playerNum)) {
             server.requestKickInvalidMessage(playerNum);
             return;
@@ -168,7 +169,7 @@ public class GameState {
                     hands[playerNum - 1].removeCard(card);
                 }
                 passingHands[playerNum - 1] = newDeck;
-                checkPassCards(server);
+                checkPassCards();
             }
         } else {
             if (c.length != 0)
@@ -187,7 +188,7 @@ public class GameState {
                     currentSuitToPlay = a.getSuit(); // if starting new turn, set new suit
                     startingPlayer = playerNum;
                 }
-                if (center.deckSize() == 4) endTurn(server);
+                if (center.deckSize() == 4) endTurn();
                 else {
                     server.requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
                 }
@@ -198,7 +199,7 @@ public class GameState {
     // REQUIRES: center.size == 4
     // MODIFIES: this
     // EFFECTS: ends current turn and starts a new one
-    private void endTurn(SCHServer caller) {
+    private void endTurn() {
         assert (center.deckSize() == 4);
         numTurns++;
         startingPlayer = trickWinner(); // set new starting player
@@ -206,8 +207,8 @@ public class GameState {
         deck.removeNonPenaltyCards();
         penalties[startingPlayer - 1].addAll(deck); // distribute penalties
         currentSuitToPlay = null; // can play whatever suit
-        checkGameEnd(caller);
-        if (!gameEnded) caller.startNewTurn(startingPlayer, deck);
+        checkGameEnd();
+        if (!gameEnded) SCHServer.getServer().startNewTurn(startingPlayer, deck);
     }
 
     // REQUIRES: center.size == 4
@@ -222,7 +223,7 @@ public class GameState {
 
     // MODIFIES: this
     // EFFECTS: checks if all cards are passed. If so, actually pass cards and move on
-    private void checkPassCards(SCHServer caller) {
+    private void checkPassCards() {
         for (Deck d : passingHands) {
             if (d.isEmpty()) return;
         }
@@ -238,7 +239,8 @@ public class GameState {
             hands[3].addAll(passingHands[0]);
         }
         allCardsPassed = true;
-        startFirstTurn(caller);
+
+        startFirstTurn();
     }
 
     // REQUIRES: game has JUST started
@@ -253,10 +255,10 @@ public class GameState {
 
     // MODIFIES: this
     // EFFECTS: checks whether the game has ended (i.e. turn number == 13)
-    private void checkGameEnd(SCHServer caller) {
+    private void checkGameEnd() {
         if (numTurns != 14) return;
         gameEnded = true;
-        caller.endGame(gameWinner(), gameWinnerPoints(), penalties);
+        SCHServer.getServer().endGame(gameWinner(), gameWinnerPoints(), penalties);
     }
 
     // EFFECTS: returns current winner
@@ -277,10 +279,10 @@ public class GameState {
 
     // MODIFIES: this
     // EFFECTS: starts the first turn - they MUST play three of clubs
-    private void startFirstTurn(SCHServer caller) {
+    private void startFirstTurn() {
         threeOfClubsNeeded = true;
         startingPlayer = gameStarter();
-        caller.startFirstTurn(startingPlayer);
+        SCHServer.getServer().startFirstTurn(startingPlayer);
         numTurns = 1;
     }
 

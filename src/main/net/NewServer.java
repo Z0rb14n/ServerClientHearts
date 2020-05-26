@@ -20,12 +20,10 @@ import static net.ServerToClientMessage.*;
 
 public class NewServer extends Server {
     private final LinkedHashMap<String, Client> clients = new LinkedHashMap<>(4);
-    private SCHServer sch;
     private final String[] IDS = new String[4];
 
-    public NewServer(SCHServer parent) {
-        super(parent, PORT);
-        sch = parent;
+    public NewServer() {
+        super(SCHServer.getServer(), PORT);
         System.out.println("Server started at: " + Server.ip());
         ChatMessageHandler cmh = new ChatMessageHandler();
         cmh.start();
@@ -265,7 +263,7 @@ public class NewServer extends Server {
                     } else if (csm.isChatMessage()) {
                         handleChatMessage(csm, c);
                     } else {
-                        sch.addNewMessage(csm);
+                        SCHServer.getServer().addNewMessage(csm);
                     }
                     c = available(); // get next client
                 }

@@ -24,10 +24,21 @@ public final class SCHServer extends PApplet {
     private GameState gameState;
     private final ArrayDeque<MessagePair> clientMessages = new ArrayDeque<>();
     private final ArrayDeque<ClientToServerMessage> clientServerMessages = new ArrayDeque<>();
+    private static SCHServer singleton;
+
+    private SCHServer() {
+        super();
+    }
+
+    public static SCHServer getServer() {
+        if (singleton == null) {
+            singleton = new SCHServer();
+        }
+        return singleton;
+    }
 
     public static void main(String[] args) {
-        SCHServer sch = new SCHServer();
-        PApplet.runSketch(new String[]{"SCHServer"}, sch);
+        PApplet.runSketch(new String[]{"SCHServer"}, getServer());
     }
 
     //<editor-fold desc="Processing loop commands (i.e. Settings, Setup, Draw)">
@@ -44,7 +55,7 @@ public final class SCHServer extends PApplet {
     // EFFECTS: runs at beginning of program before draw
     public void setup() {
         frameRate(FPS);
-        server = new NewServer(this);
+        server = new NewServer();
         surface.setTitle("Server Client Hearts Server?");
     }
 
@@ -144,7 +155,7 @@ public final class SCHServer extends PApplet {
                     int clientNum = server.getClientNumber(msg.client);
                     if (clientNum != 0) {
                         Deck deck = msg.msg.getThreeCards();
-                        gameState.playCard(clientNum, this, deck.get(0), deck.get(1), deck.get(2));
+                        gameState.playCard(clientNum, deck.get(0), deck.get(1), deck.get(2));
                     }
                 } catch (IllegalArgumentException e) {
                     server.kick(msg.client, ERR_INVALID_MSG);
@@ -154,7 +165,7 @@ public final class SCHServer extends PApplet {
                     int clientNum = server.getClientNumber(msg.client);
                     if (clientNum != 0) {
                         Card card = msg.msg.getCard();
-                        gameState.playCard(clientNum, this, card);
+                        gameState.playCard(clientNum, card);
                     }
                 } catch (IllegalArgumentException e) {
                     server.kick(msg.client, ERR_INVALID_MSG);
