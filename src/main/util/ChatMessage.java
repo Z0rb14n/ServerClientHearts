@@ -8,4 +8,9 @@ public class ChatMessage {
         message = msg;
         playerNumberSender = number;
     }
+
+    @Override
+    public String toString() {
+        return "Player " + playerNumberSender + ": " + message;
+    }
 }

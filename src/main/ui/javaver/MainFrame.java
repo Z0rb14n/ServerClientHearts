@@ -44,17 +44,29 @@ public class MainFrame extends JFrame {
         setVisible(true);
     }
 
-    private void update() {
+    void update() {
         if (isClientInactive() && !displayingInputIP) {
+            removeAll();
             add(cp);
-            remove(gp);
             displayingInputIP = true;
         } else if (!isClientInactive() && displayingInputIP) {
-            remove(cp);
+            removeAll();
             add(gp);
             displayingInputIP = false;
         }
+        if (!isClientInactive()) {
+            if (client.available() > 0) {
+                ServerToClientMessage scm = client.readServerToClientMessage();
+                clientState.processNewMessage(scm);
+                Console.getConsole().addMessage("New Message from Server: " + scm);
+                gp.update(clientState.getChatMessages());
+            }
+        }
         repaint();
+    }
+
+    void sendChatMessage(String message) {
+        client.sendChatMessage(message);
     }
 
     public void updateErrorMessage(String msg) {
@@ -134,7 +146,11 @@ public class MainFrame extends JFrame {
             }
         } else if (!failed) {
             cp.updateErrorDisplayed("");
+            cp.setVisible(false);
+            remove(cp);
+            add(gp);
+            displayingInputIP = false;
+            repaint();
         }
-        update();
     }
 }

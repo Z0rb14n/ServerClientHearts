@@ -109,7 +109,7 @@ public class ClientState {
                 chatMessages.removeLast();
             }
             chatMessages.addFirst(cm);
-            SCHClient.getClient().addNewMessages("Player " + cm.playerNumberSender + ": " + cm.message);
+            if (SCHClient.isUsingProcessing()) SCHClient.getClient().addNewMessages(cm.toString());
             //CHAT <digit> : message
         }
     }

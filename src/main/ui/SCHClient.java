@@ -68,6 +68,10 @@ public final class SCHClient extends PApplet {
         return singleton;
     }
 
+    public static boolean isUsingProcessing() {
+        return singleton != null;
+    }
+
 
     //<editor-fold desc="Initialization">
 
