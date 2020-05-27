@@ -24,6 +24,7 @@ public class MainFrame extends JFrame {
     private ConnectionPanel cp = new ConnectionPanel();
     private ClientState clientState = new ClientState();
     private NewClient client;
+    private MessageReceiverThread mrt = new MessageReceiverThread();
     private static MainFrame singleton;
 
     public static MainFrame getFrame() {
@@ -41,7 +42,38 @@ public class MainFrame extends JFrame {
         setSize(WINDOW_DIMENSION);
         cp.initialize();
         add(cp);
+        mrt.start();
         setVisible(true);
+    }
+
+    class MessageReceiverThread extends Thread {
+        private boolean end = false;
+
+        MessageReceiverThread() {
+            super();
+        }
+
+        void end() {
+            end = true;
+        }
+
+        @Override
+        public void run() {
+            while (!end) {
+                if (!isClientInactive() && client.available() > 0) {
+                    ServerToClientMessage scm = client.readServerToClientMessage();
+                    clientState.processNewMessage(scm);
+                    Console.getConsole().addMessage("New Message from Server: " + scm);
+                    gp.update(clientState);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        mrt.end();
     }
 
     void update() {
@@ -53,14 +85,6 @@ public class MainFrame extends JFrame {
             removeAll();
             add(gp);
             displayingInputIP = false;
-        }
-        if (!isClientInactive()) {
-            if (client.available() > 0) {
-                ServerToClientMessage scm = client.readServerToClientMessage();
-                clientState.processNewMessage(scm);
-                Console.getConsole().addMessage("New Message from Server: " + scm);
-                gp.update(clientState.getChatMessages());
-            }
         }
         repaint();
     }

@@ -1,10 +1,9 @@
 package ui.javaver;
 
-import util.ChatMessage;
+import util.ClientState;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.LinkedList;
 
 class GamePanel extends JPanel {
     private ChatPanel chatPanel;
@@ -23,7 +22,9 @@ class GamePanel extends JPanel {
         setVisible(true);
     }
 
-    void update(LinkedList<ChatMessage> messages) {
-        chatPanel.update(messages);
+    void update(ClientState state) {
+        chatPanel.update(state.getChatMessages());
+        playerView.update(state);
+        cardView.update(state);
     }
 }
