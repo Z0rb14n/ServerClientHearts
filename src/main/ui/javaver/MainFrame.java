@@ -20,6 +20,7 @@ public class MainFrame extends JFrame {
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
     private final static Dimension WINDOW_DIMENSION = new Dimension(1366, 708);
     private boolean displayingInputIP = true;
+    private GamePanel gp = new GamePanel();
     private ConnectionPanel cp = new ConnectionPanel();
     private ClientState clientState = new ClientState();
     private NewClient client;
@@ -46,9 +47,11 @@ public class MainFrame extends JFrame {
     private void update() {
         if (isClientInactive() && !displayingInputIP) {
             add(cp);
+            remove(gp);
             displayingInputIP = true;
         } else if (!isClientInactive() && displayingInputIP) {
             remove(cp);
+            add(gp);
             displayingInputIP = false;
         }
         repaint();
@@ -57,6 +60,7 @@ public class MainFrame extends JFrame {
     public void updateErrorMessage(String msg) {
         cp.updateErrorDisplayed(msg);
         add(cp);
+        remove(gp);
         displayingInputIP = true;
         repaint();
     }
