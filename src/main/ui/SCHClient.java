@@ -107,7 +107,7 @@ public final class SCHClient extends PApplet {
         final int BICYCLE_HEIGHT = 294;
         final int BICYCLE_WIDTH = 192;
         PImage bicycleCat = loadImage(BICYCLE_BACK_FILE);
-        bicycleCat.resize(192, 294);
+        bicycleCat.resize(BICYCLE_WIDTH, BICYCLE_HEIGHT);
         final float X = (240 - BICYCLE_WIDTH) / 2.0f;
         final float Y = (380 - BICYCLE_HEIGHT) / 2.0f;
         BACK_OF_CARD = createGraphics(240, 380);
