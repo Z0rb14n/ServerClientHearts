@@ -19,10 +19,10 @@ public final class NewClient extends Client {
     private int playerNum;
     private boolean isUsingProcessing;
 
-    // EFFECTS: initializes client without using processing
-    public NewClient(String ip, boolean noUsingProcessing) {
+    // EFFECTS: initializes client
+    public NewClient(String ip, boolean isUsingProcessing) {
         super(new PApplet(), ip, PORT);
-        isUsingProcessing = false;
+        this.isUsingProcessing = isUsingProcessing;
         if (!active()) {
             stop();
             Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
@@ -34,15 +34,7 @@ public final class NewClient extends Client {
 
     // EFFECTS: initializes client with params of Processing's Client parameters
     public NewClient(String ip) {
-        super(SCHClient.getClient(), ip, PORT);
-        isUsingProcessing = true;
-        if (!active()) {
-            stop();
-            Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
-            throw new ConnectionException(ERR_TIMED_OUT);
-        } else {
-            getClientIDFromServer();
-        }
+        this(ip, true);
     }
 
     // MODIFIES: this

@@ -60,11 +60,18 @@ public class MainFrame extends JFrame {
         @Override
         public void run() {
             while (!end) {
+                System.out.print(end + "," + isClientInactive());
+                if (client != null) System.out.println("," + client.available());
+                else System.out.println();
                 if (!isClientInactive() && client.available() > 0) {
                     ServerToClientMessage scm = client.readServerToClientMessage();
                     clientState.processNewMessage(scm);
                     Console.getConsole().addMessage("New Message from Server: " + scm);
                     gp.update(clientState);
+                }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ignored) {
                 }
             }
         }
@@ -89,7 +96,8 @@ public class MainFrame extends JFrame {
         repaint();
     }
 
-    void sendChatMessage(String message) {
+    public void sendChatMessage(String message) {
+        Console.getConsole().addMessage("Sending chat message: " + message);
         client.sendChatMessage(message);
     }
 
@@ -124,14 +132,14 @@ public class MainFrame extends JFrame {
 
         @Override
         public void run() {
-            client = new NewClient(loadedIP, true);
+            client = new NewClient(loadedIP, false);
             didTimeout = false;
         }
     }
 
     // MODIFIES: this
     // EFFECTS: attempts to load the client with given ip
-    void attemptLoadClient(String ip) {
+    public void attemptLoadClient(String ip) {
         if (!isClientInactive()) {
             Console.getConsole().addMessage("Attempted to connect to client when one was already connected");
             return;

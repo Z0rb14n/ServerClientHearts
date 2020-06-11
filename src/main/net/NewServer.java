@@ -257,11 +257,12 @@ public class NewServer extends Server {
                     System.out.print("MESSAGE IS BEING RECEIVED.");
                     ClientToServerMessage csm = readClientToServerMessage(c);
                     if (csm == null) continue;
-                    System.out.print(csm.isChatMessage());
+                    System.out.print(csm);
                     if (!csm.isValidMessage()) {
                         kickInvalid(getClientNumber(c));
                     } else if (csm.isChatMessage()) {
                         handleChatMessage(csm, c);
+                        System.out.print("handled chat message.");
                     } else {
                         SCHServer.getServer().addNewMessage(csm);
                     }
