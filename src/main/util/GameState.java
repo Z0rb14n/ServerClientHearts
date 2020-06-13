@@ -2,6 +2,8 @@ package util;
 
 import ui.SCHServer;
 
+// TODO SEND PLAYING/PASSING ORDER OVER SERVERTOCLIENTMESSAGE
+
 // Represents the state of the server (i.e. has the game started?)
 public class GameState {
     private static final PlayOrder PLAYING_ORDER = PlayOrder.ASCENDING_NUM;
