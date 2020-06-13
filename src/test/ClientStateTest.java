@@ -11,6 +11,8 @@ import static net.ServerToClientMessage.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+// TODO FINISH TESTS
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ClientStateTest {
     private ClientState sc;

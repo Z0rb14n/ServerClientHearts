@@ -65,7 +65,6 @@ public class Deck implements Iterable<Card>, Serializable {
 
     // MODIFIES: this
     // EFFECTS: adds a card to the deck
-    //          does not make a complete copy of the added card
     public void addCard(Card a) {
         cards.add(a.copy());
     }

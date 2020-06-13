@@ -65,6 +65,7 @@ public class SuitOrder implements Comparator<Card>, Serializable {
     // MODIFIES: this
     // EFFECTS: moves a suit to specific location (1-4, or index + 1)
     public void moveSuitToLocation(Suit a, int location) {
+        if (location < 1 || location > 4) throw new IllegalArgumentException();
         final int prevLocation = locateSuit(a);
         if (prevLocation == location) return;
         if (prevLocation > location) {
