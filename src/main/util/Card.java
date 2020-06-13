@@ -120,23 +120,21 @@ public final class Card implements Serializable {
             return Face.Queen.equals(face);
         } else if (suit.equals(Suit.Diamond)) {
             return Face.Jack.equals(face);
-        } else if (suit.equals(Suit.Club)) {
+        } else {
             return number == 10;
         }
-        return false;
     }
 
     // EFFECTS: determines the amount of penalty points this card entails, or 0
     public int getPenaltyPoints() {
-        if (is10C()) return -50;
-        if (Suit.Diamond.equals(suit) && Face.Jack.equals(face)) return -100;
-        if (Suit.Spade.equals(suit) && Face.Queen.equals(face)) return 100;
-        if (Suit.Heart.equals(suit)) {
+        if (Suit.Diamond.equals(suit)) return Face.Jack.equals(face) ? -100 : 0;
+        if (Suit.Spade.equals(suit)) return Face.Queen.equals(face) ? 100 : 0;
+        if (Suit.Club.equals(suit)) return number == 10 ? -50 : 0;
+        else {
             if (!isFaceCard && number < 5) return 0;
             else if (!isFaceCard) return 10;
             else return (face.getValue() - 9) * 10;
         }
-        return 0;
     }
 
     @Override
@@ -145,7 +143,7 @@ public final class Card implements Serializable {
         int hash = 5;
         hash = 97 * hash + suit.hashCode();
         hash = 97 * hash + this.number;
-        hash = 97 * hash + face.hashCode();
+        hash = 97 * hash + (face == null ? 0 : face.hashCode());
         hash = 97 * hash + (this.isFaceCard ? 1 : 0);
         return hash;
     }
@@ -162,7 +160,7 @@ public final class Card implements Serializable {
     }
 
     // EFFECTS: determines if this card is the three of clubs
-    boolean is3C() {
+    public boolean is3C() {
         return Suit.Club.equals(suit) && number == 3;
     }
 

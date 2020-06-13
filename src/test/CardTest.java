@@ -2,8 +2,6 @@ import org.junit.jupiter.api.Test;
 import util.Card;
 import util.Suit;
 
-import java.nio.ByteBuffer;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class CardTest {
@@ -30,6 +28,44 @@ class CardTest {
             assertTrue(card.equalSuit(card2));
         } catch (IllegalArgumentException e) {
             fail("Exception should not have been thrown");
+        }
+    }
+
+    @Test
+    void testBadInit() {
+        try {
+            new Card("4F");
+            fail();
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        try {
+            new Card("1D");
+            fail();
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        try {
+            new Card("LD");
+            fail();
+        } catch (IllegalArgumentException ignored) {
+        }
+        try {
+            new Card("4FD");
+            fail();
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        try {
+            new Card("4");
+            fail();
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        try {
+            new Card("4FDA");
+            fail();
+        } catch (IllegalArgumentException ignored) {
         }
     }
 
@@ -73,28 +109,22 @@ class CardTest {
         assertTrue(card.isPenaltyCard());
         card = new Card("4C");
         assertFalse(card.isPenaltyCard());
+
     }
 
     @Test
     void testPenaltyPoints() {
-        card = new Card("2H");
-        assertEquals(0, card.getPenaltyPoints());
-        card = new Card("5H");
-        assertEquals(10, card.getPenaltyPoints());
-        card = new Card("10H");
-        assertEquals(10, card.getPenaltyPoints());
-        card = new Card("JH");
-        assertEquals(20, card.getPenaltyPoints());
-        card = new Card("AH");
-        assertEquals(50, card.getPenaltyPoints());
-        card = new Card("QS");
-        assertEquals(100, card.getPenaltyPoints());
-        card = new Card("JD");
-        assertEquals(-100, card.getPenaltyPoints());
-        card = new Card("10C");
-        assertEquals(-50, card.getPenaltyPoints());
-        card = new Card("4C");
-        assertEquals(0, card.getPenaltyPoints());
+        assertEquals(0, new Card("2H").getPenaltyPoints());
+        assertEquals(10, new Card("5H").getPenaltyPoints());
+        assertEquals(10, new Card("10H").getPenaltyPoints());
+        assertEquals(20, new Card("JH").getPenaltyPoints());
+        assertEquals(50, new Card("AH").getPenaltyPoints());
+        assertEquals(0, new Card("3S").getPenaltyPoints());
+        assertEquals(100, new Card("QS").getPenaltyPoints());
+        assertEquals(-100, new Card("JD").getPenaltyPoints());
+        assertEquals(0, new Card("QD").getPenaltyPoints());
+        assertEquals(-50, new Card("10C").getPenaltyPoints());
+        assertEquals(0, new Card("4C").getPenaltyPoints());
     }
 
     @Test
@@ -115,8 +145,15 @@ class CardTest {
         Card card2 = new Card("3C");
         assertTrue(card.is10C());
         assertFalse(card2.is10C());
+        assertFalse(new Card("10D").is10C());
     }
 
+    @Test
+    void testIs3C() {
+        assertTrue(new Card("3C").is3C());
+        assertFalse(new Card("4C").is3C());
+        assertFalse(new Card("3H").is3C());
+    }
     @Test
     void testEqualSuit() {
         card = new Card("3C");
@@ -140,6 +177,7 @@ class CardTest {
         assertTrue(card.equalFace(card4));
         assertFalse(card.equalFace(card5));
         assertTrue(card3.equalFace(card5));
+        assertFalse(card3.equalFace(card4));
         assertFalse(card.equalFace(card2));
     }
 
@@ -155,11 +193,30 @@ class CardTest {
     }
 
     @Test
-    void lol() {
-        System.out.print('\0');
-        final int desiredInt = 512;
-        byte[] lol = ByteBuffer.allocate(4).putInt(desiredInt).array();
-        for (byte b : lol) System.out.print(b);
-        assertEquals(ByteBuffer.wrap(lol).getInt(), desiredInt);
+    void testToString() {
+        Card card = new Card("3C");
+        assertEquals("3C", card.toString());
+        Card card2 = new Card("JH");
+        assertEquals("JH", card2.toString());
+    }
+
+    @Test
+    void testEquals() {
+        assertNotEquals("3C", new Card("3C"));
+        assertNotEquals(new Card("3C"), "3C");
+        assertEquals(new Card("3C"), new Card("3C"));
+        assertNotEquals(new Card("4C"), new Card("3C"));
+        assertNotEquals(new Card("3C"), new Card("JC"));
+        assertNotEquals(new Card("JC"), new Card("3C"));
+        assertNotEquals(new Card("3C"), new Card("3H"));
+        assertNotEquals(new Card("QC"), new Card("JC"));
+        assertEquals(new Card("JC"), new Card("JC"));
+    }
+
+    @Test
+    void testCopy() {
+        assertEquals(new Card("3C"), new Card("3C").copy());
+        assertEquals(new Card("3C").hashCode(), new Card("3C").copy().hashCode());
+        assertEquals(new Card("JH").hashCode(), new Card("JH").copy().hashCode());
     }
 }
