@@ -83,10 +83,12 @@ public class ClientState {
         return exists;
     }
 
+    // EFFECTS: gets the client's deck
     public Deck getDeck() {
         return deck;
     }
 
+    // EFFECTS: determines if the game has started
     public boolean isGameStarted() {
         return gameStarted;
     }

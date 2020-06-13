@@ -14,6 +14,13 @@ public enum Face {
         this.rep = rep;
     }
 
+    public static Face getFace(char c) {
+        for (Face f : Face.values()) {
+            if (f.toString().charAt(0) == c) return f;
+        }
+        throw new IllegalArgumentException();
+    }
+
     @Override
     public String toString() {
         return rep;

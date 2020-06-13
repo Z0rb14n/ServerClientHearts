@@ -15,11 +15,13 @@ public class SuitOrder implements Comparator<Card>, Serializable {
     //{top,secondTop,secondBottom,bottom};
     private Suit[] suits = new Suit[4];
 
+    // EFFECTS: initializes a default suit order
     public SuitOrder() {
         // Defaults: Hearts > Diamonds > Spades > Clubs
         reset();
     }
 
+    // EFFECTS: returns a deep copy of this suit order
     SuitOrder copy() {
         SuitOrder so = new SuitOrder();
         so.sortByValue = this.sortByValue;
@@ -29,10 +31,13 @@ public class SuitOrder implements Comparator<Card>, Serializable {
         return so;
     }
 
+    // EFFECTS: returns whether or not this SuitOrder is sorting by value
     public boolean isSortingByValue() {
         return sortByValue;
     }
 
+    // MODIFIES: this
+    // EFFECTS: sets whether or not this suit order is sorting by value
     public void setSortByValue(boolean val) {
         sortByValue = val;
     }

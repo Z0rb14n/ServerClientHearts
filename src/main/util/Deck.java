@@ -36,6 +36,7 @@ public class Deck implements Iterable<Card>, Serializable {
         return true;
     }
 
+    // EFFECTS: gets the card at index i
     public Card get(int i) {
         return cards.get(i);
     }
@@ -281,6 +282,7 @@ public class Deck implements Iterable<Card>, Serializable {
     }
 
     @Override
+    // EFFECTS: determines if this object is equal to the other object
     public boolean equals(Object o) {
         if (!(o instanceof Deck)) return false;
         Deck deck = (Deck) o;
@@ -288,6 +290,7 @@ public class Deck implements Iterable<Card>, Serializable {
     }
 
     @Override
+    // EFFECTS: get the hash code of this object
     public int hashCode() {
         int result = 17;
         result = 31 * result + order.hashCode();
