@@ -7,8 +7,6 @@ import util.SuitOrder;
 import static org.junit.jupiter.api.Assertions.*;
 import static util.Suit.*;
 
-// TODO FINISH TESTS
-
 class SuitOrderTest {
     private static final Card[] cards = new Card[]{
             new Card("3C"), new Card("4C"),
@@ -42,6 +40,11 @@ class SuitOrderTest {
         assertEquals(2, so.locateSuit(Diamond));
         assertEquals(3, so.locateSuit(Spade));
         assertEquals(4, so.locateSuit(Club));
+        try {
+            so.locateSuit(null);
+            fail();
+        } catch (IllegalArgumentException ignored) {
+        }
     }
 
     @Test
@@ -130,5 +133,15 @@ class SuitOrderTest {
                 assertEquals(so.valueCompare(card, card1), so.compare(card, card1));
             }
         }
+    }
+
+    @Test
+    void testCopy() {
+        SuitOrder copy = so.copy();
+        assertEquals(copy, so);
+        assertEquals(copy.hashCode(), so.hashCode());
+        so.moveSuitToLocation(Club, 2);
+        assertNotEquals(copy, so);
+        assertNotEquals(copy.hashCode(), so.hashCode());
     }
 }
