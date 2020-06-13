@@ -2,21 +2,19 @@ package net;
 
 import processing.net.Client;
 
+// Represents a client and the message it sent
 public final class MessagePair {
     public Client client;
     public ClientToServerMessage msg;
 
-    protected MessagePair() {
-        client = null;
-        msg = null;
-    }
-
+    // EFFECTS: initializes the message pair with given client and message
     public MessagePair(Client c, ClientToServerMessage msg) {
         this.client = c;
         this.msg = msg;
     }
 
     @Override
+    // EFFECTS: determines if the two objects are equal
     public boolean equals(Object o) {
         if (!(o instanceof MessagePair)) return false;
         MessagePair lol = (MessagePair) o;
@@ -24,6 +22,7 @@ public final class MessagePair {
     }
 
     @Override
+    // EFFECTS: gets the hash code of this object
     public int hashCode() {
         int hash = 17;
         hash = 31 * hash + client.hashCode();

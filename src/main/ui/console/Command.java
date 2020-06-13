@@ -1,12 +1,12 @@
 package ui.console;
 
-import exception.InvalidCommandException;
 import ui.client.MainFrame;
 import util.Card;
 import util.Deck;
 
 import java.util.Scanner;
 
+// Represents a command to be run
 final class Command {
     private final static String CONNECT = "connect .+";
     private final static int CONNECT_IP_SUBSTRING = "connect ".length();
@@ -20,6 +20,7 @@ final class Command {
     private String chatMsg;
     private Deck cards;
 
+    // EFFECTS: initializes the command with given command input
     Command(String cmdInput) throws InvalidCommandException {
         if (cmdInput.matches(CONNECT)) {
             ip = cmdInput.substring(CONNECT_IP_SUBSTRING);
@@ -41,9 +42,9 @@ final class Command {
         } else {
             throw new InvalidCommandException();
         }
-
     }
 
+    // EFFECTS: runs the command (i.e. connection to server/chat message)
     void runCommand() {
         if (ip != null) {
             MainFrame.getFrame().attemptLoadClient(ip);

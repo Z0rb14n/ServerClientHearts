@@ -17,9 +17,4 @@ public final class Constants {
     // public final static char HEART_UNICODE_OUTLINE = '♡';
 
     final static int PORT = 5204;
-
-    public final static int WHITE = 0xffffffff;
-    public final static int BLACK = 0xff000000;
-    public final static int RED = 0xffff0000;
-    public final static int LIGHT_RED = 0xFFFF6666;
 }

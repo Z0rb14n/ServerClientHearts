@@ -19,7 +19,7 @@ public final class NewClient extends Client {
 
     // EFFECTS: initializes client
     public NewClient(String ip) {
-        super(new PApplet(), ip, PORT);
+        super(new PApplet(), ip, PORT); // the PApplet isn't used
         if (!active()) {
             stop();
             Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
@@ -76,6 +76,8 @@ public final class NewClient extends Client {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: writes out a ClientToServerMessage to the server
     public void write(ClientToServerMessage msg) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream out = new ObjectOutputStream(bos)) {
             out.writeObject(msg);
@@ -88,11 +90,13 @@ public final class NewClient extends Client {
         }
     }
 
+    // EFFECTS: reads the next four bytes from the server and interprets it as an int
     private int readInt() {
         byte[] bytes = readBytes(4);
         return ByteBuffer.wrap(bytes).getInt();
     }
 
+    // EFFECTS: writes out the byte representation of an integer to the server
     private void writeInt(int a) {
         byte[] bytes = ByteBuffer.allocate(4).putInt(a).array();
         write(bytes);

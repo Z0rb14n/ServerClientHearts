@@ -1,6 +1,6 @@
 package ui.client;
 
-// TODO EXPERIMENTAL JFRAME VERSION
+// TODO FINISH GUI
 
 import net.ConnectionException;
 import net.NewClient;
@@ -15,19 +15,23 @@ import java.awt.*;
 import static net.Constants.ERR_TIMED_OUT;
 import static net.Constants.ERR_TOO_MANY_PLAYERS;
 
+// Represents the main JFrame the user interacts with
 public class MainFrame extends JFrame {
     private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
     private final static Dimension WINDOW_DIMENSION = new Dimension(1366, 708);
+    private final Timer updateTimer = new Timer(100, e -> repaint());
+    private final MessageReceiver mr = new MessageReceiver();
     private boolean displayingInputIP = true;
     private GamePanel gp = new GamePanel();
     private ConnectionPanel cp = new ConnectionPanel();
     private ClientState clientState = new ClientState();
     private NewClient client;
-    private MessageReceiverThread mrt = new MessageReceiverThread();
     private static MainFrame singleton;
 
+    // MODIFIES: this
+    // EFFECTS: ensures there is only one MainFrame in existence (see Singleton Design Pattern, Gang of Four)
     public static MainFrame getFrame() {
         if (singleton == null) {
             singleton = new MainFrame();
@@ -35,6 +39,7 @@ public class MainFrame extends JFrame {
         return singleton;
     }
 
+    // EFFECTS: initializes the JFrame with an update updateTimer and a message receiver thread
     private MainFrame() {
         super("Server Client Hearts Client");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -43,24 +48,17 @@ public class MainFrame extends JFrame {
         setSize(WINDOW_DIMENSION);
         cp.initialize();
         add(cp);
-        mrt.start();
+        mr.start();
+        updateTimer.start();
+        Console.getConsole(); // creates the console window
         setVisible(true);
     }
 
-    class MessageReceiverThread extends Thread {
-        private boolean end = false;
+    // Represents the message receiver thread/timer
+    class MessageReceiver extends Timer {
 
-        MessageReceiverThread() {
-            super();
-        }
-
-        void end() {
-            end = true;
-        }
-
-        @Override
-        public void run() {
-            while (!end) {
+        MessageReceiver() {
+            super(100, e -> {
                 System.out.print(isClientInactive());
                 if (client != null) System.out.println("," + client.available());
                 else System.out.println();
@@ -70,24 +68,28 @@ public class MainFrame extends JFrame {
                     Console.getConsole().addMessage("New Message from Server: " + scm);
                     gp.update();
                 }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ignored) {
-                }
-            }
+            });
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: plays the cards (and sends it to the server)
+    // TODO METHOD BODY
     public void playCards(Deck d) {
         throw new UnsupportedOperationException();
     }
 
     @Override
+    // MODIFIES: this
+    // EFFECTS: disposes of this JFrame - overridden to stop all timers
     public void dispose() {
         super.dispose();
-        mrt.end();
+        updateTimer.stop();
+        mr.stop();
     }
 
+    // MODIFIES: this
+    // EFFECTS: updates the JFrame to indicate to show connection panel or game panel (currently unused)
     void update() {
         if (isClientInactive() && !displayingInputIP) {
             removeAll();
@@ -101,11 +103,15 @@ public class MainFrame extends JFrame {
         repaint();
     }
 
+    // MODIFIES: this
+    // EFFECTS: sends the chat message with given message to the server
     public void sendChatMessage(String message) {
         Console.getConsole().addMessage("Sending chat message: " + message);
         client.sendChatMessage(message);
     }
 
+    // MODIFIES: this
+    // EFFECTS: updates the error displayed on the jframe
     public void updateErrorMessage(String msg) {
         cp.updateErrorDisplayed(msg);
         add(cp);
@@ -114,6 +120,7 @@ public class MainFrame extends JFrame {
         repaint();
     }
 
+    // EFFECTS: returns the client state
     ClientState getClientState() {
         return clientState;
     }
@@ -129,17 +136,21 @@ public class MainFrame extends JFrame {
         return client == null || !client.active();
     }
 
-    private boolean didTimeout = true;
+    private volatile boolean didTimeout = true;
 
+    // Represents a thread to load the client to determine if it runs for too long
     private class ClientLoader extends Thread {
         private String loadedIP;
 
+        // EFFECTS: initializes the client loader with the ip to attempt
         ClientLoader(String ip) {
             super();
             this.loadedIP = ip;
         }
 
         @Override
+        // MODIFIES: this
+        // EFFECTS: attempts to connect to the server, and if it does, indicate so
         public void run() {
             client = new NewClient(loadedIP);
             didTimeout = false;

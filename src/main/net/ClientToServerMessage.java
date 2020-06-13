@@ -76,11 +76,12 @@ public final class ClientToServerMessage implements Serializable {
         return isFirstThreeCards;
     }
 
+    // EFFECTS: returns the three cards to pass onto the next player
     public Deck getThreeCards() {
         return cards;
     }
 
-    private Card card; // future cards played
+    private Card card;
 
     // EFFECTS: creates a new ClientToServerMessage in the format of a card played message
     public static ClientToServerMessage createNewCardPlayedMessage(Card c) {
@@ -95,11 +96,13 @@ public final class ClientToServerMessage implements Serializable {
         return card != null;
     }
 
+    // EFFECTS: returns the singular card played
     public Card getCard() {
         return card;
     }
 
     @Override
+    // EFFECTS: returns the string representation of this message
     public String toString() {
         if (isChatMessage()) return CHAT_MSG_HEADER + getChatMessage();
         if (isFirstThreeCardsMessage()) return FIRST_THREE_HEADER + cards.toString();
@@ -108,6 +111,7 @@ public final class ClientToServerMessage implements Serializable {
     }
 
     @Override
+    // EFFECTS: determines if two objects are equal
     public boolean equals(Object o) {
         if (!(o instanceof ClientToServerMessage)) return false;
         ClientToServerMessage newO = (ClientToServerMessage) o;

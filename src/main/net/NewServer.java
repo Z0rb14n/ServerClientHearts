@@ -18,10 +18,12 @@ import java.util.UUID;
 import static net.Constants.*;
 import static net.ServerToClientMessage.*;
 
+// Represents a wrapper over the Processing server class to allow greater functionality
 public class NewServer extends Server {
     private final LinkedHashMap<String, Client> clients = new LinkedHashMap<>(4);
     private final String[] IDS = new String[4];
 
+    // EFFECTS: instantiates the server
     public NewServer() {
         super(SCHServer.getServer(), PORT);
         System.out.println("Server started at: " + Server.ip());
@@ -50,6 +52,8 @@ public class NewServer extends Server {
 
     }
 
+    // MODIFIES: this
+    // EFFECTS: informs all the clients that the first turn is starting
     public void startFirstTurn(int starter, Deck[] hands, Deck[] newCards) {
         if (starter < 1 || starter > 4) throw new IllegalArgumentException("Invalid argument: " + starter);
         if (hands.length != 4) throw new IllegalArgumentException();
@@ -60,14 +64,20 @@ public class NewServer extends Server {
 
     }
 
+    // MODIFIES: this
+    // EFFECTS: informs players that a card has been played and requests the next card
     public void requestNextCard(int justPlayed, int nextPlayerNum, Deck center, Card played, Suit required) {
         write(createRequestNextCardMessage(played, justPlayed, nextPlayerNum, required));
     }
 
+    // MODIFIES: this
+    // EFFECTS: informs players that a round has ended and requests the "winner" (or loser) plays next
     public void startNewTurn(int winner, Deck addedPenalties) {
         write(createStartNextTurnMessage(winner, addedPenalties));
     }
 
+    // MODIFIES: this
+    // EFFECTS: informs players that the game has ended
     public void endGame(boolean[] winners, int points, Deck[] penaltyHands) {
         write(createGameEndMessage(winners, penaltyHands));
     }
@@ -162,6 +172,8 @@ public class NewServer extends Server {
         removeClientFromEntries(c);
     }
 
+    // MODIFIES: this
+    // EFFECTS: writes out a ServerToClientMessage to clients
     public void write(ServerToClientMessage msg) {
         write(msg.toByteArr());
     }
@@ -195,6 +207,8 @@ public class NewServer extends Server {
         }
     }
 
+    // MODIFIES: c
+    // EFFECTS: reads 4 bytes from a client and interprets it as an integer
     private int readInt(Client c) {
         byte[] bytes = c.readBytes(4);
         return ByteBuffer.wrap(bytes).getInt();
@@ -222,6 +236,7 @@ public class NewServer extends Server {
         System.out.println("Successfully removed id " + toRemove + ", ip: " + c.ip());
     }
 
+    // MODIFIES: this
     // EFFECTS: sends Nth client a message
     private void sendNthClientMessage(int n, ServerToClientMessage scm) {
         if (IDS[n - 1] == null) return;

@@ -1,15 +1,15 @@
 package ui.console;
 
-import exception.InvalidCommandException;
-
 import javax.swing.*;
 import java.awt.*;
 
+// Represents the console window frame
 public class Console extends JFrame {
     private static final Dimension SIZE = new Dimension(600, 600);
     private ConsolePanel consolePanel;
     private static Console singleton;
 
+    // EFFECTS: initializes the console window frame with given title
     private Console() {
         super("Console");
         setResizable(false);
@@ -21,6 +21,9 @@ public class Console extends JFrame {
         setVisible(true);
     }
 
+    // MODIFIES: Console
+    // EFFECTS: ensures there only exists one console instance, while maintaining global access to that instance
+    //          see Singleton Design Pattern, Gang of Four
     public static Console getConsole() {
         if (singleton == null) {
             singleton = new Console();
@@ -28,6 +31,8 @@ public class Console extends JFrame {
         return singleton;
     }
 
+    // MODIFIES: this
+    // EFFECTS: parses and runs the inputted command
     void runCommand(String input) {
         addCommand(input);
         try {
@@ -37,10 +42,14 @@ public class Console extends JFrame {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: adds the given command to the console panel
     private void addCommand(String input) {
         consolePanel.addCommand(input);
     }
 
+    // MODIFIES: this
+    // EFFECTS: adds a given message to console output
     public void addMessage(String output) {
         consolePanel.addMessage(output);
     }

@@ -8,13 +8,14 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+// Represents the view of the cats/players
 public class PlayerView extends JPanel {
-    public static BufferedImage catDefault;
-    public static BufferedImage catFaceLeft;
-    public static BufferedImage catFaceRight;
-    public static BufferedImage catBackOnly;
-    public static BufferedImage catOutlineOnly;
-    public static BufferedImage bicycleCat;
+    private static BufferedImage catDefault;
+    private static BufferedImage catFaceLeft;
+    private static BufferedImage catFaceRight;
+    private static BufferedImage catBackOnly;
+    private static BufferedImage catOutlineOnly;
+    private static BufferedImage bicycleCat;
     private final static Font font = new Font("Arial", Font.PLAIN, 20);
     private final static String DEFAULT_CAT_FILE = "./data/Symmetrical Miaow.png";
     private final static String CAT_LEFT_FILE = "./data/Symmetrical Miaow Face Left.png";
@@ -26,12 +27,14 @@ public class PlayerView extends JPanel {
     private static final int CAT_WIDTH = 150;
     private static final int CAT_HEIGHT = 150;
 
+    // EFFECTS: initializes this PlayerView and initializes the cats
     PlayerView() {
         super();
         setPreferredSize(new Dimension(900, 200));
         initCats();
     }
 
+    // EFFECTS: initializes all the cats
     public static void initCats() {
         try {
             catDefault = resize(ImageIO.read(new File(DEFAULT_CAT_FILE)), CAT_WIDTH, CAT_HEIGHT);
@@ -60,6 +63,9 @@ public class PlayerView extends JPanel {
         }
     }
 
+    // MODIFIES: this
+    // EFFECTS: gets the outline cat image - if not initialized, initializes the cats
+    //          throws new RuntimeException if cats cannot be initialized
     public static BufferedImage getOutlineCat() {
         if (catOutlineOnly == null) {
             initCats();
@@ -68,6 +74,9 @@ public class PlayerView extends JPanel {
         return catOutlineOnly;
     }
 
+    // MODIFIES: this
+    // EFFECTS: gets the cat image - if not initialized, initializes the cats
+    //          throws new RuntimeException if cats cannot be initialized
     public static BufferedImage getCatDefault() {
         if (catDefault == null) {
             initCats();
@@ -76,6 +85,9 @@ public class PlayerView extends JPanel {
         return catDefault;
     }
 
+    // MODIFIES: this
+    // EFFECTS: gets the cat image facing left - if not initialized, initializes the cats
+    //          throws new RuntimeException if cats cannot be initialized
     public static BufferedImage getCatFaceLeft() {
         if (catFaceLeft == null) {
             initCats();
@@ -84,6 +96,9 @@ public class PlayerView extends JPanel {
         return catFaceLeft;
     }
 
+    // MODIFIES: this
+    // EFFECTS: gets the cat image facing right - if not initialized, initializes the cats
+    //          throws new RuntimeException if cats cannot be initialized
     public static BufferedImage getCatFaceRight() {
         if (catFaceRight == null) {
             initCats();
@@ -92,6 +107,9 @@ public class PlayerView extends JPanel {
         return catFaceRight;
     }
 
+    // MODIFIES: this
+    // EFFECTS: gets the cat back image - if not initialized, initializes the cats
+    //          throws new RuntimeException if cats cannot be initialized
     public static BufferedImage getCatBackOnly() {
         if (catBackOnly == null) {
             initCats();
@@ -100,6 +118,9 @@ public class PlayerView extends JPanel {
         return catBackOnly;
     }
 
+    // MODIFIES: this
+    // EFFECTS: gets the cat riding the bicycle - if not initialized, initializes the cats
+    //          throws new RuntimeException if cats cannot be initialized
     public static BufferedImage getBicycleCat() {
         if (bicycleCat == null) {
             initCats();
@@ -123,6 +144,8 @@ public class PlayerView extends JPanel {
     };
 
     @Override
+    // MODIFIES: g
+    // EFFECTS: paints this component onto the graphics object
     public void paintComponent(Graphics g) {
         final boolean[] existingPlayers = MainFrame.getFrame().getClientState().getExistingPlayers();
         Graphics2D g2d = (Graphics2D) g;
@@ -146,6 +169,7 @@ public class PlayerView extends JPanel {
         g.drawImage(bicycleCat, 0, 0, null);
     }
 
+    // EFFECTS: returns a resized image to the new width and new height
     private static BufferedImage resize(BufferedImage img, int newW, int newH) {
         final int w = img.getWidth();
         final int h = img.getHeight();

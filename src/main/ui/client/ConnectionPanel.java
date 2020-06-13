@@ -1,6 +1,5 @@
 package ui.client;
 
-
 import util.Card;
 
 import javax.swing.*;
@@ -13,12 +12,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+// Represents the first panel seen (i.e. to connect to the server)
 class ConnectionPanel extends JPanel {
     private static final Font font = new Font("Arial", Font.PLAIN, 24);
     private IPEnterBox ipBox;
     private IPEnterButton ipEnterButton;
     private JLabel errorDisplayer = new JLabel("");
 
+    // EFFECTS: initializes connection panel with ip enter box and button
     ConnectionPanel() {
         super();
         setBorder(new EmptyBorder(30, 0, 0, 0));
@@ -27,12 +28,16 @@ class ConnectionPanel extends JPanel {
     }
 
     @Override
+    // MODIFIES: g
+    // EFFECTS: paints this component onto g (mainly for testing purposes, delete later)
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Card card = new Card("3C");
         card.draw(g, 0, 0);
     }
 
+    // MODIFIES: this
+    // EFFECTS: initializes this panel properly (must be called after constructor)
     void initialize() {
         setCorrectLayout();
         JLabel jl = new JLabel("Enter IP");
@@ -47,20 +52,27 @@ class ConnectionPanel extends JPanel {
         add(errorDisplayer);
     }
 
+    // MODIFIES: this
+    // EFFECTS: sets the correct panel layout
     private void setCorrectLayout() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
 
+    // MODIFIES: this
+    // EFFECTS: updates the error to display
     void updateErrorDisplayed(String error) {
         errorDisplayer.setText(error);
         repaint();
     }
 
+    // EFFECTS: gets the error displayed
     String getErrorDisplayed() {
         return errorDisplayer.getText();
     }
 
+    // Represents the IP enter box
     private class IPEnterBox extends JTextField {
+        // EFFECTS: initializes the ip enter box with given size
         IPEnterBox() {
             super(20);
             setFont(font);
@@ -70,15 +82,17 @@ class ConnectionPanel extends JPanel {
             setMaximumSize(getPreferredSize());
         }
 
+        // Represents an action listener to be run when the user presses the action key
         private class onFinalizedInput implements ActionListener {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!ipBox.getText().isEmpty()) {
+                if (ipBox.getText().length() != 0) {
                     MainFrame.getFrame().attemptLoadClient(ipBox.getText());
                 }
             }
         }
 
+        // Represents a document listener that runs when the ip enter box contents is changed
         private class whenInputChanges implements DocumentListener {
 
             @Override

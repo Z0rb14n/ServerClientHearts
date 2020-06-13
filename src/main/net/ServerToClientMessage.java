@@ -27,6 +27,7 @@ public final class ServerToClientMessage implements Serializable {
     private static final String GAME_END_HEADER = "GAME END:";
     private static final String RESET_MSG = "RESET";
 
+    // EFFECTS: returns the byte array representation of this message to be sent
     byte[] toByteArr() {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(this);
@@ -52,11 +53,7 @@ public final class ServerToClientMessage implements Serializable {
         if (d.deckSize() != length) throw new IllegalArgumentException();
     }
 
-    // EFFECTS: blank constructor (produces invalid message, technically, so it can't be called)
-    private ServerToClientMessage() {
-    }
-
-    // in order of which it'll likely be used
+    // These functions are listed in the order in which they will be used.
 
     // EFFECTS: determines whether this message is valid
     public boolean isValidMessage() {
@@ -72,6 +69,7 @@ public final class ServerToClientMessage implements Serializable {
         return new ServerToClientMessage();
     }
 
+    // EFFECTS: creates a kick message with a given message
     static ServerToClientMessage createKickMessage(String msg) {
         if (msg == null) throw new IllegalArgumentException();
         final ServerToClientMessage scm = createBlankMessage();
@@ -80,10 +78,12 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
+    // EFFECTS: returns whether this message is a kick message
     boolean isKickMessage() {
         return isKickMessage && kickMessage != null;
     }
 
+    // EFFECTS: gets the kick message
     String getKickMessage() {
         return kickMessage;
     }
@@ -93,6 +93,7 @@ public final class ServerToClientMessage implements Serializable {
     private int playerNumber = 0;
     private boolean[] existingPlayers = new boolean[4];
 
+    // EFFECTS: creates an ID message
     public static ServerToClientMessage createIDMessage(String UUID, int playerNum, boolean[] existingPlayers) {
         final ServerToClientMessage scm = createBlankMessage();
         verifyPlayerNumber(playerNum);
@@ -103,18 +104,22 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
+    // EFFECTS: returns the player number of the ID message
     public int getPlayerNumber() {
         return playerNumber;
     }
 
+    // EFFECTS: returns whether this message is an ID message
     public boolean isIDMessage() {
         return ID != null && ID.length() > 0 && playerNumber != 0;
     }
 
+    // EFFECTS: returns the ID if the message is an ID message
     String getID() {
         return ID;
     }
 
+    // EFFECTS: returns existing player if the message is an ID message
     public boolean[] getExistingPlayers() {
         return existingPlayers;
     }
@@ -123,6 +128,7 @@ public final class ServerToClientMessage implements Serializable {
     private String chatMessage = "";
     private int playerChatSender = 0;
 
+    // EFFECTS: creates a chat message given a sender and the message
     public static ServerToClientMessage createChatMessage(String msg, int sender) {
         verifyPlayerNumber(sender);
         if (msg == null) throw new IllegalArgumentException();
@@ -132,14 +138,17 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
+    // EFFECTS: returns whether or not this message is a chat message
     public boolean isChatMessage() {
         return playerChatSender != 0;
     }
 
+    // EFFECTS: gets the sent chat message
     public String getChatMessage() {
         return chatMessage;
     }
 
+    // EFFECTS: gets the player number of the sender of the chat message
     public int getChatMessageSender() {
         return playerChatSender;
     }
@@ -148,6 +157,7 @@ public final class ServerToClientMessage implements Serializable {
     private boolean playerConnect = false;
     private int newPlayerNumber = 0;
 
+    // EFFECTS: creates a connection message (i.e. player X connected)
     public static ServerToClientMessage createConnectionMessage(int playerNum) {
         verifyPlayerNumber(playerNum);
         final ServerToClientMessage scm = createBlankMessage();
@@ -156,10 +166,12 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
+    // EFFECTS: returns whether or not this message is a player connection message
     public boolean isPlayerConnectionMessage() {
         return playerConnect && newPlayerNumber != 0;
     }
 
+    // EFFECTS: gets the player number of the new connected player
     public int getNewConnectedPlayer() {
         return newPlayerNumber;
     }
@@ -168,6 +180,7 @@ public final class ServerToClientMessage implements Serializable {
     private boolean playerDisconnect = false;
     private int disconnectedPlayerNumber = 0;
 
+    // EFFECTS: creates a new player disconnect message
     public static ServerToClientMessage createDisconnectMessage(int playerNum) {
         verifyPlayerNumber(playerNum);
         final ServerToClientMessage scm = createBlankMessage();
@@ -176,10 +189,12 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
+    // EFFECTS: returns whether this message is a player disconnection message
     public boolean isPlayerDisconnectMessage() {
         return playerDisconnect && disconnectedPlayerNumber != 0;
     }
 
+    // EFFECTS: returns the player number of the person who disconnected
     public int getDisconnectedPlayerNumber() {
         return disconnectedPlayerNumber;
     }
@@ -188,6 +203,7 @@ public final class ServerToClientMessage implements Serializable {
     private boolean gameStarting = false;
     private Deck clientHand = new Deck();
 
+    // EFFECTS: creates a new game start message (and the deck of cards)
     static ServerToClientMessage createStartGameMessage(Deck deck) {
         verifyDeckLength(deck, 13);
         final ServerToClientMessage scm = createBlankMessage();
@@ -196,10 +212,12 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
+    // EFFECTS: returns whether this message as a game starting message
     public boolean isGameStartingMessage() {
         return gameStarting;
     }
 
+    // EFFECTS: gets the starting hand
     public Deck getStartingHand() {
         return clientHand;
     }
@@ -209,6 +227,7 @@ public final class ServerToClientMessage implements Serializable {
     private boolean startingFirstTurnMessage = false;
     private boolean[] whichClientStarts = new boolean[4]; // determines who starts as a boolean [p1,p2,p3,p4]
 
+    // EFFECTS: creates a start first turn message, with the three cards the player receives, and the starting player
     static ServerToClientMessage createStartFirstTurnMessage(Deck threeCards, int startingPlayer) {
         verifyDeckLength(threeCards, 3);
         verifyPlayerNumber(startingPlayer);
@@ -219,6 +238,7 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
+    // EFFECTS: determines if this message is a start first turn message
     public boolean isStartingFirstTurnMessage() {
         return startingFirstTurnMessage;
     }
@@ -229,6 +249,7 @@ public final class ServerToClientMessage implements Serializable {
     private Suit expectedSuit;
     private int nextPlayerNumber = 0;
 
+    // EFFECTS: creates a request new card message, given previous card/player and next suit/player
     static ServerToClientMessage createRequestNextCardMessage(Card prevPlayed, int justPlayed, int nextToPlay, Suit requiredSuit) {
         verifyPlayerNumber(justPlayed);
         verifyPlayerNumber(nextToPlay);
@@ -241,6 +262,7 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
+    // EFFECTS: returns whether or not this message is a next card message
     public boolean isNextCardMessage() {
         return nextPlayerNumber != 0 && playerNumJustPlayed != 0 && previouslyPlayed != null && expectedSuit != null;
     }
@@ -250,6 +272,7 @@ public final class ServerToClientMessage implements Serializable {
     private Deck newPenaltyCards = new Deck();
     private int playerWhoStartsNext = 0;
 
+    // EFFECTS: creates a start next turn message, indicating the "winner" and the penalty cards s/he got
     static ServerToClientMessage createStartNextTurnMessage(int winner, Deck newPenaltyCards) {
         verifyPlayerNumber(winner);
         if (newPenaltyCards.deckSize() > 4) throw new IllegalArgumentException();
@@ -260,6 +283,7 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
+    // EFFECTS: determines if this message is one to indicate a new turn starting
     public boolean isStartingNewTurnMessage() {
         return startingNewTurn && playerWhoStartsNext != 0;
     }
@@ -269,6 +293,7 @@ public final class ServerToClientMessage implements Serializable {
     private boolean[] winners = new boolean[4];
     private Deck[] penaltyHands = new Deck[4];
 
+    // EFFECTS: creates a game end message
     static ServerToClientMessage createGameEndMessage(boolean[] winners, Deck[] penalties) {
         if (winners.length != 4 || penalties.length != 4) throw new IllegalArgumentException();
         final ServerToClientMessage scm = createBlankMessage();
@@ -278,6 +303,7 @@ public final class ServerToClientMessage implements Serializable {
         return scm;
     }
 
+    // EFFECTS: determines if this message is a game end message
     public boolean isGameEndingMessage() {
         return gameEnding;
     }
@@ -285,17 +311,20 @@ public final class ServerToClientMessage implements Serializable {
     // Reset
     private boolean isReset = false;
 
+    // EFFECTS: creates a reset message
     static ServerToClientMessage createResetMessage() {
         final ServerToClientMessage scm = createBlankMessage();
         scm.isReset = true;
         return scm;
     }
 
+    // EFFECTS: returns whether or not this message is a reset message
     public boolean isResetMessage() {
         return isReset;
     }
 
     @Override
+    // EFFECTS: returns string representation of this message
     public String toString() {
         if (!isValidMessage()) return INVALID_MSG;
         if (isKickMessage()) {

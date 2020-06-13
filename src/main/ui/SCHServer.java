@@ -26,10 +26,13 @@ public final class SCHServer extends PApplet {
     private final ArrayDeque<ClientToServerMessage> clientServerMessages = new ArrayDeque<>();
     private static SCHServer singleton;
 
+    // EFFECTS: initializes the SCHServer
     private SCHServer() {
         super();
     }
 
+    // MODIFIES: SCHServer
+    // EFFECTS: gets the SCHServer singleton instance (see Singleton Design Pattern, Gang of Four)
     public static SCHServer getServer() {
         if (singleton == null) {
             singleton = new SCHServer();
@@ -37,6 +40,7 @@ public final class SCHServer extends PApplet {
         return singleton;
     }
 
+    // EFFECTS: runs the program
     public static void main(String[] args) {
         PApplet.runSketch(new String[]{"SCHServer"}, getServer());
     }
@@ -73,10 +77,14 @@ public final class SCHServer extends PApplet {
     }
     //</editor-fold>
 
+    // MODIFIES: this
+    // EFFECTS: adds the message to the server and processes it
     public void addNewMessage(MessagePair mp) {
         clientMessages.add(mp);
     }
 
+    // MODIFIES: this
+    // EFFECTS: adds a client to server message to list of messages
     public void addNewMessage(ClientToServerMessage scm) {
         clientServerMessages.add(scm);
     }
@@ -137,6 +145,8 @@ public final class SCHServer extends PApplet {
         server.endGame(winner, points, penaltyHands);
     }
 
+    // MODIFIES: this
+    // EFFECTS: kicks a player due to an invalid message
     public void requestKickInvalidMessage(int playerNum) {
         server.kickInvalid(playerNum);
     }

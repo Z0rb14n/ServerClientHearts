@@ -1,5 +1,7 @@
 package ui.client;
 
+import util.ChatMessage;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -18,6 +20,10 @@ class GamePanel extends JPanel {
         playerView = new PlayerView();
         add(playerView, BorderLayout.LINE_START);
         setVisible(true);
+    }
+
+    void addNewChatMessage(ChatMessage c) {
+
     }
 
     void update() {

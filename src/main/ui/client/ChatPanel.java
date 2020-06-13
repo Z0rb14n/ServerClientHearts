@@ -12,12 +12,14 @@ import java.awt.event.MouseEvent;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+// Represents the chat window on the right hand side of the screen
 class ChatPanel extends JPanel {
     private JTextArea chatArea = new JTextArea(10, 20);
     private JScrollPane jsp = new JScrollPane(chatArea);
     private static final Color CHAT_GREY = new Color(150, 150, 150, 255);
     private static final Color CHAT_ACTIVE = new Color(50, 50, 50, 255);
 
+    // EFFECTS: initializes chat panel with scroll area for text, and the submission area
     ChatPanel() {
         super();
         setBackground(CHAT_GREY);
@@ -30,6 +32,14 @@ class ChatPanel extends JPanel {
         add(new ChatInput(), BorderLayout.PAGE_END);
     }
 
+    // MODIFIES: this
+    // EFFECTS: appends the chat message onto the bottom of the chat area
+    void appendMessage(ChatMessage c) {
+        chatArea.append("\n" + c.toString());
+    }
+
+    // MODIFIES: this
+    // EFFECTS: updates the displayed chat message
     void update(LinkedList<ChatMessage> messages) {
         StringBuilder sb = new StringBuilder();
         Iterator<ChatMessage> iterator = messages.descendingIterator();
@@ -42,11 +52,15 @@ class ChatPanel extends JPanel {
         repaint();
     }
 
+    // MODIFIES: this
+    // EFFECTS: scrolls the chat area to the bottom
     void scrollToBottom() {
         jsp.getVerticalScrollBar().setValue(jsp.getVerticalScrollBar().getValue());
     }
 
+    // EFFECTS: represents the chat input area
     private class ChatInput extends JPanel {
+        // EFFECTS: initializes the chat input area
         ChatInput() {
             super();
             JTextField jtf = new JTextField(20);
