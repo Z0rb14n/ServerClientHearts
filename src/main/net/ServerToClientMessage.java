@@ -1,7 +1,5 @@
 package net;
 
-import exception.InvalidClientNumberException;
-import exception.InvalidDeckException;
 import util.Card;
 import util.Deck;
 import util.Suit;
@@ -46,12 +44,12 @@ public final class ServerToClientMessage implements Serializable {
 
     // EFFECTS: throws IllegalArgumentException if player number is out of range
     private static void verifyPlayerNumber(int playerNum) {
-        if (playerNum < 1 || playerNum > 4) throw new InvalidClientNumberException();
+        if (playerNum < 1 || playerNum > 4) throw new IllegalArgumentException();
     }
 
-    // EFFECTS: throws InvalidDeckException if deck length does not match
+    // EFFECTS: throws IllegalArgumentException if deck length does not match
     private static void verifyDeckLength(Deck d, int length) {
-        if (d.deckSize() != length) throw new InvalidDeckException();
+        if (d.deckSize() != length) throw new IllegalArgumentException();
     }
 
     // EFFECTS: blank constructor (produces invalid message, technically, so it can't be called)
