@@ -1,7 +1,5 @@
 package ui.javaver;
 
-import util.ClientState;
-
 import javax.swing.*;
 
 class CardView extends JPanel {
@@ -9,7 +7,7 @@ class CardView extends JPanel {
         super();
     }
 
-    void update(ClientState state) {
+    void update() {
 
     }
 }

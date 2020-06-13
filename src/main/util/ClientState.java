@@ -4,6 +4,7 @@ import net.ServerToClientMessage;
 import processing.core.PImage;
 import ui.SCHClient;
 
+import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 
 import static ui.SCHClient.*;
@@ -17,6 +18,7 @@ public class ClientState {
     private final LinkedList<ChatMessage> chatMessages = new LinkedList<>();
     private boolean[] exists = new boolean[4];
     private PImage[] drawnImages = new PImage[4];
+
 
     // EFFECTS: initializes clientState with empty deck with invalid player number
     public ClientState() {
@@ -67,6 +69,15 @@ public class ClientState {
     // EFFECTS: gets the images to draw
     public PImage[] getDrawnImages() {
         return drawnImages;
+    }
+
+    // EFFECTS: gets images to draw
+    public BufferedImage[] getNativeImages() {
+        BufferedImage[] result = new BufferedImage[4];
+        for (int i = 0; i < 4; i++) {
+            result[i] = (BufferedImage) drawnImages[i].getNative();
+        }
+        return result;
     }
 
     // EFFECTS: gets the player number

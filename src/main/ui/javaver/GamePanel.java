@@ -1,7 +1,5 @@
 package ui.javaver;
 
-import util.ClientState;
-
 import javax.swing.*;
 import java.awt.*;
 
@@ -22,9 +20,8 @@ class GamePanel extends JPanel {
         setVisible(true);
     }
 
-    void update(ClientState state) {
-        chatPanel.update(state.getChatMessages());
-        playerView.update(state);
-        cardView.update(state);
+    void update() {
+        chatPanel.update(MainFrame.getFrame().getClientState().getChatMessages());
+        cardView.update();
     }
 }

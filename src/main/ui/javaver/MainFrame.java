@@ -60,14 +60,14 @@ public class MainFrame extends JFrame {
         @Override
         public void run() {
             while (!end) {
-                System.out.print(end + "," + isClientInactive());
+                System.out.print(isClientInactive());
                 if (client != null) System.out.println("," + client.available());
                 else System.out.println();
                 if (!isClientInactive() && client.available() > 0) {
                     ServerToClientMessage scm = client.readServerToClientMessage();
                     clientState.processNewMessage(scm);
                     Console.getConsole().addMessage("New Message from Server: " + scm);
-                    gp.update(clientState);
+                    gp.update();
                 }
                 try {
                     Thread.sleep(100);
@@ -107,6 +107,10 @@ public class MainFrame extends JFrame {
         remove(gp);
         displayingInputIP = true;
         repaint();
+    }
+
+    ClientState getClientState() {
+        return clientState;
     }
 
     // MODIFIES: this
