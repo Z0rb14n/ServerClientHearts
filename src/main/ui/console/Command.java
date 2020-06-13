@@ -1,8 +1,7 @@
 package ui.console;
 
 import exception.InvalidCommandException;
-import ui.SCHClient;
-import ui.javaver.MainFrame;
+import ui.client.MainFrame;
 import util.Card;
 import util.Deck;
 
@@ -47,13 +46,11 @@ final class Command {
 
     void runCommand() {
         if (ip != null) {
-            if (SCHClient.isUsingProcessing()) SCHClient.getClient().attemptLoadClient(ip);
-            else MainFrame.getFrame().attemptLoadClient(ip);
+            MainFrame.getFrame().attemptLoadClient(ip);
         } else if (chatMsg != null) {
-            if (SCHClient.isUsingProcessing()) SCHClient.getClient().sendChatMessage(chatMsg);
-            else MainFrame.getFrame().sendChatMessage(chatMsg);
+            MainFrame.getFrame().sendChatMessage(chatMsg);
         } else if (cards != null) {
-            SCHClient.getClient().playCards(cards);
+            MainFrame.getFrame().playCards(cards);
         }
     }
 }

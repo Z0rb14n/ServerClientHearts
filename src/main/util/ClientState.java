@@ -1,13 +1,10 @@
 package util;
 
 import net.ServerToClientMessage;
-import processing.core.PImage;
-import ui.SCHClient;
+import ui.client.PlayerView;
 
 import java.awt.image.BufferedImage;
 import java.util.LinkedList;
-
-import static ui.SCHClient.*;
 
 // Represents the state of the client
 public class ClientState {
@@ -17,7 +14,7 @@ public class ClientState {
     private boolean gameStarted = false;
     private final LinkedList<ChatMessage> chatMessages = new LinkedList<>();
     private boolean[] exists = new boolean[4];
-    private PImage[] drawnImages = new PImage[4];
+    private BufferedImage[] drawnImages = new BufferedImage[4];
 
 
     // EFFECTS: initializes clientState with empty deck with invalid player number
@@ -25,7 +22,7 @@ public class ClientState {
         playernum = -1;
         deck = new Deck();
         for (int i = 0; i < 4; i++) {
-            drawnImages[i] = CAT_OUTLINE;
+            drawnImages[i] = PlayerView.getOutlineCat();
         }
     }
 
@@ -44,40 +41,31 @@ public class ClientState {
         if (num < 1 || num > 4) throw new IllegalArgumentException("AAAAAAA");
         if (exist) {
             if (num == 1) {
-                drawnImages[0] = CAT_DEFAULT;
+                drawnImages[0] = PlayerView.getCatDefault();
             } else if (num == 2) {
-                drawnImages[1] = CAT_FACE_LEFT;
+                drawnImages[1] = PlayerView.getCatFaceLeft();
             } else if (num == 3) {
-                drawnImages[2] = CAT_BACK_ONLY;
+                drawnImages[2] = PlayerView.getCatBackOnly();
             } else {
-                drawnImages[3] = CAT_FACE_RIGHT;
+                drawnImages[3] = PlayerView.getCatFaceRight();
             }
         } else {
-            drawnImages[num - 1] = CAT_OUTLINE;
+            drawnImages[num - 1] = PlayerView.getOutlineCat();
         }
     }
 
     // MODIFIES: this
     // EFFECTS: updates the drawn images of player numbers
     private void updateDrawnImages() {
-        drawnImages[0] = exists[0] ? CAT_DEFAULT : CAT_OUTLINE;
-        drawnImages[1] = exists[1] ? CAT_FACE_LEFT : CAT_OUTLINE;
-        drawnImages[2] = exists[2] ? CAT_BACK_ONLY : CAT_OUTLINE;
-        drawnImages[3] = exists[3] ? CAT_FACE_RIGHT : CAT_OUTLINE;
+        drawnImages[0] = exists[0] ? PlayerView.getCatDefault() : PlayerView.getOutlineCat();
+        drawnImages[1] = exists[1] ? PlayerView.getCatFaceLeft() : PlayerView.getOutlineCat();
+        drawnImages[2] = exists[2] ? PlayerView.getCatBackOnly() : PlayerView.getOutlineCat();
+        drawnImages[3] = exists[3] ? PlayerView.getCatFaceRight() : PlayerView.getOutlineCat();
     }
 
     // EFFECTS: gets the images to draw
-    public PImage[] getDrawnImages() {
+    public BufferedImage[] getDrawnImages() {
         return drawnImages;
-    }
-
-    // EFFECTS: gets images to draw
-    public BufferedImage[] getNativeImages() {
-        BufferedImage[] result = new BufferedImage[4];
-        for (int i = 0; i < 4; i++) {
-            result[i] = (BufferedImage) drawnImages[i].getNative();
-        }
-        return result;
     }
 
     // EFFECTS: gets the player number
@@ -120,7 +108,6 @@ public class ClientState {
                 chatMessages.removeLast();
             }
             chatMessages.addFirst(cm);
-            if (SCHClient.isUsingProcessing()) SCHClient.getClient().addNewMessages(cm.toString());
             //CHAT <digit> : message
         }
     }

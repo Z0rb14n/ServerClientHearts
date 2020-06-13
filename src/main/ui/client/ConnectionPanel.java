@@ -1,5 +1,7 @@
-package ui.javaver;
+package ui.client;
 
+
+import util.Card;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,6 +24,13 @@ class ConnectionPanel extends JPanel {
         setBorder(new EmptyBorder(30, 0, 0, 0));
         ipBox = new IPEnterBox();
         ipEnterButton = new IPEnterButton();
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Card card = new Card("3C");
+        card.draw(g, 0, 0);
     }
 
     void initialize() {

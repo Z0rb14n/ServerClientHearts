@@ -1,4 +1,4 @@
-package ui.javaver;
+package ui.client;
 
 // TODO EXPERIMENTAL JFRAME VERSION
 
@@ -7,6 +7,7 @@ import net.NewClient;
 import net.ServerToClientMessage;
 import ui.console.Console;
 import util.ClientState;
+import util.Deck;
 
 import javax.swing.*;
 import java.awt.*;
@@ -77,6 +78,10 @@ public class MainFrame extends JFrame {
         }
     }
 
+    public void playCards(Deck d) {
+        throw new UnsupportedOperationException();
+    }
+
     @Override
     public void dispose() {
         super.dispose();
@@ -136,7 +141,7 @@ public class MainFrame extends JFrame {
 
         @Override
         public void run() {
-            client = new NewClient(loadedIP, false);
+            client = new NewClient(loadedIP);
             didTimeout = false;
         }
     }

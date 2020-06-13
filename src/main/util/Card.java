@@ -1,17 +1,17 @@
 package util;
 
-import ui.SCHClient;
-
+import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.io.Serializable;
 
-import static net.Constants.*;
 import static util.Face.*;
 
 // Represents a singular card
 public final class Card implements Serializable {
     private static final long serialVersionUID = 2L;
-    public static final float CARD_WIDTH = 80;
-    public static final float CARD_HEIGHT = 150;
+    private static final Font font = new Font("Arial", Font.PLAIN, 20);
+    public static final int CARD_WIDTH = 80;
+    public static final int CARD_HEIGHT = 150;
 
     private Suit suit;
     private int number; // -1 if faceCard
@@ -75,31 +75,28 @@ public final class Card implements Serializable {
         return face;
     }
 
-    public void draw(float x, float y) {
-        SCHClient applet = SCHClient.getClient();
-        applet.pushStyle();
-        applet.stroke(BLACK);
-        applet.strokeWeight(2);
-        applet.fill(WHITE);
-        applet.textSize(20); // hard coded text size. fite me.
-        applet.textLeading(20);
-        applet.pushMatrix();
-        applet.translate(x, y);
-        applet.rect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20);
-        int textFillColor = getSuit() == Suit.Spade || getSuit() == Suit.Club ? BLACK : RED;
-        String renderedText = "" + getSuit().getCharacter();
-        if (isFaceCard()) {
-            renderedText += "\n" + getFace().toString();
-        } else {
-            renderedText += "\n" + getNumber();
-        }
-        applet.textAlign(applet.CENTER, applet.TOP);
-        applet.fill(textFillColor);
-        applet.text(renderedText, 15, 10);
-        applet.scale(-1, -1);
-        applet.text(renderedText, -CARD_WIDTH + 15, -CARD_HEIGHT + 10);
-        applet.popMatrix();
-        applet.popStyle();
+    public void draw(Graphics g, float x, float y) {
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        AffineTransform af = g2d.getTransform();
+        g2d.setStroke(new BasicStroke(2));
+        g2d.setColor(Color.WHITE);
+        g2d.fillRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20, 20);
+        g2d.setColor(Color.BLACK);
+        g2d.translate(x, y);
+        g2d.drawRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20, 20);
+        g2d.setFont(font);
+        g2d.setColor(getSuit() == Suit.Spade || getSuit() == Suit.Club ? Color.BLACK : Color.RED);
+        String firstLine = "" + getSuit().getCharacter();
+        String secondLine = isFaceCard() ? getFace().toString() : "" + getNumber();
+        FontMetrics fm = g2d.getFontMetrics();
+        g2d.drawString(firstLine, 15 - fm.stringWidth(firstLine) / 2, 15);
+        g2d.drawString(secondLine, 15 - fm.stringWidth(secondLine) / 2, 35);
+        g2d.scale(-1, -1);
+        g2d.drawString(firstLine, -CARD_WIDTH + 15 - fm.stringWidth(firstLine) / 2, -CARD_HEIGHT + 15);
+        g2d.drawString(secondLine, -CARD_WIDTH + 15 - fm.stringWidth(secondLine) / 2, -CARD_HEIGHT + 35);
+        g2d.setTransform(af);
     }
 
     private static Suit convertStringToSuit(String suit) {

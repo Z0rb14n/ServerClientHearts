@@ -1,4 +1,4 @@
-package ui.javaver;
+package ui.client;
 
 import ui.console.Console;
 

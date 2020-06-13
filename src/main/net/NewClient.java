@@ -2,9 +2,8 @@ package net;
 
 import processing.core.PApplet;
 import processing.net.Client;
-import ui.SCHClient;
+import ui.client.MainFrame;
 import ui.console.Console;
-import ui.javaver.MainFrame;
 import util.Deck;
 
 import java.io.*;
@@ -17,12 +16,10 @@ import static net.Constants.PORT;
 public final class NewClient extends Client {
     private String clientID;
     private int playerNum;
-    private boolean isUsingProcessing;
 
     // EFFECTS: initializes client
-    public NewClient(String ip, boolean isUsingProcessing) {
+    public NewClient(String ip) {
         super(new PApplet(), ip, PORT);
-        this.isUsingProcessing = isUsingProcessing;
         if (!active()) {
             stop();
             Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
@@ -30,11 +27,6 @@ public final class NewClient extends Client {
         } else {
             getClientIDFromServer();
         }
-    }
-
-    // EFFECTS: initializes client with params of Processing's Client parameters
-    public NewClient(String ip) {
-        this(ip, true);
     }
 
     // MODIFIES: this
@@ -47,8 +39,7 @@ public final class NewClient extends Client {
         } else {
             clientID = msg.getID();
             playerNum = msg.getPlayerNumber();
-            if (isUsingProcessing) SCHClient.getClient().catchExtraMessages(msg);
-            else MainFrame.getFrame().catchExtraMessages(msg);
+            MainFrame.getFrame().catchExtraMessages(msg);
         }
     }
 
@@ -137,8 +128,7 @@ public final class NewClient extends Client {
     public void stop() {
         ServerToClientMessage lastMessage = readServerToClientMessage();
         if (lastMessage.isKickMessage()) {
-            if (isUsingProcessing) SCHClient.getClient().updateErrorMessage(lastMessage.getKickMessage());
-            else MainFrame.getFrame().updateErrorMessage(lastMessage.getKickMessage());
+            MainFrame.getFrame().updateErrorMessage(lastMessage.getKickMessage());
         }
 
         super.stop();

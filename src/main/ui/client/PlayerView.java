@@ -1,4 +1,4 @@
-package ui.javaver;
+package ui.client;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -8,7 +8,7 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-class PlayerView extends JPanel {
+public class PlayerView extends JPanel {
     public static BufferedImage catDefault;
     public static BufferedImage catFaceLeft;
     public static BufferedImage catFaceRight;
@@ -25,9 +25,14 @@ class PlayerView extends JPanel {
 
     private static final int CAT_WIDTH = 150;
     private static final int CAT_HEIGHT = 150;
+
     PlayerView() {
         super();
         setPreferredSize(new Dimension(900, 200));
+        initCats();
+    }
+
+    public static void initCats() {
         try {
             catDefault = resize(ImageIO.read(new File(DEFAULT_CAT_FILE)), CAT_WIDTH, CAT_HEIGHT);
             catFaceLeft = resize(ImageIO.read(new File(CAT_LEFT_FILE)), CAT_WIDTH, CAT_HEIGHT);
@@ -53,6 +58,54 @@ class PlayerView extends JPanel {
         } catch (Exception e) {
             throw new RuntimeException();
         }
+    }
+
+    public static BufferedImage getOutlineCat() {
+        if (catOutlineOnly == null) {
+            initCats();
+            if (catOutlineOnly == null) throw new RuntimeException();
+        }
+        return catOutlineOnly;
+    }
+
+    public static BufferedImage getCatDefault() {
+        if (catDefault == null) {
+            initCats();
+            if (catDefault == null) throw new RuntimeException();
+        }
+        return catDefault;
+    }
+
+    public static BufferedImage getCatFaceLeft() {
+        if (catFaceLeft == null) {
+            initCats();
+            if (catFaceLeft == null) throw new RuntimeException();
+        }
+        return catFaceLeft;
+    }
+
+    public static BufferedImage getCatFaceRight() {
+        if (catFaceRight == null) {
+            initCats();
+            if (catFaceRight == null) throw new RuntimeException();
+        }
+        return catFaceRight;
+    }
+
+    public static BufferedImage getCatBackOnly() {
+        if (catBackOnly == null) {
+            initCats();
+            if (catBackOnly == null) throw new RuntimeException();
+        }
+        return catBackOnly;
+    }
+
+    public static BufferedImage getBicycleCat() {
+        if (bicycleCat == null) {
+            initCats();
+            if (bicycleCat == null) throw new RuntimeException();
+        }
+        return bicycleCat;
     }
 
     private final static int[][] CAT_COORDINATES = new int[][]{
