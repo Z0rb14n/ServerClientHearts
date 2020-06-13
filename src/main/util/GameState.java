@@ -2,11 +2,10 @@ package util;
 
 import ui.SCHServer;
 
-import static util.PassOrder.ASCENDING_NUM;
-
 // Represents the state of the server (i.e. has the game started?)
 public class GameState {
-    private static final PassOrder PASSING_ORDER = ASCENDING_NUM;
+    private static final PlayOrder PLAYING_ORDER = PlayOrder.ASCENDING_NUM;
+    private static final PassOrder PASS_ORDER = PassOrder.ASCENDING_NUM;
     private boolean isGameStarted;
     private boolean allCardsPassed;
     private int numTurns;
@@ -123,8 +122,7 @@ public class GameState {
 
     // EFFECTS: determines whether the player (1-4) has played a card already (i.e. is in the center)
     private boolean hasPlayedCard(int playerNum) {
-        if (startingPlayer > playerNum) playerNum += 4;
-        return playerNum < startingPlayer + center.deckSize() && playerNum >= startingPlayer;
+        return PLAYING_ORDER.hasPlayerPlayed(startingPlayer, center.deckSize(), playerNum);
     }
 
     // EFFECTS: determines whether the player is not the next player to play
@@ -134,8 +132,7 @@ public class GameState {
 
     // EFFECTS: determines the player number of player next to play
     private int nextToPlay() {
-        int next = center.deckSize() + startingPlayer;
-        return next > 4 ? next - 4 : next;
+        return PLAYING_ORDER.nextPlayer(startingPlayer, center.deckSize());
     }
 
     // MODIFIES: this, server
@@ -215,10 +212,8 @@ public class GameState {
     // EFFECTS: returns the player number that "won" the trick (1-4)
     private int trickWinner() {
         assert (center.deckSize() == 4);
-        int index = center.highestIndexOfSuit(currentSuitToPlay);
-        int playerWinner = index + startingPlayer;
-        if (playerWinner > 4) playerWinner -= 4;
-        return playerWinner;
+        // works only because index starts at 0 instead of 1
+        return PLAYING_ORDER.nextPlayer(startingPlayer, center.highestIndexOfSuit(currentSuitToPlay));
     }
 
     // MODIFIES: this
@@ -227,16 +222,8 @@ public class GameState {
         for (Deck d : passingHands) {
             if (d.isEmpty()) return;
         }
-        if (PASSING_ORDER.equals(ASCENDING_NUM)) {
-            hands[0].addAll(passingHands[3]);
-            hands[1].addAll(passingHands[0]);
-            hands[2].addAll(passingHands[1]);
-            hands[3].addAll(passingHands[2]);
-        } else {
-            hands[0].addAll(passingHands[1]);
-            hands[1].addAll(passingHands[2]);
-            hands[2].addAll(passingHands[3]);
-            hands[3].addAll(passingHands[0]);
+        for (int i = 0; i < 4; i++) {
+            hands[PASS_ORDER.toPass(i + 1) - 1].addAll(passingHands[i]);
         }
         allCardsPassed = true;
 
@@ -254,7 +241,7 @@ public class GameState {
     }
 
     // MODIFIES: this
-    // EFFECTS: checks whether the game has ended (i.e. turn number == 13)
+    // EFFECTS: checks whether the game has ended (i.e. turn number == 14, since it increments then checks)
     private void checkGameEnd() {
         if (numTurns != 14) return;
         gameEnded = true;
