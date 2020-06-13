@@ -204,7 +204,7 @@ public final class ServerToClientMessage implements Serializable {
     private Deck clientHand = new Deck();
 
     // EFFECTS: creates a new game start message (and the deck of cards)
-    static ServerToClientMessage createStartGameMessage(Deck deck) {
+    public static ServerToClientMessage createStartGameMessage(Deck deck) {
         verifyDeckLength(deck, 13);
         final ServerToClientMessage scm = createBlankMessage();
         scm.gameStarting = true;

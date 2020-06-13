@@ -110,16 +110,16 @@ public class ClientState {
                 chatMessages.removeLast();
             }
             chatMessages.addFirst(cm);
-            //CHAT <digit> : message
         }
     }
 
     // MODIFIES: this
-    // EFFECTS: handles new player addition/removal messages
+    // EFFECTS: handles new player addition/removal messages (includes ID message)
     private void handlePlayerAdditionMessages(ServerToClientMessage msg) {
         int num;
         if (msg.isIDMessage()) {
             System.arraycopy(msg.getExistingPlayers(), 0, exists, 0, 4);
+            playernum = msg.getPlayerNumber();
             exists[msg.getPlayerNumber() - 1] = true; // just to be sure
             updateDrawnImages();
         } else if (msg.isPlayerConnectionMessage()) {
