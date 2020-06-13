@@ -7,7 +7,7 @@ import java.util.Random;
 
 // Represents a deck of cards
 public class Deck implements Iterable<Card>, Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 69420L;
 
     private SuitOrder order = new SuitOrder();
     private final ArrayList<Card> cards = new ArrayList<>(13);
@@ -92,7 +92,7 @@ public class Deck implements Iterable<Card>, Serializable {
 
     // MODIFIES: this
     // EFFECTS: removes non-penalty cards
-    void removeNonPenaltyCards() {
+    public void removeNonPenaltyCards() {
         cards.removeIf(t -> !t.isPenaltyCard());
     }
 
@@ -119,11 +119,12 @@ public class Deck implements Iterable<Card>, Serializable {
         return cards.contains(a);
     }
 
-    // REQUIRES: cards.size() == 52 or generate52() has to be called prior
     // MODIFIES: d1, d2, d3, d4, this
     // EFFECTS: distributes all 52 cards in this given deck into d1,d2, d3 and d4,
-    void randomlyDistribute(Deck d1, Deck d2, Deck d3, Deck d4) {
-        assert(cards.size() == 52);
+    //          throws IllegalArgumentException if deck size ≠ 52 or given decks are not empty
+    public void randomlyDistribute(Deck d1, Deck d2, Deck d3, Deck d4) {
+        if (cards.size() != 52) throw new IllegalArgumentException();
+        if (!d1.isEmpty() || !d2.isEmpty() || !d3.isEmpty() || !d4.isEmpty()) throw new IllegalArgumentException();
         Random random = new Random();
         for(int i = 13; i > 0; i--) {
             int index = random.nextInt(i*4);
@@ -150,7 +151,7 @@ public class Deck implements Iterable<Card>, Serializable {
         assert(cards.isEmpty());
     }
 
-    // EFFECTS: returns a SHALLOW COPY of all playable cards in the deck
+    // EFFECTS: returns a copy of all playable cards in the deck
     public Deck getPlayableCards(Suit a) {
         if (!containsSuit(a)) return copy();
         Deck play = new Deck();
@@ -256,7 +257,7 @@ public class Deck implements Iterable<Card>, Serializable {
     }
 
     // EFFECTS: returns index of highest value card of given suit
-    int highestIndexOfSuit(Suit a) {
+    public int highestIndexOfSuit(Suit a) {
         int index = -1;
         int value = -1;
         for (int i = 0; i < cards.size(); i++) {
