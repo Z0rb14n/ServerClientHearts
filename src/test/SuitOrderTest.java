@@ -7,6 +7,8 @@ import util.SuitOrder;
 import static org.junit.jupiter.api.Assertions.*;
 import static util.Suit.*;
 
+// TODO FINISH TESTS
+
 class SuitOrderTest {
     private static final Card[] cards = new Card[]{
             new Card("3C"), new Card("4C"),

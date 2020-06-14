@@ -7,7 +7,7 @@ import java.awt.*;
 
 class GamePanel extends JPanel {
     private ChatPanel chatPanel;
-    private CardView cardView;
+    private DeckView deckView;
     private PlayerView playerView;
 
     GamePanel() {
@@ -15,8 +15,8 @@ class GamePanel extends JPanel {
         setLayout(new BorderLayout());
         chatPanel = new ChatPanel();
         add(chatPanel, BorderLayout.LINE_END);
-        cardView = new CardView();
-        add(cardView, BorderLayout.PAGE_END);
+        deckView = new DeckView();
+        add(deckView, BorderLayout.PAGE_END);
         playerView = new PlayerView();
         add(playerView, BorderLayout.LINE_START);
         setVisible(true);
@@ -28,6 +28,6 @@ class GamePanel extends JPanel {
 
     void update() {
         chatPanel.update(MainFrame.getFrame().getClientState().getChatMessages());
-        cardView.update();
+        deckView.update();
     }
 }

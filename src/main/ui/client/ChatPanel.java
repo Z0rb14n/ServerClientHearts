@@ -65,6 +65,7 @@ class ChatPanel extends JPanel {
             super();
             JTextField jtf = new JTextField(20);
             jtf.setForeground(Color.WHITE);
+            jtf.setCaretColor(Color.WHITE);
             jtf.setBackground(CHAT_ACTIVE);
             jtf.setBorder(new EmptyBorder(2, 2, 2, 2));
             jtf.addActionListener(e -> {

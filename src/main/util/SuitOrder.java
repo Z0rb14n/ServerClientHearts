@@ -10,7 +10,8 @@ import static util.Suit.*;
 public class SuitOrder implements Comparator<Card>, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private boolean sortByValue;
+    private boolean reverse = false;
+    private boolean sortByValue = false;
     public static final Suit[] DEFAULT = new Suit[]{Heart, Diamond, Spade, Club};
     //{top,secondTop,secondBottom,bottom};
     private Suit[] suits = new Suit[4];
@@ -28,12 +29,34 @@ public class SuitOrder implements Comparator<Card>, Serializable {
         Suit[] suitArray = new Suit[4];
         System.arraycopy(suits, 0, suitArray, 0, 4);
         so.suits = suitArray;
+        so.reverse = reverse;
         return so;
+    }
+
+    // EFFECTS: returns whether or not the SuitOrder results are reversed
+    public boolean isReversed() {
+        return reverse;
+    }
+
+    // EFFECTS: returns whether or not this suit order is the default suit order
+    public boolean isDefault() {
+        if (reverse) return false;
+        if (sortByValue) return false;
+        for (int i = 0; i < 4; i++) {
+            if (DEFAULT[i] != suits[i]) return false;
+        }
+        return true;
     }
 
     // EFFECTS: returns whether or not this SuitOrder is sorting by value
     public boolean isSortingByValue() {
         return sortByValue;
+    }
+
+    // MODIFIES: this
+    // EFFECTS: sets whether or not to reverse the suit order
+    public void setReverse(boolean value) {
+        reverse = value;
     }
 
     // MODIFIES: this
@@ -58,6 +81,7 @@ public class SuitOrder implements Comparator<Card>, Serializable {
     // MODIFIES: this
     // EFFECTS: resets SuitOrder
     public void reset() {
+        reverse = false;
         sortByValue = false;
         System.arraycopy(DEFAULT, 0, suits, 0, 4);
     }
@@ -113,8 +137,13 @@ public class SuitOrder implements Comparator<Card>, Serializable {
     @Override
     // EFFECTS: returns 1 if a > b, 0 if a == b, -1 if a < b
     public int compare(Card a, Card b) {
-        if (!sortByValue && suitCompare(a, b) != 0) return suitCompare(a, b);
-        else return valueCompare(a, b);
+        if (reverse) {
+            if (!sortByValue && suitCompare(a, b) != 0) return -suitCompare(a, b);
+            else return -valueCompare(a, b);
+        } else {
+            if (!sortByValue && suitCompare(a, b) != 0) return suitCompare(a, b);
+            else return valueCompare(a, b);
+        }
     }
 
     @Override
@@ -122,7 +151,7 @@ public class SuitOrder implements Comparator<Card>, Serializable {
     public boolean equals(Object o) {
         if (!(o instanceof SuitOrder)) return false;
         SuitOrder so = (SuitOrder) o;
-        return Arrays.equals(suits, so.getSuitOrder()) && sortByValue == so.isSortingByValue();
+        return Arrays.equals(suits, so.getSuitOrder()) && sortByValue == so.sortByValue && reverse == so.reverse;
     }
 
     @Override
@@ -131,6 +160,7 @@ public class SuitOrder implements Comparator<Card>, Serializable {
         int result = 17;
         result = 31 * result + (sortByValue ? 0 : 1);
         result = 31 * result + Arrays.hashCode(suits);
+        result = 31 * result + (reverse ? 0 : 1);
         return result;
     }
 }
