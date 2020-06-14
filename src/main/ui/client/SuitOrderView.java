@@ -3,23 +3,28 @@ package ui.client;
 import javax.swing.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-// TODO OTHER ITEMS (e.g. reset button, radio buttons for Suit > Value, functionality to change suit)
+// TODO OTHER ITEMS (e.g. radio buttons for Suit > Value, functionality to change suit)
 
 // Represents the view of the SuitOrder
-public class SuitOrderView extends JPanel {
+class SuitOrderView extends JPanel {
     private ReverseCheckBox rcb = new ReverseCheckBox();
+    private ResetButton rb = new ResetButton();
 
     // EFFECTS: initializes SuitOrderView and its components
-    public SuitOrderView() {
+    SuitOrderView() {
         super();
         add(rcb);
+        add(rb);
     }
 
     // MODIFIES: this
     // EFFECTS: updates all components
     public void update() {
         rcb.update();
+        rb.update();
     }
 
     // MODIFIES: MainFrame
@@ -27,6 +32,7 @@ public class SuitOrderView extends JPanel {
     private void reset() {
         MainFrame.getFrame().getClientState().getDeck().getOrder().reset();
         rcb.update();
+        rb.update();
     }
 
     // MODIFIES: MainFrame
@@ -60,6 +66,33 @@ public class SuitOrderView extends JPanel {
                     setDoReverse(false);
                 } else if (e.getStateChange() == ItemEvent.SELECTED) {
                     setDoReverse(true);
+                }
+            }
+        }
+    }
+
+    // Represents the Reset button
+    private class ResetButton extends JButton {
+        // EFFECTS: initializes the checkbox with given text and mouse listener
+        ResetButton() {
+            super("Reset to Default");
+            addMouseListener(new Listener());
+        }
+
+        // MODIFIES: this
+        // EFFECTS: updates the reset button to the current state of the client state
+        void update() {
+            setEnabled(MainFrame.getFrame().getClientState().getDeck().getOrder().isDefault());
+        }
+
+        // Represents the Mouse listener that determines if the reset button is clicked
+        private class Listener extends MouseAdapter {
+            @Override
+            // MODIFIES: ResetButton
+            // EFFECTS: resets the suit order
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    reset();
                 }
             }
         }
