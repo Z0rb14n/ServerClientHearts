@@ -1,7 +1,5 @@
 package ui.client;
 
-import util.Card;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
@@ -25,15 +23,6 @@ class ConnectionPanel extends JPanel {
         setBorder(new EmptyBorder(30, 0, 0, 0));
         ipBox = new IPEnterBox();
         ipEnterButton = new IPEnterButton();
-    }
-
-    @Override
-    // MODIFIES: g
-    // EFFECTS: paints this component onto g (mainly for testing purposes, delete later)
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Card card = new Card("3C");
-        CardView.drawCard((Graphics2D) g, 0, 0, card);
     }
 
     // MODIFIES: this

@@ -10,11 +10,16 @@ import java.awt.geom.AffineTransform;
 
 // Represents the view of the cards (currently empty)
 class CardView extends JPanel {
+    private static final int CARD_WIDTH = 80;
+    private static final int CARD_HEIGHT = 150;
+    private static final Font font = new Font("Arial", Font.PLAIN, 20);
+    private static final int BORDER_THICKNESS = 2;
+    private static final int SIZE_BUFFER = 4 * BORDER_THICKNESS;
     // EFFECTS: initializes CardView
     CardView() {
         super();
-        setPreferredSize(new Dimension(CARD_WIDTH * 13, CARD_HEIGHT));
-        setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        setPreferredSize(new Dimension(CARD_WIDTH * 13 + SIZE_BUFFER, CARD_HEIGHT + SIZE_BUFFER));
+        setBorder(BorderFactory.createLineBorder(Color.BLACK, BORDER_THICKNESS));
     }
 
     // MODIFIES: this
@@ -31,14 +36,10 @@ class CardView extends JPanel {
         Deck d = MainFrame.getFrame().getClientState().getDeck();
         int i = 0;
         for (Card c : d) {
-            drawCard(g2d, CARD_WIDTH * i, getY(), c);
+            drawCard(g2d, CARD_WIDTH * i + BORDER_THICKNESS, getY() + BORDER_THICKNESS, c);
             i++;
         }
     }
-
-    private static final int CARD_WIDTH = 80;
-    private static final int CARD_HEIGHT = 150;
-    private static final Font font = new Font("Arial", Font.PLAIN, 20);
 
     // MODIFIES: g
     // EFFECTS: draws the card offset by given x and y coordinates onto graphics object
