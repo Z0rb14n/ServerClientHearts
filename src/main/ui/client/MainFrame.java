@@ -51,6 +51,7 @@ public class MainFrame extends JFrame {
         mr.start();
         updateTimer.start();
         Console.getConsole(); // creates the console window
+        pack();
         setVisible(true);
     }
 
@@ -100,6 +101,7 @@ public class MainFrame extends JFrame {
             add(gp);
             displayingInputIP = false;
         }
+        pack();
         repaint();
     }
 

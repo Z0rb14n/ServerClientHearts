@@ -33,7 +33,7 @@ class ConnectionPanel extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Card card = new Card("3C");
-        card.draw(g, 0, 0);
+        CardView.drawCard((Graphics2D) g, 0, 0, card);
     }
 
     // MODIFIES: this

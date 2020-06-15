@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import util.Card;
+import util.Deck;
 import util.Suit;
 import util.SuitOrder;
 
@@ -145,5 +146,13 @@ class SuitOrderTest {
         so.moveSuitToLocation(Club, 2);
         assertNotEquals(copy, so);
         assertNotEquals(copy.hashCode(), so.hashCode());
+    }
+
+    @Test
+    void testDeckSorting() {
+        Deck deck = new Deck();
+        deck.generate52();
+        deck.sort();
+        System.out.println(deck);
     }
 }

@@ -12,27 +12,38 @@ import java.awt.event.MouseEvent;
 class SuitOrderView extends JPanel {
     private ReverseCheckBox rcb = new ReverseCheckBox();
     private ResetButton rb = new ResetButton();
+    private SuitDisplay sd = new SuitDisplay();
 
     // EFFECTS: initializes SuitOrderView and its components
     SuitOrderView() {
         super();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: initializes the SuitOrderView to use proper layouts
+    void initialize() {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        sd.setAlignmentX(JPanel.CENTER_ALIGNMENT);
+        add(sd);
+        rcb.setAlignmentX(JPanel.CENTER_ALIGNMENT);
         add(rcb);
+        rb.setAlignmentX(JPanel.CENTER_ALIGNMENT);
         add(rb);
     }
 
     // MODIFIES: this
     // EFFECTS: updates all components
-    public void update() {
+    void update() {
         rcb.update();
         rb.update();
+        sd.update();
     }
 
     // MODIFIES: MainFrame
     // EFFECTS: calls the reset function on the SuitOrder in MainFrame
     private void reset() {
         MainFrame.getFrame().getClientState().getDeck().getOrder().reset();
-        rcb.update();
-        rb.update();
+        update();
     }
 
     // MODIFIES: MainFrame

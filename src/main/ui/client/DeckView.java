@@ -3,20 +3,23 @@ package ui.client;
 import javax.swing.*;
 
 // Represents the view of the Deck
-public class DeckView extends JPanel {
+class DeckView extends JPanel {
     private CardView cv = new CardView();
     private SuitOrderView sov = new SuitOrderView();
 
     // EFFECTS: initializes DeckView and its components
-    public DeckView() {
+    DeckView() {
         super();
+        sov.initialize();
+        cv.setAlignmentX(JPanel.LEFT_ALIGNMENT);
         add(cv);
+        sov.setAlignmentX(JPanel.RIGHT_ALIGNMENT);
         add(sov);
     }
 
     // MODIFIES: this
     // EFFECTS: updates components
-    public void update() {
+    void update() {
         cv.update();
         sov.update();
     }

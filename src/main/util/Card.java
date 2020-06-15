@@ -1,15 +1,10 @@
 package util;
 
-import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.io.Serializable;
 
 // Represents a singular card
 public final class Card implements Serializable {
     private static final long serialVersionUID = 2L;
-    private static final Font font = new Font("Arial", Font.PLAIN, 20);
-    public static final int CARD_WIDTH = 80;
-    public static final int CARD_HEIGHT = 150;
 
     private Suit suit;
     private int number = -1; // -1 if faceCard
@@ -55,32 +50,6 @@ public final class Card implements Serializable {
     // EFFECTS: returns the face of the card
     public Face getFace() {
         return face;
-    }
-
-    // MODIFIES: g
-    // EFFECTS: draws the card offset by given x and y coordinates onto graphics object
-    public void draw(Graphics g, float x, float y) {
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        AffineTransform af = g2d.getTransform();
-        g2d.setStroke(new BasicStroke(2));
-        g2d.setColor(Color.WHITE);
-        g2d.fillRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20, 20);
-        g2d.setColor(Color.BLACK);
-        g2d.translate(x, y);
-        g2d.drawRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20, 20);
-        g2d.setFont(font);
-        g2d.setColor(getSuit() == Suit.Spade || getSuit() == Suit.Club ? Color.BLACK : Color.RED);
-        String firstLine = "" + getSuit().getCharacter();
-        String secondLine = isFaceCard() ? getFace().toString() : "" + getNumber();
-        FontMetrics fm = g2d.getFontMetrics();
-        g2d.drawString(firstLine, 15 - fm.stringWidth(firstLine) / 2, 15);
-        g2d.drawString(secondLine, 15 - fm.stringWidth(secondLine) / 2, 35);
-        g2d.scale(-1, -1);
-        g2d.drawString(firstLine, -CARD_WIDTH + 15 - fm.stringWidth(firstLine) / 2, -CARD_HEIGHT + 15);
-        g2d.drawString(secondLine, -CARD_WIDTH + 15 - fm.stringWidth(secondLine) / 2, -CARD_HEIGHT + 35);
-        g2d.setTransform(af);
     }
 
     @Override
