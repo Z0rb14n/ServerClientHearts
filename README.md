@@ -1,6 +1,6 @@
 # ServerClientHearts
 
-The server for the server-client based Hearts game I'm trying to make.
+The project for the server-client based Hearts game I'm trying to make.
 
 ## Getting Started
 
