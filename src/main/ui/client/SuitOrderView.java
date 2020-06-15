@@ -1,22 +1,27 @@
 package ui.client;
 
 import javax.swing.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
-// TODO OTHER ITEMS (e.g. radio buttons for Suit > Value, functionality to change suit)
+// TODO SUIT CHANGE FUNCTIONALITY
 
 // Represents the view of the SuitOrder
 class SuitOrderView extends JPanel {
     private ReverseCheckBox rcb = new ReverseCheckBox();
     private ResetButton rb = new ResetButton();
     private SuitDisplay sd = new SuitDisplay();
+    private SortButton sb = new SortButton();
+    private static final String SUIT_STRING = "Suit";
+    private static final String VALUE_STRING = "Value";
+    private JRadioButton preferSuit = new JRadioButton(SUIT_STRING, true);
+    private JRadioButton preferValue = new JRadioButton(VALUE_STRING, false);
 
     // EFFECTS: initializes SuitOrderView and its components
     SuitOrderView() {
         super();
+        ButtonGroup buttonGroup = new ButtonGroup();
+        buttonGroup.add(preferSuit);
+        buttonGroup.add(preferValue);
     }
 
     // MODIFIES: this
@@ -27,6 +32,15 @@ class SuitOrderView extends JPanel {
         add(sd);
         rcb.setAlignmentX(JPanel.CENTER_ALIGNMENT);
         add(rcb);
+        preferSuit.addActionListener(new RadioListener());
+        preferValue.addActionListener(new RadioListener());
+        JPanel radioPanel = new JPanel();
+        radioPanel.add(preferSuit);
+        radioPanel.add(preferValue);
+        radioPanel.setAlignmentX(JPanel.CENTER_ALIGNMENT);
+        add(radioPanel);
+        sb.setAlignmentX(JPanel.CENTER_ALIGNMENT);
+        add(sb);
         rb.setAlignmentX(JPanel.CENTER_ALIGNMENT);
         add(rb);
     }
@@ -37,6 +51,22 @@ class SuitOrderView extends JPanel {
         rcb.update();
         rb.update();
         sd.update();
+        sb.update();
+    }
+
+    // MODIFIES: MainFrame
+    // EFFECTS: adjusts the state of the main application's deck's sorting order
+    private void setSortOrder(boolean isValue) {
+        MainFrame.getFrame().getClientState().getDeck().getOrder().setSortByValue(isValue);
+        update();
+    }
+
+
+    // MODIFIES: MainFrame
+    // EFFECTS: sorts the main application's deck
+    private void sort() {
+        MainFrame.getFrame().getClientState().getDeck().sort();
+        update();
     }
 
     // MODIFIES: MainFrame
@@ -50,6 +80,7 @@ class SuitOrderView extends JPanel {
     // EFFECTS: sets the SuitOrder in MainFrame to reverse or not reverse
     private void setDoReverse(boolean value) {
         MainFrame.getFrame().getClientState().getDeck().getOrder().setReverse(value);
+        update();
     }
 
     // Represents the "Reverse [X]" check box
@@ -84,16 +115,17 @@ class SuitOrderView extends JPanel {
 
     // Represents the Reset button
     private class ResetButton extends JButton {
-        // EFFECTS: initializes the checkbox with given text and mouse listener
+        // EFFECTS: initializes the reset button and mouse listener
         ResetButton() {
             super("Reset to Default");
+            setEnabled(false);
             addMouseListener(new Listener());
         }
 
         // MODIFIES: this
         // EFFECTS: updates the reset button to the current state of the client state
         void update() {
-            setEnabled(MainFrame.getFrame().getClientState().getDeck().getOrder().isDefault());
+            setEnabled(!MainFrame.getFrame().getClientState().getDeck().getOrder().isDefault());
         }
 
         // Represents the Mouse listener that determines if the reset button is clicked
@@ -105,6 +137,46 @@ class SuitOrderView extends JPanel {
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     reset();
                 }
+            }
+        }
+    }
+
+    // Represents the Sort button
+    private class SortButton extends JButton {
+        // EFFECTS: initializes the button with given text and mouse listener
+        SortButton() {
+            super("Sort");
+            setEnabled(false);
+            addMouseListener(new Listener());
+        }
+
+        // MODIFIES: this
+        // EFFECTS: updates the reset button to the current state of the client state
+        void update() {
+            setEnabled(!MainFrame.getFrame().getClientState().getDeck().isSorted());
+        }
+
+        // Represents the Mouse listener that determines if the reset button is clicked
+        private class Listener extends MouseAdapter {
+            @Override
+            // MODIFIES: ResetButton
+            // EFFECTS: resets the suit order
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    sort();
+                }
+            }
+        }
+    }
+
+    // Represents the item listener for the Radio buttons
+    private class RadioListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (e.getActionCommand().equals(VALUE_STRING)) {
+                setSortOrder(true);
+            } else if (e.getActionCommand().equals(SUIT_STRING)) {
+                setSortOrder(false);
             }
         }
     }
