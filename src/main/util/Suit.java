@@ -1,5 +1,7 @@
 package util;
 
+import java.awt.*;
+
 import static net.Constants.*;
 
 // Represents a suit
@@ -16,6 +18,12 @@ public enum Suit {
     Suit(char representation, String str) {
         rep = representation;
         stringRepresentation = str;
+    }
+
+    // EFFECTS: gets the suit's color
+    public Color getColor() {
+        if (this == Club || this == Spade) return Color.BLACK;
+        else return Color.RED;
     }
 
     // EFFECTS: gets the given suit whose internal representation is given

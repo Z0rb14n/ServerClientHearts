@@ -2,7 +2,6 @@ package ui.client;
 
 import util.Card;
 import util.Deck;
-import util.Suit;
 
 import javax.swing.*;
 import java.awt.*;
@@ -56,7 +55,7 @@ class CardView extends JPanel {
         g.setColor(Color.BLACK);
         g.drawRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20, 20);
         g.setFont(font);
-        g.setColor(c.getSuit() == Suit.Spade || c.getSuit() == Suit.Club ? Color.BLACK : Color.RED);
+        g.setColor(c.getSuit().getColor());
         String firstLine = "" + c.getSuit().getCharacter();
         String secondLine = c.isFaceCard() ? c.getFace().toString() : "" + c.getNumber();
         FontMetrics fm = g.getFontMetrics();
