@@ -48,6 +48,9 @@ class SuitOrderView extends JPanel {
     // MODIFIES: this
     // EFFECTS: updates all components
     void update() {
+        boolean isSortingByValue = MainFrame.getFrame().getClientState().getDeck().getOrder().isSortingByValue();
+        preferValue.setSelected(isSortingByValue);
+        preferSuit.setSelected(!isSortingByValue);
         rcb.update();
         rb.update();
         sd.update();
