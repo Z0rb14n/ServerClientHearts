@@ -8,6 +8,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
+// TODO SELECT CARDS FUNCTIONALITY
+
 // Represents the view of the cards (currently empty)
 class CardView extends JPanel {
     private static final int CARD_WIDTH = 80;
@@ -43,7 +45,7 @@ class CardView extends JPanel {
 
     // MODIFIES: g
     // EFFECTS: draws the card offset by given x and y coordinates onto graphics object
-    public static void drawCard(Graphics2D g, int x, int y, Card c) {
+    private static void drawCard(Graphics2D g, int x, int y, Card c) {
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         AffineTransform af = g.getTransform();
