@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 
+// Represents Processing's Client class but modified to not use PApplet
 public class ModifiedClient implements Runnable {
 
     private static final int MAX_BUFFER_SIZE = 1 << 27; // 128 MB
@@ -14,8 +15,6 @@ public class ModifiedClient implements Runnable {
 
     private volatile Thread thread;
     private Socket socket;
-    private int port;
-    private String host;
 
     private InputStream input;
     private OutputStream output;
@@ -34,11 +33,9 @@ public class ModifiedClient implements Runnable {
      */
     public ModifiedClient(EventReceiver parent, String host, int port) {
         this.eventReceiver = parent;
-        this.host = host;
-        this.port = port;
 
         try {
-            socket = new Socket(this.host, this.port);
+            socket = new Socket(host, port);
             input = socket.getInputStream();
             output = socket.getOutputStream();
 
