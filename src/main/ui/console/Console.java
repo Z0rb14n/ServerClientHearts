@@ -36,8 +36,7 @@ public class Console extends JFrame {
     void runCommand(String input) {
         addCommand(input);
         try {
-            Command command = new Command(input);
-            command.runCommand();
+            new Command(input).runCommand();
         } catch (InvalidCommandException ignored) {
         }
     }

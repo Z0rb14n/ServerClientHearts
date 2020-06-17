@@ -53,7 +53,10 @@ public class MainFrame extends JFrame implements EventReceiver {
     // EFFECTS: plays the cards (and sends it to the server)
     // TODO METHOD BODY
     public void playCards(Deck d) {
-        client.write(ClientToServerMessage.createNewSubmitThreeCardMessage(d));
+        if (!isClientInactive()) {
+            if (d.deckSize() == 1) client.write(ClientToServerMessage.createNewCardPlayedMessage(d.get(0)));
+            else client.write(ClientToServerMessage.createNewSubmitThreeCardMessage(d));
+        } else throw new IllegalArgumentException();
     }
 
     @Override

@@ -11,8 +11,15 @@ class CommandInput extends JPanel {
     // EFFECTS: initializes the command input field
     CommandInput() {
         super();
+        jtf.addActionListener(e -> sendCommand());
         add(jtf);
         add(new Button());
+    }
+
+    private void sendCommand() {
+        Console.getConsole().runCommand(jtf.getText());
+        jtf.setText("");
+        repaint();
     }
 
     // Represents the button to submit the command
@@ -28,8 +35,7 @@ class CommandInput extends JPanel {
             @Override
             // EFFECTS: runs code when the submit button is pressed
             public void mouseClicked(MouseEvent e) {
-                Console.getConsole().runCommand(jtf.getText());
-                jtf.setText("");
+                sendCommand();
             }
         }
     }

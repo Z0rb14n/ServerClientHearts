@@ -22,36 +22,39 @@ final class Command {
 
     // EFFECTS: initializes the command with given command input
     Command(String cmdInput) throws InvalidCommandException {
-        if (cmdInput.matches(CONNECT)) {
-            ip = cmdInput.substring(CONNECT_IP_SUBSTRING);
-        } else if (cmdInput.matches(CHAT)) {
-            chatMsg = cmdInput.substring(CHAT_MSG_SUBSTRING);
-        } else if (cmdInput.matches(PLAY)) {
+        if (cmdInput.matches(CONNECT)) ip = cmdInput.substring(CONNECT_IP_SUBSTRING);
+        else if (cmdInput.matches(CHAT)) chatMsg = cmdInput.substring(CHAT_MSG_SUBSTRING);
+        else if (cmdInput.matches(PLAY)) {
             Deck deck = new Deck();
             String cardInput = cmdInput.substring(PLAY_MSG_SUBSTRING);
-            Scanner scanner = new Scanner(cardInput);
-            for (String card = scanner.next(); scanner.hasNext(); ) {
-                try {
-                    deck.addCard(new Card(card));
-                } catch (IllegalArgumentException e) {
-                    Console.getConsole().addMessage("Invalid command.");
-                    throw new InvalidCommandException();
+            System.out.print(cardInput);
+            try (Scanner scanner = new Scanner(cardInput)) {
+                String str;
+                while (scanner.hasNext()) {
+                    str = scanner.next();
+                    if (str.isEmpty()) break;
+                    deck.addCard(new Card(str));
                 }
+                cards = deck;
+            } catch (IllegalArgumentException e) {
+                Console.getConsole().addMessage("Invalid arguments");
+                throw new InvalidCommandException();
             }
-            cards = deck;
-        } else {
-            throw new InvalidCommandException();
-        }
+        } else throw new InvalidCommandException();
     }
 
     // EFFECTS: runs the command (i.e. connection to server/chat message)
     void runCommand() {
-        if (ip != null) {
-            MainFrame.getFrame().attemptLoadClient(ip);
-        } else if (chatMsg != null) {
-            MainFrame.getFrame().sendChatMessage(chatMsg);
-        } else if (cards != null) {
-            MainFrame.getFrame().playCards(cards);
+        try {
+            if (ip != null) {
+                MainFrame.getFrame().attemptLoadClient(ip);
+            } else if (chatMsg != null) {
+                MainFrame.getFrame().sendChatMessage(chatMsg);
+            } else if (cards != null) {
+                MainFrame.getFrame().playCards(cards);
+            }
+        } catch (IllegalArgumentException e) {
+            Console.getConsole().addMessage("Invalid arguments/command");
         }
     }
 }
