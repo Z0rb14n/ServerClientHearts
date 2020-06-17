@@ -17,7 +17,7 @@ import static net.Constants.ERR_INVALID_MSG;
 import static net.Constants.ERR_TOO_MANY_PLAYERS;
 import static net.ServerToClientMessage.*;
 
-public class ModifiedNewServer extends ModifiedServer {
+public final class ModifiedNewServer extends ModifiedServer {
     private final LinkedHashMap<String, ModifiedClient> clients = new LinkedHashMap<>(4);
     private final String[] IDS = new String[4];
 

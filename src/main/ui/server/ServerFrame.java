@@ -55,8 +55,6 @@ public class ServerFrame extends JFrame implements EventReceiver {
             handleMessages();
         }
     }
-
-
     // MODIFIES: this
     // EFFECTS: adds the message to the server and processes it
     public void addNewMessage(MessagePair mp) {

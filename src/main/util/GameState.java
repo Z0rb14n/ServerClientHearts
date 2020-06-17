@@ -1,6 +1,5 @@
 package util;
 
-import ui.SCHServer;
 import ui.server.ServerFrame;
 
 // TODO SEND PLAYING/PASSING ORDER OVER SERVERTOCLIENTMESSAGE
@@ -186,20 +185,14 @@ public class GameState {
                 }
                 if (center.deckSize() == 4) endTurn();
                 else {
-                    if (ServerFrame.isUsingJFrameServer())
-                        ServerFrame.getInstance().requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
-                    else SCHServer.getServer().requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
+                    ServerFrame.getInstance().requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
                 }
             }
         }
     }
 
     private void kickInvalid(int playerNum) {
-        if (ServerFrame.isUsingJFrameServer()) {
-            ServerFrame.getInstance().requestKickInvalidMessage(playerNum);
-        } else {
-            SCHServer.getServer().requestKickInvalidMessage(playerNum);
-        }
+        ServerFrame.getInstance().requestKickInvalidMessage(playerNum);
     }
 
     // REQUIRES: center.size == 4
@@ -215,8 +208,7 @@ public class GameState {
         currentSuitToPlay = null; // can play whatever suit
         checkGameEnd();
         if (!gameEnded) {
-            if (ServerFrame.isUsingJFrameServer()) ServerFrame.getInstance().startNewTurn(startingPlayer, deck);
-            else SCHServer.getServer().startNewTurn(startingPlayer, deck);
+            ServerFrame.getInstance().startNewTurn(startingPlayer, deck);
         }
     }
 
@@ -257,9 +249,7 @@ public class GameState {
     private void checkGameEnd() {
         if (numTurns != 14) return;
         gameEnded = true;
-        if (ServerFrame.isUsingJFrameServer())
-            ServerFrame.getInstance().endGame(gameWinner(), gameWinnerPoints(), penalties);
-        else SCHServer.getServer().endGame(gameWinner(), gameWinnerPoints(), penalties);
+        ServerFrame.getInstance().endGame(gameWinner(), gameWinnerPoints(), penalties);
     }
 
     // EFFECTS: returns current winner
@@ -283,8 +273,7 @@ public class GameState {
     private void startFirstTurn() {
         threeOfClubsNeeded = true;
         startingPlayer = gameStarter();
-        if (ServerFrame.isUsingJFrameServer()) ServerFrame.getInstance().startFirstTurn(startingPlayer);
-        else SCHServer.getServer().startFirstTurn(startingPlayer);
+        ServerFrame.getInstance().startFirstTurn(startingPlayer);
         numTurns = 1;
     }
 

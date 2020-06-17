@@ -1,7 +1,5 @@
 package net;
 
-import processing.core.PApplet;
-import processing.net.Client;
 import ui.client.MainFrame;
 import ui.console.Console;
 import util.Deck;
@@ -12,14 +10,12 @@ import java.nio.ByteBuffer;
 import static net.Constants.ERR_TIMED_OUT;
 import static net.Constants.PORT;
 
-// Represents the game client
-public final class NewClient extends Client {
+public final class ModifiedNewClient extends ModifiedClient {
     private String clientID;
     private int playerNum;
 
-    // EFFECTS: initializes client
-    public NewClient(String ip) {
-        super(new PApplet(), ip, PORT); // the PApplet isn't used
+    public ModifiedNewClient(EventReceiver parent, String ip) {
+        super(parent, ip, Constants.PORT);
         if (!active()) {
             stop();
             Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
@@ -28,6 +24,7 @@ public final class NewClient extends Client {
             getClientIDFromServer();
         }
     }
+
 
     // MODIFIES: this
     // EFFECTS: gets the client ID from the server

@@ -3,7 +3,8 @@ package ui.client;
 // TODO FINISH GUI
 
 import net.ConnectionException;
-import net.NewClient;
+import net.EventReceiver;
+import net.ModifiedNewClient;
 import net.ServerToClientMessage;
 import ui.console.Console;
 import util.ClientState;
@@ -16,7 +17,7 @@ import static net.Constants.ERR_TIMED_OUT;
 import static net.Constants.ERR_TOO_MANY_PLAYERS;
 
 // Represents the main JFrame the user interacts with
-public class MainFrame extends JFrame {
+public class MainFrame extends JFrame implements EventReceiver {
     private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
@@ -27,7 +28,7 @@ public class MainFrame extends JFrame {
     private GamePanel gp = new GamePanel();
     private ConnectionPanel cp = new ConnectionPanel();
     private ClientState clientState = new ClientState();
-    private NewClient client;
+    private ModifiedNewClient client;
     private static MainFrame singleton;
 
     // MODIFIES: this
@@ -154,7 +155,7 @@ public class MainFrame extends JFrame {
         // MODIFIES: this
         // EFFECTS: attempts to connect to the server, and if it does, indicate so
         public void run() {
-            client = new NewClient(loadedIP);
+            client = new ModifiedNewClient(MainFrame.getFrame(), loadedIP);
             didTimeout = false;
         }
     }
