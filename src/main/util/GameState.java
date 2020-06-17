@@ -1,6 +1,7 @@
 package util;
 
 import ui.SCHServer;
+import ui.server.ServerFrame;
 
 // TODO SEND PLAYING/PASSING ORDER OVER SERVERTOCLIENTMESSAGE
 
@@ -140,29 +141,27 @@ public class GameState {
     // MODIFIES: this, server
     // EFFECTS: receives the card played and updates game state, kicks player if invalid
     public void playCard(int playerNum, Card a, Card... c) {
-        SCHServer server = SCHServer.getServer();
         if (isInvalidPlay(a, playerNum)) {
-            server.requestKickInvalidMessage(playerNum);
+            kickInvalid(playerNum);
             return;
         }
         if (!isGameStarted) {
-            server.requestKickInvalidMessage(playerNum);
+            kickInvalid(playerNum);
             return;
         }
         for (Card card1 : c) {
             if (isInvalidPlay(card1, playerNum)) {
-                server.requestKickInvalidMessage(playerNum);
+                kickInvalid(playerNum);
                 return;
             }
         }
         if (!allCardsPassed) {
-            if (c.length != 2) {
-                server.requestKickInvalidMessage(playerNum); // you must be passing exactly three cards
-            } else if (!passingHands[playerNum - 1].isEmpty()) {
-                server.requestKickInvalidMessage(playerNum); // you can't pass cards twice
-            } else {
+            if (c.length != 2) kickInvalid(playerNum); // needs 3 cards
+            else if (!passingHands[playerNum - 1].isEmpty()) kickInvalid(playerNum); // no passing cards twice
+            else {
                 Deck newDeck = new Deck();
                 newDeck.addCard(a);
+                hands[playerNum - 1].removeCard(a);
                 for (Card card : c) {
                     newDeck.addCard(card);
                     hands[playerNum - 1].removeCard(card);
@@ -171,17 +170,15 @@ public class GameState {
                 checkPassCards();
             }
         } else {
-            if (c.length != 0)
-                server.requestKickInvalidMessage(playerNum); // you should not be playing more than one card
+            if (c.length != 0) kickInvalid(playerNum);// you should not be playing more than one card
             else if (!matchesCurrentSuit(a, playerNum))
-                server.requestKickInvalidMessage(playerNum); // can't play clubs if suit is hearts, etc.
-            else if (hasPlayedCard(playerNum)) server.requestKickInvalidMessage(playerNum); // you can't play twice
-            else if (threeOfClubsNeeded && !a.is3C())
-                server.requestKickInvalidMessage(playerNum); // you have to play 3C if starting
-            else if (isPlayingOutOfOrder(playerNum))
-                server.requestKickInvalidMessage(playerNum); // can't play out of order
+                kickInvalid(playerNum); // can't play clubs if suit is hearts, etc.
+            else if (hasPlayedCard(playerNum)) kickInvalid(playerNum); // you can't play twice
+            else if (threeOfClubsNeeded && !a.is3C()) kickInvalid(playerNum); // you have to play 3C if starting
+            else if (isPlayingOutOfOrder(playerNum)) kickInvalid(playerNum); // can't play out of order
             else {
                 center.addCard(a);
+                hands[playerNum - 1].removeCard(a);
                 if (threeOfClubsNeeded) threeOfClubsNeeded = false;
                 if (currentSuitToPlay == null) {
                     currentSuitToPlay = a.getSuit(); // if starting new turn, set new suit
@@ -189,9 +186,19 @@ public class GameState {
                 }
                 if (center.deckSize() == 4) endTurn();
                 else {
-                    server.requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
+                    if (ServerFrame.isUsingJFrameServer())
+                        ServerFrame.getInstance().requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
+                    else SCHServer.getServer().requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
                 }
             }
+        }
+    }
+
+    private void kickInvalid(int playerNum) {
+        if (ServerFrame.isUsingJFrameServer()) {
+            ServerFrame.getInstance().requestKickInvalidMessage(playerNum);
+        } else {
+            SCHServer.getServer().requestKickInvalidMessage(playerNum);
         }
     }
 
@@ -207,7 +214,10 @@ public class GameState {
         penalties[startingPlayer - 1].addAll(deck); // distribute penalties
         currentSuitToPlay = null; // can play whatever suit
         checkGameEnd();
-        if (!gameEnded) SCHServer.getServer().startNewTurn(startingPlayer, deck);
+        if (!gameEnded) {
+            if (ServerFrame.isUsingJFrameServer()) ServerFrame.getInstance().startNewTurn(startingPlayer, deck);
+            else SCHServer.getServer().startNewTurn(startingPlayer, deck);
+        }
     }
 
     // REQUIRES: center.size == 4
@@ -247,7 +257,9 @@ public class GameState {
     private void checkGameEnd() {
         if (numTurns != 14) return;
         gameEnded = true;
-        SCHServer.getServer().endGame(gameWinner(), gameWinnerPoints(), penalties);
+        if (ServerFrame.isUsingJFrameServer())
+            ServerFrame.getInstance().endGame(gameWinner(), gameWinnerPoints(), penalties);
+        else SCHServer.getServer().endGame(gameWinner(), gameWinnerPoints(), penalties);
     }
 
     // EFFECTS: returns current winner
@@ -271,7 +283,8 @@ public class GameState {
     private void startFirstTurn() {
         threeOfClubsNeeded = true;
         startingPlayer = gameStarter();
-        SCHServer.getServer().startFirstTurn(startingPlayer);
+        if (ServerFrame.isUsingJFrameServer()) ServerFrame.getInstance().startFirstTurn(startingPlayer);
+        else SCHServer.getServer().startFirstTurn(startingPlayer);
         numTurns = 1;
     }
 

@@ -1,82 +1,61 @@
-package ui;
+package ui.server;
 
-// TODO: DO THIS FIRST BEFORE WORKING ON CLIENT
-
-import net.ClientToServerMessage;
-import net.EventReceiver;
-import net.MessagePair;
-import net.NewServer;
-import processing.core.PApplet;
-import processing.net.Client;
-import processing.net.Server;
+import net.*;
 import util.Card;
 import util.Deck;
 import util.GameState;
 import util.Suit;
 
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayDeque;
 
 import static net.Constants.ERR_INVALID_MSG;
 
-// Represents the server application
-public final class SCHServer extends PApplet implements EventReceiver {
-    private NewServer server;
-    private final static int FPS = 30;
-    private GameState gameState;
+public class ServerFrame extends JFrame implements EventReceiver {
+    private static ServerFrame ourInstance;
+    private static final Dimension SIZE = new Dimension(640, 480);
+    private final Timer updateTimer = new Timer(100, e -> repaint());
     private final ArrayDeque<MessagePair> clientMessages = new ArrayDeque<>();
     private final ArrayDeque<ClientToServerMessage> clientServerMessages = new ArrayDeque<>();
-    private static SCHServer singleton;
+    private ModifiedNewServer newServer = new ModifiedNewServer(this);
+    private GameState gameState = new GameState();
 
-    // EFFECTS: initializes the SCHServer
-    private SCHServer() {
-        super();
+    public static boolean isUsingJFrameServer() {
+        return ourInstance != null;
     }
 
-    // MODIFIES: SCHServer
-    // EFFECTS: gets the SCHServer singleton instance (see Singleton Design Pattern, Gang of Four)
-    public static SCHServer getServer() {
-        if (singleton == null) {
-            singleton = new SCHServer();
+    public static ServerFrame getInstance() {
+        if (ourInstance == null) {
+            ourInstance = new ServerFrame();
         }
-        return singleton;
+        return ourInstance;
     }
 
-    // EFFECTS: runs the program
-    public static void main(String[] args) {
-        PApplet.runSketch(new String[]{"SCHServer"}, getServer());
+    private ServerFrame() {
+        super("Server Client Hearts Server");
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setPreferredSize(SIZE);
+        setBackground(Color.WHITE);
+        setSize(SIZE);
+        updateTimer.start();
+        setVisible(true);
     }
 
-    //<editor-fold desc="Processing loop commands (i.e. Settings, Setup, Draw)">
-    @Override
-    // MODIFIES: this
-    // EFFECTS: runs at beginning of program before setup - size() must be in settings() (see PApplet in processing for details)
-    public void settings() {
-        size(640, 480);
-        gameState = new GameState();
+    public void paint(Graphics g) {
+        super.paint(g);
+        update();
     }
 
-    @Override
-    // MODIFIES: this
-    // EFFECTS: runs at beginning of program before draw
-    public void setup() {
-        frameRate(FPS);
-        server = new NewServer();
-        surface.setTitle("Server Client Hearts Server?");
-    }
-
-    @Override
-    // MODIFIES: this
-    // EFFECTS: loops FPS times per second and renders to the screen
-    public void draw() {
-        background(255);
-        if (!gameState.isGameStarted() && server.isFull()) {
+    private void update() {
+        if (!gameState.isGameStarted() && newServer.isFull()) {
             startGame();
         }
         if (hasNewAction()) {
             handleMessages();
         }
     }
-    //</editor-fold>
+
 
     // MODIFIES: this
     // EFFECTS: adds the message to the server and processes it
@@ -96,16 +75,18 @@ public final class SCHServer extends PApplet implements EventReceiver {
     }
 
     //<editor-fold desc="Events (i.e. Client/Disconnect events)">
+    @Override
     // MODIFIES: this
     // EFFECTS: runs when a client connects to the server
-    public void serverEvent(Server s, Client c) {
-        server.onClientConnect(c);
+    public void serverEvent(ModifiedServer s, ModifiedClient c) {
+        newServer.onClientConnect(c);
     }
 
+    @Override
     // MODIFIES: this
     // EFFECTS: after a client has disconnected, remove them from the entries list
-    public void disconnectEvent(Client c) {
-        server.onClientDisconnect(c);
+    public void disconnectEvent(ModifiedClient c) {
+        newServer.onClientDisconnect(c);
     }
     //</editor-fold>
 
@@ -118,38 +99,38 @@ public final class SCHServer extends PApplet implements EventReceiver {
     // EFFECTS: starts the current game of hearts and transitions to "pass cards" stage
     private void startGame() {
         gameState.startGame();
-        server.onGameStart(gameState.getHandsInOrder());
+        newServer.onGameStart(gameState.getHandsInOrder());
     }
 
 
     // MODIFIES: this
     // EFFECTS: asks player to play 3C
     public void startFirstTurn(int starter) {
-        server.startFirstTurn(starter, gameState.getHandsInOrder(), gameState.getPassingHands());
+        newServer.startFirstTurn(starter, gameState.getHandsInOrder(), gameState.getPassingHands());
     }
 
     // MODIFIES: this
     // EFFECTS: asks next player to play a card
     public void requestNextCard(int justPlayed, int playerNumOfNextPlayer, Card played, Suit required) {
-        server.requestNextCard(justPlayed, playerNumOfNextPlayer, gameState.getCenter(), played, required);
+        newServer.requestNextCard(justPlayed, playerNumOfNextPlayer, gameState.getCenter(), played, required);
     }
 
     // MODIFIES: this
     // EFFECTS: starts new turn and writes messages to players, given "winner" (player number 1-4)
     public void startNewTurn(int winner, Deck addedPenalties) {
-        server.startNewTurn(winner, addedPenalties);
+        newServer.startNewTurn(winner, addedPenalties);
     }
 
     // MODIFIES: this
     // EFFECTS: when game has ended - writes messages to players (who won, etc.)
     public void endGame(boolean[] winner, int points, Deck[] penaltyHands) {
-        server.endGame(winner, points, penaltyHands);
+        newServer.endGame(winner, points, penaltyHands);
     }
 
     // MODIFIES: this
     // EFFECTS: kicks a player due to an invalid message
     public void requestKickInvalidMessage(int playerNum) {
-        server.kickInvalid(playerNum);
+        newServer.kickInvalid(playerNum);
     }
 
     // MODIFIES: this
@@ -159,27 +140,27 @@ public final class SCHServer extends PApplet implements EventReceiver {
             MessagePair msg = clientMessages.poll();
             // ASSUMES THERE'S ONLY PLAY MESSAGES
             if (!msg.msg.isValidMessage() || !msg.msg.isNewCardPlayedMessage() || !msg.msg.isFirstThreeCardsMessage()) {
-                server.kick(msg.client, ERR_INVALID_MSG); // this only accepts play messages
+                newServer.kick(msg.modifiedClient, ERR_INVALID_MSG); // this only accepts play messages
             }
             if (msg.msg.isFirstThreeCardsMessage()) {
                 try {
-                    int clientNum = server.getClientNumber(msg.client);
+                    int clientNum = newServer.getClientNumber(msg.modifiedClient);
                     if (clientNum != 0) {
                         Deck deck = msg.msg.getThreeCards();
                         gameState.playCard(clientNum, deck.get(0), deck.get(1), deck.get(2));
                     }
                 } catch (IllegalArgumentException e) {
-                    server.kick(msg.client, ERR_INVALID_MSG);
+                    newServer.kick(msg.modifiedClient, ERR_INVALID_MSG);
                 }
             } else if (msg.msg.isNewCardPlayedMessage()) {
                 try {
-                    int clientNum = server.getClientNumber(msg.client);
+                    int clientNum = newServer.getClientNumber(msg.modifiedClient);
                     if (clientNum != 0) {
                         Card card = msg.msg.getCard();
                         gameState.playCard(clientNum, card);
                     }
                 } catch (IllegalArgumentException e) {
-                    server.kick(msg.client, ERR_INVALID_MSG);
+                    newServer.kick(msg.modifiedClient, ERR_INVALID_MSG);
                 }
             }
         }
@@ -189,7 +170,7 @@ public final class SCHServer extends PApplet implements EventReceiver {
     // EFFECTS: resets the server/games
     public void reset() {
         clientMessages.clear();
-        server.reset();
+        newServer.reset();
         gameState.reset();
     }
 }
