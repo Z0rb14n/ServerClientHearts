@@ -28,9 +28,17 @@ public final class ModifiedNewClient extends ModifiedClient {
 
     // MODIFIES: this
     // EFFECTS: gets the client ID from the server
-    //          throws ConnectionException if kicked from the server?
+    //          throws ConnectionException if kicked from the server
     private void getClientIDFromServer() {
+        // continuously wait until you get a message
+        while (available() <= 0) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException ignored) {
+            }
+        }
         ServerToClientMessage msg = readServerToClientMessage();
+        assert (msg != null);
         if (msg.isKickMessage()) {
             throw new ConnectionException(msg.getKickMessage());
         } else {
@@ -49,6 +57,10 @@ public final class ModifiedNewClient extends ModifiedClient {
             throw new RuntimeException("AAAA UR INTERNET IS SLOW AAAAA - tried to read a new message when one was already being read");
         msgFinished = false;
         int bytesRead = 0;
+        if (available() == 0) {
+            Console.getConsole().addMessage("Tried to read ServerToClientMessage when available() == 0. Returning null.");
+            return null;
+        }
         while (available() < 4) {
             try {
                 Thread.sleep(10);
@@ -66,7 +78,11 @@ public final class ModifiedNewClient extends ModifiedClient {
         msgFinished = true;
         ByteArrayInputStream bis = new ByteArrayInputStream(msgBuffer);
         try (ObjectInputStream in = new ObjectInputStream(bis)) {
-            return (ServerToClientMessage) in.readObject();
+            ServerToClientMessage scm = (ServerToClientMessage) in.readObject();
+            if (scm.isKickMessage()) {
+                Console.getConsole().addMessage("Received kick message from server: " + scm.getKickMessage());
+            }
+            return scm;
         } catch (IOException | ClassNotFoundException | ClassCastException e) {
             System.err.println("Are you sure this is an actual server?");
             throw new RuntimeException(e.getMessage());
@@ -128,10 +144,9 @@ public final class ModifiedNewClient extends ModifiedClient {
     // EFFECTS: disconnects client from the server and stops the client.
     public void stop() {
         ServerToClientMessage lastMessage = readServerToClientMessage();
-        if (lastMessage.isKickMessage()) {
+        if (lastMessage != null && lastMessage.isKickMessage()) {
             MainFrame.getFrame().updateErrorMessage(lastMessage.getKickMessage());
         }
-
         super.stop();
     }
 }

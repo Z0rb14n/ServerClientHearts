@@ -19,4 +19,9 @@ public interface EventReceiver {
     //          called by ModifiedClient
     default void disconnectEvent(ModifiedClient c) {
     }
+
+    // MODIFIES: this
+    // EFFECTS: runs when a client encounters end-of-stream (e.g. host disconnect, kick)
+    default void endOfStreamEvent(ModifiedClient c) {
+    }
 }

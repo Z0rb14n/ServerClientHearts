@@ -150,6 +150,7 @@ public class ModifiedClient implements Runnable {
                     // read returns -1 if end-of-stream occurs (for example if the host disappears)
                     if (readCount == -1) {
                         System.err.println("Client got end-of-stream.");
+                        eventReceiver.endOfStreamEvent(this);
                         stop();
                         return;
                     }

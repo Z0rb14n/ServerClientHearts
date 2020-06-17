@@ -79,7 +79,7 @@ public final class ServerToClientMessage implements Serializable {
     }
 
     // EFFECTS: returns whether this message is a kick message
-    boolean isKickMessage() {
+    public boolean isKickMessage() {
         return isKickMessage && kickMessage != null;
     }
 

@@ -65,22 +65,49 @@ public class MainFrame extends JFrame implements EventReceiver {
         if (!isClientInactive()) {
             System.out.println(c instanceof ModifiedNewClient);
             ServerToClientMessage scm = client.readServerToClientMessage();
-            clientState.processNewMessage(scm);
-            Console.getConsole().addMessage("New Message from Server: " + scm);
-            gp.update();
+            assert (scm != null);
+            if (!scm.isKickMessage()) {
+                clientState.processNewMessage(scm);
+                Console.getConsole().addMessage("New Message from Server: " + scm);
+                gp.update();
+            }
         }
         update();
+    }
+
+    @Override
+    public void endOfStreamEvent(ModifiedClient c) {
+        System.out.println("CLIENT RECEIVED END OF STREAM - KICK/HOST DISCONNECT.");
+        if (!displayingInputIP) {
+            invalidate();
+            remove(gp);
+            resetConnectionPanel();
+            add(cp);
+            clientState = new ClientState(); // reset
+            displayingInputIP = true;
+        }
+        pack();
+        repaint();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: resets the connection panel
+    private void resetConnectionPanel() {
+        cp = new ConnectionPanel();
+        cp.initialize();
     }
 
     // MODIFIES: this
     // EFFECTS: updates the JFrame to indicate to show connection panel or game panel (currently unused)
     private void update() {
         if (isClientInactive() && !displayingInputIP) {
-            removeAll();
+            remove(gp);
+            resetConnectionPanel();
             add(cp);
+            clientState = new ClientState(); // reset
             displayingInputIP = true;
         } else if (!isClientInactive() && displayingInputIP) {
-            removeAll();
+            remove(cp);
             add(gp);
             displayingInputIP = false;
         }
@@ -123,6 +150,7 @@ public class MainFrame extends JFrame implements EventReceiver {
     }
 
     private volatile boolean didTimeout = true;
+    private volatile boolean connectionSuccess = false;
 
     // Represents a thread to load the client to determine if it runs for too long
     private class ClientLoader extends Thread {
@@ -138,8 +166,13 @@ public class MainFrame extends JFrame implements EventReceiver {
         // MODIFIES: this
         // EFFECTS: attempts to connect to the server, and if it does, indicate so
         public void run() {
-            client = new ModifiedNewClient(MainFrame.getFrame(), loadedIP);
-            didTimeout = false;
+            try {
+                client = new ModifiedNewClient(MainFrame.getFrame(), loadedIP);
+                didTimeout = false;
+                connectionSuccess = true;
+            } catch (ConnectionException e) {
+                connectionSuccess = false;
+            }
         }
     }
 
@@ -150,13 +183,15 @@ public class MainFrame extends JFrame implements EventReceiver {
             Console.getConsole().addMessage("Attempted to connect to client when one was already connected");
             return;
         }
+        didTimeout = false;
+        connectionSuccess = false;
         cp.updateErrorDisplayed("");
         boolean failed = false;
         try {
             ClientLoader cl = new ClientLoader(ip);
             cl.start();
             cl.join(10000);
-            if (client == null || didTimeout) {
+            if (client == null || didTimeout || !connectionSuccess) {
                 failed = true;
                 Console.getConsole().addMessage("Connection timed out.");
                 cp.updateErrorDisplayed(CONNECTION_TIMEOUT);
@@ -187,6 +222,7 @@ public class MainFrame extends JFrame implements EventReceiver {
             cp.setVisible(false);
             remove(cp);
             add(gp);
+            invalidate();
             displayingInputIP = false;
             repaint();
         }
