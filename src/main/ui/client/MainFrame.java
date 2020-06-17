@@ -2,10 +2,7 @@ package ui.client;
 
 // TODO FINISH GUI
 
-import net.ConnectionException;
-import net.EventReceiver;
-import net.ModifiedNewClient;
-import net.ServerToClientMessage;
+import net.*;
 import ui.console.Console;
 import util.ClientState;
 import util.Deck;
@@ -22,8 +19,6 @@ public class MainFrame extends JFrame implements EventReceiver {
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
     private final static Dimension WINDOW_DIMENSION = new Dimension(1366, 708);
-    private final Timer updateTimer = new Timer(100, e -> repaint());
-    private final MessageReceiver mr = new MessageReceiver();
     private boolean displayingInputIP = true;
     private GamePanel gp = new GamePanel();
     private ConnectionPanel cp = new ConnectionPanel();
@@ -49,50 +44,34 @@ public class MainFrame extends JFrame implements EventReceiver {
         setSize(WINDOW_DIMENSION);
         cp.initialize();
         add(cp);
-        mr.start();
-        updateTimer.start();
         Console.getConsole(); // creates the console window
         pack();
         setVisible(true);
-    }
-
-    // Represents the message receiver thread/timer
-    class MessageReceiver extends Timer {
-
-        MessageReceiver() {
-            super(100, e -> {
-                System.out.print(isClientInactive());
-                if (client != null) System.out.println("," + client.available());
-                else System.out.println();
-                if (!isClientInactive() && client.available() > 0) {
-                    ServerToClientMessage scm = client.readServerToClientMessage();
-                    clientState.processNewMessage(scm);
-                    Console.getConsole().addMessage("New Message from Server: " + scm);
-                    gp.update();
-                }
-            });
-        }
     }
 
     // MODIFIES: this
     // EFFECTS: plays the cards (and sends it to the server)
     // TODO METHOD BODY
     public void playCards(Deck d) {
-        throw new UnsupportedOperationException();
+        client.write(ClientToServerMessage.createNewSubmitThreeCardMessage(d));
     }
 
     @Override
-    // MODIFIES: this
-    // EFFECTS: disposes of this JFrame - overridden to stop all timers
-    public void dispose() {
-        super.dispose();
-        updateTimer.stop();
-        mr.stop();
+    public void dataReceivedEvent(ModifiedClient c) {
+        System.out.println("EVENT: " + c.available() + "," + " is client inactive: " + isClientInactive());
+        if (!isClientInactive()) {
+            System.out.println(c instanceof ModifiedNewClient);
+            ServerToClientMessage scm = client.readServerToClientMessage();
+            clientState.processNewMessage(scm);
+            Console.getConsole().addMessage("New Message from Server: " + scm);
+            gp.update();
+        }
+        update();
     }
 
     // MODIFIES: this
     // EFFECTS: updates the JFrame to indicate to show connection panel or game panel (currently unused)
-    void update() {
+    private void update() {
         if (isClientInactive() && !displayingInputIP) {
             removeAll();
             add(cp);
@@ -102,6 +81,7 @@ public class MainFrame extends JFrame implements EventReceiver {
             add(gp);
             displayingInputIP = false;
         }
+        invalidate();
         pack();
         repaint();
     }

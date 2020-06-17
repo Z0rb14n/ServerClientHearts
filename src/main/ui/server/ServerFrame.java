@@ -17,13 +17,8 @@ public class ServerFrame extends JFrame implements EventReceiver {
     private static final Dimension SIZE = new Dimension(640, 480);
     private final Timer updateTimer = new Timer(100, e -> repaint());
     private final ArrayDeque<MessagePair> clientMessages = new ArrayDeque<>();
-    private final ArrayDeque<ClientToServerMessage> clientServerMessages = new ArrayDeque<>();
     private ModifiedNewServer newServer = new ModifiedNewServer(this);
     private GameState gameState = new GameState();
-
-    public static boolean isUsingJFrameServer() {
-        return ourInstance != null;
-    }
 
     public static ServerFrame getInstance() {
         if (ourInstance == null) {
@@ -42,11 +37,25 @@ public class ServerFrame extends JFrame implements EventReceiver {
         setVisible(true);
     }
 
+    @Override
+    // MODIFIES: g, this
+    // EFFECTS: paints the given graphics object and updates the frame
     public void paint(Graphics g) {
         super.paint(g);
         update();
     }
 
+    @Override
+    // MODIFIES: this
+    // EFFECTS: disposes the jframe
+    public void dispose() {
+        updateTimer.stop();
+        newServer.stop();
+        super.dispose();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: updates the game state
     private void update() {
         if (!gameState.isGameStarted() && newServer.isFull()) {
             startGame();
@@ -61,12 +70,6 @@ public class ServerFrame extends JFrame implements EventReceiver {
         clientMessages.add(mp);
     }
 
-    // MODIFIES: this
-    // EFFECTS: adds a client to server message to list of messages
-    public void addNewMessage(ClientToServerMessage scm) {
-        clientServerMessages.add(scm);
-    }
-
     // EFFECTS: determines whether there is a new non-chat message to process
     public boolean hasNewMessage() {
         return !clientMessages.isEmpty();
@@ -76,7 +79,7 @@ public class ServerFrame extends JFrame implements EventReceiver {
     @Override
     // MODIFIES: this
     // EFFECTS: runs when a client connects to the server
-    public void serverEvent(ModifiedServer s, ModifiedClient c) {
+    public void clientConnectionEvent(ModifiedServer s, ModifiedClient c) {
         newServer.onClientConnect(c);
     }
 

@@ -212,7 +212,7 @@ public class ModifiedServer implements Runnable {
                 ModifiedClient client = new ModifiedClient(eventReceiver, socket);
                 synchronized (clientsLock) {
                     addClient(client);
-                    eventReceiver.serverEvent(this, client);
+                    eventReceiver.clientConnectionEvent(this, client);
                 }
             } catch (SocketException e) {
                 //thrown when server.close() is called and server is waiting on accept

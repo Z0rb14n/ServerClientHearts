@@ -185,7 +185,7 @@ public class ModifiedClient implements Runnable {
                     }
 
                     // now post an event
-                    eventReceiver.clientEvent(this);
+                    eventReceiver.dataReceivedEvent(this);
                 }
             } catch (IOException e) {
                 //errorMessage("run", e);

@@ -19,12 +19,12 @@ import static net.ServerToClientMessage.*;
 
 public final class ModifiedNewServer extends ModifiedServer {
     private final LinkedHashMap<String, ModifiedClient> clients = new LinkedHashMap<>(4);
+    private ChatMessageHandler cmh = new ChatMessageHandler();
     private final String[] IDS = new String[4];
 
     public ModifiedNewServer(EventReceiver parent) {
         super(parent, Constants.PORT);
         System.out.println("Server started at: " + ModifiedServer.ip());
-        ChatMessageHandler cmh = new ChatMessageHandler();
         cmh.start();
     }
 
@@ -255,7 +255,7 @@ public final class ModifiedNewServer extends ModifiedServer {
 
         // MODIFIES: this
         // EFFECTS: stops the thread
-        public void end() {
+        void end() {
             stop = true;
         }
 
@@ -276,7 +276,7 @@ public final class ModifiedNewServer extends ModifiedServer {
                         handleChatMessage(csm, c);
                         System.out.print("handled chat message.");
                     } else {
-                        ServerFrame.getInstance().addNewMessage(csm);
+                        ServerFrame.getInstance().addNewMessage(new MessagePair(c, csm));
                     }
                     c = available(); // get next client
                 }
@@ -292,5 +292,11 @@ public final class ModifiedNewServer extends ModifiedServer {
             } catch (InterruptedException ignored) {
             }
         }
+    }
+
+    @Override
+    public void dispose() {
+        cmh.end();
+        super.dispose();
     }
 }
