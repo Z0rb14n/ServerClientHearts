@@ -12,6 +12,7 @@ public class ClientState {
     private Deck deck;
     private int playernum;
     private boolean gameStarted = false;
+    private boolean cardsBeenPassed = false;
     private final LinkedList<ChatMessage> chatMessages = new LinkedList<>();
     private boolean[] exists = new boolean[4];
     private BufferedImage[] drawnImages = new BufferedImage[4];
@@ -93,12 +94,18 @@ public class ClientState {
         return gameStarted;
     }
 
+    // EFFECTS: determines if the passing of cards is finished
+    public boolean hasCardsPassed() {
+        return cardsBeenPassed;
+    }
+
     // MODIFIES: this
     // EFFECTS: handles incoming messages from server
     public void processNewMessage(ServerToClientMessage msgFromServer) {
         handleNewChatMessage(msgFromServer);
         handlePlayerAdditionMessages(msgFromServer);
         handleGameStartMessages(msgFromServer);
+        if (!cardsBeenPassed) cardsBeenPassed = msgFromServer.isStartingFirstTurnMessage();
     }
 
     // MODIFIES: this

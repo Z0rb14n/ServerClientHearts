@@ -64,6 +64,7 @@ public class ServerFrame extends JFrame implements EventReceiver {
             handleMessages();
         }
     }
+
     // MODIFIES: this
     // EFFECTS: adds the message to the server and processes it
     public void addNewMessage(MessagePair mp) {
@@ -140,22 +141,18 @@ public class ServerFrame extends JFrame implements EventReceiver {
         while (!clientMessages.isEmpty()) {
             MessagePair msg = clientMessages.poll();
             // ASSUMES THERE'S ONLY PLAY MESSAGES
-            if (!msg.msg.isValidMessage() || !msg.msg.isNewCardPlayedMessage() || !msg.msg.isFirstThreeCardsMessage()) {
+            if (!msg.msg.isValidMessage() && !msg.msg.isNewCardPlayedMessage() && !msg.msg.isFirstThreeCardsMessage()) {
+                System.err.println("Received non-play message for play message handler");
                 newServer.kick(msg.modifiedClient, ERR_INVALID_MSG); // this only accepts play messages
             }
+            int clientNum = newServer.getClientNumber(msg.modifiedClient);
             if (msg.msg.isFirstThreeCardsMessage()) {
-                try {
-                    int clientNum = newServer.getClientNumber(msg.modifiedClient);
-                    if (clientNum != 0) {
-                        Deck deck = msg.msg.getThreeCards();
-                        gameState.playCard(clientNum, deck.get(0), deck.get(1), deck.get(2));
-                    }
-                } catch (IllegalArgumentException e) {
-                    newServer.kick(msg.modifiedClient, ERR_INVALID_MSG);
+                if (clientNum != 0) {
+                    Deck deck = msg.msg.getThreeCards();
+                    gameState.playCard(clientNum, deck.get(0), deck.get(1), deck.get(2));
                 }
             } else if (msg.msg.isNewCardPlayedMessage()) {
                 try {
-                    int clientNum = newServer.getClientNumber(msg.modifiedClient);
                     if (clientNum != 0) {
                         Card card = msg.msg.getCard();
                         gameState.playCard(clientNum, card);
@@ -164,6 +161,7 @@ public class ServerFrame extends JFrame implements EventReceiver {
                     newServer.kick(msg.modifiedClient, ERR_INVALID_MSG);
                 }
             }
+
         }
     }
 

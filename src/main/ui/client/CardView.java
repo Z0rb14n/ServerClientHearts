@@ -5,27 +5,45 @@ import util.Deck;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.geom.AffineTransform;
 
 // TODO SELECT CARDS FUNCTIONALITY
 
 // Represents the view of the cards (currently empty)
-class CardView extends JPanel {
+class CardView extends JPanel implements MouseListener {
     private static final int CARD_WIDTH = 80;
     private static final int CARD_HEIGHT = 150;
     private static final Font font = new Font("Arial", Font.PLAIN, 20);
     private static final int BORDER_THICKNESS = 2;
     private static final int SIZE_BUFFER = 4 * BORDER_THICKNESS;
+    private static final int HEIGHT_OFFSET = 20;
+    private DeckView parent;
     // EFFECTS: initializes CardView
-    CardView() {
+    CardView(DeckView parent) {
         super();
-        setPreferredSize(new Dimension(CARD_WIDTH * 13 + SIZE_BUFFER, CARD_HEIGHT + SIZE_BUFFER));
+        this.parent = parent;
+        setPreferredSize(new Dimension(CARD_WIDTH * 13 + SIZE_BUFFER, CARD_HEIGHT + SIZE_BUFFER + HEIGHT_OFFSET));
         setBorder(BorderFactory.createLineBorder(Color.BLACK, BORDER_THICKNESS));
+        addMouseListener(this);
     }
 
-    // MODIFIES: this
-    // EFFECTS: updates the display of all cards played
-    void update() {
+    private int numSelected = 0;
+    private boolean[] activeCards = new boolean[13];
+
+    // EFFECTS: returns the number of selected cards
+    int getNumberSelectedCards() {
+        return numSelected;
+    }
+
+    // EFFECTS: returns the active cards
+    Deck getActiveCards() {
+        Deck deck = new Deck();
+        for (int i = 0; i < MainFrame.getFrame().getClientState().getDeck().deckSize(); i++) {
+            if (activeCards[i]) deck.addCard(MainFrame.getFrame().getClientState().getDeck().get(i));
+        }
+        return deck;
     }
 
     @Override
@@ -35,10 +53,10 @@ class CardView extends JPanel {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         Deck d = MainFrame.getFrame().getClientState().getDeck();
-        int i = 0;
-        for (Card c : d) {
-            drawCard(g2d, CARD_WIDTH * i + BORDER_THICKNESS, getY() + BORDER_THICKNESS, c);
-            i++;
+        for (int i = 0; i < d.deckSize(); i++) {
+            int drawnYPos = getY() + BORDER_THICKNESS + HEIGHT_OFFSET;
+            if (activeCards[i]) drawnYPos -= HEIGHT_OFFSET;
+            drawCard(g2d, CARD_WIDTH * i + BORDER_THICKNESS, drawnYPos, d.get(i));
         }
     }
 
@@ -66,4 +84,55 @@ class CardView extends JPanel {
         g.drawString(secondLine, -CARD_WIDTH + 15 - fm.stringWidth(secondLine) / 2, -CARD_HEIGHT + 35);
         g.setTransform(af);
     }
+
+    @Override
+    // MODIFIES: this
+    // EFFECTS: toggles the active cards upon mouse click
+    public void mouseClicked(MouseEvent e) {
+        System.out.println(e.getX() + "," + e.getY());
+        // top left of JPanel is 0,0
+        int index = Math.floorDiv(e.getX() - BORDER_THICKNESS, CARD_WIDTH);
+        System.out.println(index);
+        if (index >= MainFrame.getFrame().getClientState().getDeck().deckSize()) return;
+        System.out.println("Toggling...");
+        if (!MainFrame.getFrame().getClientState().hasCardsPassed()) {
+            if (MainFrame.getFrame().getClientState().getDeck().deckSize() == 13) {
+                if (activeCards[index]) {
+                    activeCards[index] = false;
+                    numSelected--;
+                } else if (numSelected < 3) {
+                    activeCards[index] = true;
+                    numSelected++;
+                }
+            }
+        } else {
+            if (activeCards[index]) {
+                activeCards[index] = false;
+                numSelected = 0;
+            } else if (numSelected == 0) {
+                activeCards[index] = true;
+                numSelected = 1;
+            }
+        }
+        parent.updatePlayButton();
+        repaint();
+    }
+
+    //<editor-fold desc="Ignore">
+    @Override
+    public void mousePressed(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+    }
+    //</editor-fold>
 }
