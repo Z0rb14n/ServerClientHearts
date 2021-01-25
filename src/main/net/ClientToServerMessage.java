@@ -26,7 +26,7 @@ public final class ClientToServerMessage implements Serializable {
     }
 
     // EFFECTS: creates a new ClientToServerMessage in the format of a chat message
-    static ClientToServerMessage createNewChatMessage(String msgContents) {
+    public static ClientToServerMessage createNewChatMessage(String msgContents) {
         final ClientToServerMessage csm = new ClientToServerMessage();
         csm.isChatMessage = true;
         csm.chatMessage = msgContents;
@@ -47,14 +47,14 @@ public final class ClientToServerMessage implements Serializable {
     }
 
     private boolean isFirstThreeCards = false;
-    private Deck cards = new Deck(); // send first three cards
+    private final Deck cards = new Deck(); // send first three cards
 
     // EFFECTS: creates a new ClientToServerMessage in the format of passing 3 cards message
     public static ClientToServerMessage createNewSubmitThreeCardMessage(Deck cards) {
-        if (cards.deckSize() != 3) throw new IllegalArgumentException("Invalid number of cards.");
+        if (cards.size() != 3) throw new IllegalArgumentException("Invalid number of cards.");
         final ClientToServerMessage csm = new ClientToServerMessage();
         csm.isFirstThreeCards = true;
-        csm.cards.addAll(cards);
+        csm.cards.add(cards);
         csm.card = null;
         return csm;
     }
@@ -64,9 +64,9 @@ public final class ClientToServerMessage implements Serializable {
         if (c1 == null || c2 == null || c3 == null) throw new IllegalArgumentException("Cannot add null cards");
         final ClientToServerMessage csm = new ClientToServerMessage();
         csm.isFirstThreeCards = true;
-        csm.cards.addCard(c1.copy());
-        csm.cards.addCard(c2.copy());
-        csm.cards.addCard(c3.copy());
+        csm.cards.add(c1.copy());
+        csm.cards.add(c2.copy());
+        csm.cards.add(c3.copy());
         csm.card = null;
         return csm;
     }

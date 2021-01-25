@@ -20,14 +20,14 @@ public class MainFrame extends JFrame implements EventReceiver {
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
     private final static Dimension WINDOW_DIMENSION = new Dimension(1366, 708);
     private boolean displayingInputIP = true;
-    private GamePanel gp = new GamePanel();
+    private final GamePanel gp = new GamePanel();
     private ConnectionPanel cp = new ConnectionPanel();
     private ClientState clientState = new ClientState();
     private ModifiedNewClient client;
     private static MainFrame singleton;
 
     // MODIFIES: this
-    // EFFECTS: ensures there is only one MainFrame in existence (see Singleton Design Pattern, Gang of Four)
+    // EFFECTS: ensures there is only one MainFrame in existence
     public static MainFrame getFrame() {
         if (singleton == null) {
             singleton = new MainFrame();
@@ -54,7 +54,7 @@ public class MainFrame extends JFrame implements EventReceiver {
     // TODO METHOD BODY
     public void playCards(Deck d) {
         if (!isClientInactive()) {
-            if (d.deckSize() == 1) client.write(ClientToServerMessage.createNewCardPlayedMessage(d.get(0)));
+            if (d.size() == 1) client.write(ClientToServerMessage.createNewCardPlayedMessage(d.get(0)));
             else client.write(ClientToServerMessage.createNewSubmitThreeCardMessage(d));
         } else throw new IllegalArgumentException();
     }
@@ -154,7 +154,7 @@ public class MainFrame extends JFrame implements EventReceiver {
 
     // Represents a thread to load the client to determine if it runs for too long
     private class ClientLoader extends Thread {
-        private String loadedIP;
+        private final String loadedIP;
 
         // EFFECTS: initializes the client loader with the ip to attempt
         ClientLoader(String ip) {

@@ -7,14 +7,13 @@ import util.Deck;
 import java.io.*;
 import java.nio.ByteBuffer;
 
-import static net.Constants.ERR_TIMED_OUT;
-import static net.Constants.PORT;
+import static net.Constants.*;
 
 public final class ModifiedNewClient extends ModifiedClient {
     private String clientID;
     private int playerNum;
 
-    public ModifiedNewClient(EventReceiver parent, String ip) {
+    public ModifiedNewClient(EventReceiver parent, String ip) throws ConnectionException {
         super(parent, ip, Constants.PORT);
         if (!active()) {
             stop();
@@ -40,7 +39,7 @@ public final class ModifiedNewClient extends ModifiedClient {
         ServerToClientMessage msg = readServerToClientMessage();
         assert (msg != null);
         if (msg.isKickMessage()) {
-            throw new ConnectionException(msg.getKickMessage());
+            throw new ConnectionException(ERR_KICKED + msg.getKickMessage());
         } else {
             clientID = msg.getID();
             playerNum = msg.getPlayerNumber();
@@ -54,7 +53,7 @@ public final class ModifiedNewClient extends ModifiedClient {
     //    NOTE: THIS WILL COMPLETELY FREEZE EXECUTION UNTIL THE MESSAGE IS FULLY SENT.
     public ServerToClientMessage readServerToClientMessage() {
         if (!msgFinished)
-            throw new RuntimeException("AAAA UR INTERNET IS SLOW AAAAA - tried to read a new message when one was already being read");
+            throw new RuntimeException("Slow Internet - tried to read a new message when one was already being read");
         msgFinished = false;
         int bytesRead = 0;
         if (available() == 0) {
@@ -134,9 +133,9 @@ public final class ModifiedNewClient extends ModifiedClient {
     // MODIFIES: this
     // EFFECTS: sends a card played message to server
     public void sendCardsPlayedMessage(Deck cards) {
-        if (cards.deckSize() != 3 && cards.deckSize() != 1) throw new IllegalArgumentException();
-        if (cards.deckSize() == 1) write(ClientToServerMessage.createNewCardPlayedMessage(cards.get(0)));
-        if (cards.deckSize() == 3) write(ClientToServerMessage.createNewSubmitThreeCardMessage(cards));
+        if (cards.size() != 3 && cards.size() != 1) throw new IllegalArgumentException();
+        if (cards.size() == 1) write(ClientToServerMessage.createNewCardPlayedMessage(cards.get(0)));
+        if (cards.size() == 3) write(ClientToServerMessage.createNewSubmitThreeCardMessage(cards));
     }
 
     @Override

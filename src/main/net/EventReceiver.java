@@ -14,6 +14,7 @@ public interface EventReceiver {
     default void dataReceivedEvent(ModifiedClient c) {
     }
 
+
     // MODIFIES: this
     // EFFECTS: runs when a client disconnects from the server
     //          called by ModifiedClient

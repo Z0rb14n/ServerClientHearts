@@ -1,5 +1,7 @@
 package util;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -54,7 +56,7 @@ public class Deck implements Iterable<Card>, Serializable {
     }
 
     // EFFECTS: returns the number of cards in the deck
-    public int deckSize() {
+    public int size() {
         return cards.size();
     }
 
@@ -65,14 +67,14 @@ public class Deck implements Iterable<Card>, Serializable {
 
     // MODIFIES: this
     // EFFECTS: adds a card to the deck
-    public void addCard(Card a) {
+    public void add(Card a) {
         cards.add(a.copy());
     }
 
     // MODIFIES: this
     // EFFECTS: adds the contents of the other deck to this deck
     //          makes a complete copy of all the cards
-    public void addAll(Deck a) {
+    public void add(Deck a) {
         for (Card c : a.cards) {
             cards.add(c.copy());
         }
@@ -80,7 +82,7 @@ public class Deck implements Iterable<Card>, Serializable {
 
     // MODIFIES: this
     // EFFECTS; removes a card from the deck
-    public void removeCard(Card a) {
+    public void remove(Card a) {
         cards.remove(a);
     }
 
@@ -127,28 +129,28 @@ public class Deck implements Iterable<Card>, Serializable {
         if (!d1.isEmpty() || !d2.isEmpty() || !d3.isEmpty() || !d4.isEmpty()) throw new IllegalArgumentException();
         Random random = new Random();
         for(int i = 13; i > 0; i--) {
-            int index = random.nextInt(i*4);
+            int index = random.nextInt(i * 4);
             Card card = cards.get(index);
             cards.remove(index);
-            d1.addCard(card);
-            index = random.nextInt(i*4-1);
+            d1.add(card);
+            index = random.nextInt(i * 4 - 1);
             card = cards.get(index);
             cards.remove(index);
-            d2.addCard(card);
-            index = random.nextInt(i*4-2);
+            d2.add(card);
+            index = random.nextInt(i * 4 - 2);
             card = cards.get(index);
             cards.remove(index);
-            d3.addCard(card);
-            index = random.nextInt(i*4-3);
+            d3.add(card);
+            index = random.nextInt(i * 4 - 3);
             card = cards.get(index);
             cards.remove(index);
-            d4.addCard(card);
+            d4.add(card);
         }
-        assert(d1.deckSize() == 13);
-        assert(d2.deckSize() == 13);
-        assert(d3.deckSize() == 13);
-        assert(d4.deckSize() == 13);
-        assert(cards.isEmpty());
+        assert (d1.size() == 13);
+        assert (d2.size() == 13);
+        assert (d3.size() == 13);
+        assert (d4.size() == 13);
+        assert (cards.isEmpty());
     }
 
     // EFFECTS: returns a copy of all playable cards in the deck
@@ -156,7 +158,7 @@ public class Deck implements Iterable<Card>, Serializable {
         if (!containsSuit(a)) return copy();
         Deck play = new Deck();
         for(Card c : cards) {
-            if (c.getSuit().equals(a)) play.addCard(c);
+            if (c.getSuit().equals(a)) play.add(c);
         }
         return play;
     }
@@ -275,7 +277,7 @@ public class Deck implements Iterable<Card>, Serializable {
     public Deck copy() {
         Deck deck = new Deck();
         for (Card a : cards) {
-            deck.addCard(a.copy());
+            deck.add(a.copy());
         }
         deck.setOrder(this.order.copy());
         return deck;
@@ -300,7 +302,7 @@ public class Deck implements Iterable<Card>, Serializable {
 
     @Override
     // EFFECTS: returns an iterator over the cards
-    public Iterator<Card> iterator() {
+    public @NotNull Iterator<Card> iterator() {
         return cards.iterator();
     }
 }

@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 
-// Represents Processing's Server but modified to not use PApplet
+/**
+ * Processing's Server but modified to not use PApplet
+ */
 public class ModifiedServer implements Runnable {
     protected EventReceiver eventReceiver;
 
@@ -35,15 +37,8 @@ public class ModifiedServer implements Runnable {
 
 
     /**
-     * ( begin auto-generated from Server_disconnect.xml )
-     * <p>
      * Disconnect a particular client.
-     * <p>
-     * ( end auto-generated )
-     *
      * @param client the client to disconnect
-     * @brief Disconnect a particular client.
-     * @webref server:server
      */
     public void disconnect(ModifiedClient client) {
         client.stop();
@@ -94,15 +89,10 @@ public class ModifiedServer implements Runnable {
 
 
     /**
-     * ( begin auto-generated from Server_active.xml )
-     * <p>
      * Returns true if this server is still active and hasn't run
      * into any trouble.
-     * <p>
-     * ( end auto-generated )
      *
-     * @webref server:server
-     * @brief Return true if this server is still active.
+     * @return true if this server is still active
      */
     public boolean active() {
         return thread != null;
@@ -125,15 +115,9 @@ public class ModifiedServer implements Runnable {
     int lastAvailable = -1;
 
     /**
-     * ( begin auto-generated from Server_available.xml )
-     * <p>
      * Returns the next client in line with a new message.
-     * <p>
-     * ( end auto-generated )
      *
-     * @brief Returns the next client in line with a new message.
-     * @webref server
-     * @usage application
+     * @return next client in line with a new message.
      */
     public ModifiedClient available() {
         synchronized (clientsLock) {
@@ -164,19 +148,7 @@ public class ModifiedServer implements Runnable {
 
 
     /**
-     * ( begin auto-generated from Server_stop.xml )
-     * <p>
      * Disconnects all clients and stops the server.
-     * <p>
-     * ( end auto-generated )
-     * <h3>Advanced</h3>
-     * Use this to shut down the server if you finish using it while your applet
-     * is still running. Otherwise, it will be automatically be shut down by the
-     * host PApplet using dispose(), which is identical.
-     *
-     * @brief Disconnects all clients and stops the server.
-     * @webref server
-     * @usage application
      */
     public void stop() {
         dispose();
@@ -228,16 +200,9 @@ public class ModifiedServer implements Runnable {
 
 
     /**
-     * ( begin auto-generated from Server_write.xml )
-     * <p>
      * Writes a value to all the connected clients. It sends bytes out from the
      * Server object.
-     * <p>
-     * ( end auto-generated )
-     *
      * @param data data to write
-     * @webref server
-     * @brief Writes data to all connected clients
      */
     public void write(int data) {  // will also cover char
         synchronized (clientsLock) {

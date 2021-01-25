@@ -125,19 +125,19 @@ class ClientStateTest {
     @Test
     void testGameStart() {
         Deck deck = new Deck();
-        deck.addCard(new Card("2C"));
-        deck.addCard(new Card("3C"));
-        deck.addCard(new Card("4C"));
-        deck.addCard(new Card("5C"));
-        deck.addCard(new Card("6C"));
-        deck.addCard(new Card("7C"));
-        deck.addCard(new Card("8C"));
-        deck.addCard(new Card("9C"));
-        deck.addCard(new Card("10C"));
-        deck.addCard(new Card("JC"));
-        deck.addCard(new Card("QC"));
-        deck.addCard(new Card("KC"));
-        deck.addCard(new Card("AC"));
+        deck.add(new Card("2C"));
+        deck.add(new Card("3C"));
+        deck.add(new Card("4C"));
+        deck.add(new Card("5C"));
+        deck.add(new Card("6C"));
+        deck.add(new Card("7C"));
+        deck.add(new Card("8C"));
+        deck.add(new Card("9C"));
+        deck.add(new Card("10C"));
+        deck.add(new Card("JC"));
+        deck.add(new Card("QC"));
+        deck.add(new Card("KC"));
+        deck.add(new Card("AC"));
 
         sc.processNewMessage(ServerToClientMessage.createStartGameMessage(deck));
         assertEquals(sc.getDeck(), deck);

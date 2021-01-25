@@ -33,7 +33,7 @@ final class Command {
                 while (scanner.hasNext()) {
                     str = scanner.next();
                     if (str.isEmpty()) break;
-                    deck.addCard(new Card(str));
+                    deck.add(new Card(str));
                 }
                 cards = deck;
             } catch (IllegalArgumentException e) {

@@ -50,7 +50,7 @@ public final class ServerToClientMessage implements Serializable {
 
     // EFFECTS: throws IllegalArgumentException if deck length does not match
     private static void verifyDeckLength(Deck d, int length) {
-        if (d.deckSize() != length) throw new IllegalArgumentException();
+        if (d.size() != length) throw new IllegalArgumentException();
     }
 
     // These functions are listed in the order in which they will be used.
@@ -225,7 +225,7 @@ public final class ServerToClientMessage implements Serializable {
     // Start first turn (get 3 cards, and who starts first)
     private Deck threeNewCards = new Deck();
     private boolean startingFirstTurnMessage = false;
-    private boolean[] whichClientStarts = new boolean[4]; // determines who starts as a boolean [p1,p2,p3,p4]
+    private final boolean[] whichClientStarts = new boolean[4]; // determines who starts as a boolean [p1,p2,p3,p4]
 
     // EFFECTS: creates a start first turn message, with the three cards the player receives, and the starting player
     static ServerToClientMessage createStartFirstTurnMessage(Deck threeCards, int startingPlayer) {
@@ -275,7 +275,7 @@ public final class ServerToClientMessage implements Serializable {
     // EFFECTS: creates a start next turn message, indicating the "winner" and the penalty cards s/he got
     static ServerToClientMessage createStartNextTurnMessage(int winner, Deck newPenaltyCards) {
         verifyPlayerNumber(winner);
-        if (newPenaltyCards.deckSize() > 4) throw new IllegalArgumentException();
+        if (newPenaltyCards.size() > 4) throw new IllegalArgumentException();
         final ServerToClientMessage scm = createBlankMessage();
         scm.startingNewTurn = true;
         scm.newPenaltyCards = newPenaltyCards.copy();
@@ -290,8 +290,8 @@ public final class ServerToClientMessage implements Serializable {
 
     // End of game (who won, what penalty points they had, what cards they had)
     private boolean gameEnding = false;
-    private boolean[] winners = new boolean[4];
-    private Deck[] penaltyHands = new Deck[4];
+    private final boolean[] winners = new boolean[4];
+    private final Deck[] penaltyHands = new Deck[4];
 
     // EFFECTS: creates a game end message
     static ServerToClientMessage createGameEndMessage(boolean[] winners, Deck[] penalties) {
