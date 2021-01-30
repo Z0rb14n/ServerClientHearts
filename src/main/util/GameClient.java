@@ -211,9 +211,9 @@ public class GameClient implements net.ObjectEventReceiver {
     }
 
     public void processIncomingMessage(ServerToClientMessage message) {
-        handleNewChatMessage(message);
-        handlePlayerAdditionMessages(message);
-        handleGameStartMessages(message);
+        if (handleNewChatMessage(message)) return;
+        if (handleOnlinePlayerUpdateMessage(message)) return;
+        if (handleGameStartMessages(message)) return;
         if (!gameState.allCardsPassed) {
             gameState.allCardsPassed = message.isStartingFirstTurnMessage();
         }
@@ -221,7 +221,7 @@ public class GameClient implements net.ObjectEventReceiver {
 
     // MODIFIES: this
     // EFFECTS: handles player chat message
-    private void handleNewChatMessage(ServerToClientMessage msg) {
+    private boolean handleNewChatMessage(ServerToClientMessage msg) {
         if (msg.isChatMessage()) {
             ChatMessage cm = new ChatMessage(msg.getChatMessageSender(), msg.getChatMessage());
             if (chatMessages.size() == MAX_CHAT_MESSAGES) {
@@ -229,33 +229,41 @@ public class GameClient implements net.ObjectEventReceiver {
             }
             chatMessages.add(cm);
             MainFrame.getFrame().addChatMessage(cm);
+            return true;
         }
+        return false;
     }
 
     // MODIFIES: this
     // EFFECTS: handles new player addition/removal messages (includes ID message)
-    private void handlePlayerAdditionMessages(ServerToClientMessage msg) {
+    private boolean handleOnlinePlayerUpdateMessage(ServerToClientMessage msg) {
         int num;
         if (msg.isIDMessage()) {
             System.arraycopy(msg.getExistingPlayers(), 0, onlinePlayers, 0, 4);
             gameState.playerNumber = msg.getPlayerNumber();
             onlinePlayers[msg.getPlayerNumber() - 1] = true; // just to be sure
+            return true;
         } else if (msg.isPlayerConnectionMessage()) {
             num = msg.getNewConnectedPlayer();
             onlinePlayers[num - 1] = true;
+            return true;
         } else if (msg.isPlayerDisconnectMessage()) {
             num = msg.getDisconnectedPlayerNumber();
             onlinePlayers[num - 1] = false;
+            return true;
         }
+        return false;
     }
 
     // MODIFIES: this
     // EFFECTS: handles gameStarting messages
-    private void handleGameStartMessages(ServerToClientMessage msg) {
+    private boolean handleGameStartMessages(ServerToClientMessage msg) {
         if (msg.isGameStartingMessage()) {
             gameState.gameStarted = true;
             gameState.playerDeck = msg.getStartingHand().copy();
+            return true;
         }
+        return false;
     }
 
     @Override
@@ -265,10 +273,8 @@ public class GameClient implements net.ObjectEventReceiver {
         messageReceivedCondition.signal();
         waitingForMessageMutex.unlock();
         ServerToClientMessage message = (ServerToClientMessage) o;
-        if (!message.isChatMessage()) {
-            GameClient.getInstance().processIncomingMessage(message);
-            Console.getConsole().addMessage("New Message from Server: " + message);
-        }
+        processIncomingMessage(message);
+        Console.getConsole().addMessage("New Message from Server: " + message);
         MainFrame.getFrame().update();
     }
 

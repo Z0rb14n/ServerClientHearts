@@ -199,42 +199,7 @@ public class ModifiedServer implements Runnable {
     }
 
 
-    /**
-     * Writes a value to all the connected clients. It sends bytes out from the
-     * Server object.
-     * @param data data to write
-     */
-    public void write(int data) {  // will also cover char
-        synchronized (clientsLock) {
-            int index = 0;
-            while (index < clients.size()) {
-                if (clients.get(index).active()) {
-                    clients.get(index).write(data);
-                    index++;
-                } else {
-                    removeIndex(index);
-                }
-            }
-        }
-    }
-
-
     public void write(byte[] data) {
-        synchronized (clientsLock) {
-            int index = 0;
-            while (index < clients.size()) {
-                if (clients.get(index).active()) {
-                    clients.get(index).write(data);
-                    index++;
-                } else {
-                    removeIndex(index);
-                }
-            }
-        }
-    }
-
-
-    public void write(String data) {
         synchronized (clientsLock) {
             int index = 0;
             while (index < clients.size()) {

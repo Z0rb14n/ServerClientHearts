@@ -76,6 +76,8 @@ public class MainFrame extends JFrame {
             invalidate();
             pack();
             repaint();
+        } else if (!displayingInputIP) {
+            gp.update();
         }
     }
 

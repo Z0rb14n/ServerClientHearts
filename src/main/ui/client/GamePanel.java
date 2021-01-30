@@ -29,6 +29,7 @@ class GamePanel extends JPanel {
 
     void update() {
         chatPanel.update(GameClient.getInstance().getChatMessages());
+        playerView.repaint();
         deckView.update();
     }
 }
