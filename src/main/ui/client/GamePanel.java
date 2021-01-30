@@ -1,14 +1,15 @@
 package ui.client;
 
 import util.ChatMessage;
+import util.GameClient;
 
 import javax.swing.*;
 import java.awt.*;
 
 class GamePanel extends JPanel {
-    private ChatPanel chatPanel;
-    private DeckView deckView;
-    private PlayerView playerView;
+    private final ChatPanel chatPanel;
+    private final DeckView deckView;
+    private final PlayerView playerView;
 
     GamePanel() {
         super();
@@ -23,11 +24,11 @@ class GamePanel extends JPanel {
     }
 
     void addNewChatMessage(ChatMessage c) {
-
+        chatPanel.appendMessage(c);
     }
 
     void update() {
-        chatPanel.update(MainFrame.getFrame().getClientState().getChatMessages());
+        chatPanel.update(GameClient.getInstance().getChatMessages());
         deckView.update();
     }
 }

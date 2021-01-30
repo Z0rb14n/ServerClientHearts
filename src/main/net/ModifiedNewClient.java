@@ -2,19 +2,29 @@ package net;
 
 import ui.client.MainFrame;
 import ui.console.Console;
-import util.Deck;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.ArrayDeque;
+import java.util.Queue;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static net.Constants.*;
 
-public final class ModifiedNewClient extends ModifiedClient {
+public final class ModifiedNewClient extends ModifiedClient implements EventReceiver {
+    private final ObjectEventReceiver objectEventReceiver;
+    private final Queue<ServerToClientMessage> lastMessages = new ArrayDeque<>(10);
     private String clientID;
     private int playerNum;
 
-    public ModifiedNewClient(EventReceiver parent, String ip) throws ConnectionException {
-        super(parent, ip, Constants.PORT);
+    private final ReentrantLock lastMessagesMutex = new ReentrantLock();
+    private final Condition lastMessagesCondition = lastMessagesMutex.newCondition();
+
+    public ModifiedNewClient(ObjectEventReceiver parent, String ip) throws ConnectionException {
+        super(null, ip, Constants.PORT);
+        setEventReceiver(this);
+        objectEventReceiver = parent;
         if (!active()) {
             stop();
             Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
@@ -24,57 +34,49 @@ public final class ModifiedNewClient extends ModifiedClient {
         }
     }
 
-
-    // MODIFIES: this
-    // EFFECTS: gets the client ID from the server
-    //          throws ConnectionException if kicked from the server
+    /**
+     * Gets client ID from the server.
+     *
+     * @throws ConnectionException if kicked from the server
+     * @throws RuntimeException    if interrupted when waiting for a ClientID message
+     */
     private void getClientIDFromServer() {
-        // continuously wait until you get a message
-        while (available() <= 0) {
+        lastMessagesMutex.lock();
+        if (lastMessages.size() == 0) {
             try {
-                Thread.sleep(10);
-            } catch (InterruptedException ignored) {
+                lastMessagesCondition.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Interrupted upon waiting for clientID message.");
             }
         }
-        ServerToClientMessage msg = readServerToClientMessage();
-        assert (msg != null);
+        assert (lastMessages.size() != 0);
+        ServerToClientMessage msg = lastMessages.peek();
+        lastMessagesMutex.unlock();
         if (msg.isKickMessage()) {
             throw new ConnectionException(ERR_KICKED + msg.getKickMessage());
         } else {
             clientID = msg.getID();
             playerNum = msg.getPlayerNumber();
-            MainFrame.getFrame().catchExtraMessages(msg);
         }
     }
 
-    private boolean msgFinished = true;
 
-    // EFFECTS: returns the message sent by the server
-    //    NOTE: THIS WILL COMPLETELY FREEZE EXECUTION UNTIL THE MESSAGE IS FULLY SENT.
-    public ServerToClientMessage readServerToClientMessage() {
-        if (!msgFinished)
-            throw new RuntimeException("Slow Internet - tried to read a new message when one was already being read");
-        msgFinished = false;
-        int bytesRead = 0;
-        if (available() == 0) {
-            Console.getConsole().addMessage("Tried to read ServerToClientMessage when available() == 0. Returning null.");
-            return null;
-        }
-        while (available() < 4) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ignored) {
-            }
-        }
-        int arrLength = readInt();
-        if (arrLength < 0) throw new RuntimeException("NEGATIVE SIZE OF MESSAGE");
-        byte[] msgBuffer = new byte[arrLength];
-        while (bytesRead < msgBuffer.length) {
-            byte[] arr = readBytes(msgBuffer.length - bytesRead);
-            System.arraycopy(arr, 0, msgBuffer, bytesRead, arr.length);
-            bytesRead += arr.length;
-        }
-        msgFinished = true;
+    /**
+     * Reads a server to client message inside the buffer.
+     * <p>
+     * Assumes that client already has read enough bytes.
+     *
+     * @return read ServerToClientMessage
+     */
+    private ServerToClientMessage readServerToClientMessage() {
+        assert (available() > 4);
+        readBytesWithoutRemoval(sizeBuffer);
+        assert (ByteBuffer.wrap(sizeBuffer).getInt() >= 0);
+        int arrLength = ByteBuffer.wrap(sizeBuffer).getInt();
+        int result = readInt();
+        assert (result == arrLength);
+        assert (available() >= arrLength);
+        byte[] msgBuffer = readBytes(arrLength);
         ByteArrayInputStream bis = new ByteArrayInputStream(msgBuffer);
         try (ObjectInputStream in = new ObjectInputStream(bis)) {
             ServerToClientMessage scm = (ServerToClientMessage) in.readObject();
@@ -119,32 +121,49 @@ public final class ModifiedNewClient extends ModifiedClient {
         return clientID;
     }
 
-    // EFFECTS: returns the player number
-    public int getPlayerNum() {
-        return playerNum;
+    public ServerToClientMessage removeServerToClientMessage() {
+        lastMessagesMutex.lock();
+        ServerToClientMessage message = lastMessages.remove();
+        lastMessagesMutex.unlock();
+        return message;
     }
 
-    // MODIFIES: this
-    // EFFECTS: sends chat message to server
-    public void sendChatMessage(String msg) {
-        write(ClientToServerMessage.createNewChatMessage(msg));
+    public int numMessages() {
+        return lastMessages.size();
     }
 
-    // MODIFIES: this
-    // EFFECTS: sends a card played message to server
-    public void sendCardsPlayedMessage(Deck cards) {
-        if (cards.size() != 3 && cards.size() != 1) throw new IllegalArgumentException();
-        if (cards.size() == 1) write(ClientToServerMessage.createNewCardPlayedMessage(cards.get(0)));
-        if (cards.size() == 3) write(ClientToServerMessage.createNewSubmitThreeCardMessage(cards));
+    private final byte[] sizeBuffer = new byte[4];
+
+    @Override
+    public void dataReceivedEvent(ModifiedClient c) {
+        int result = readBytesWithoutRemoval(sizeBuffer);
+        if (result == 4) {
+            int size = ByteBuffer.wrap(sizeBuffer).getInt();
+            System.out.println("Data received! Amount available: " + available() + ", amount required: " + (size + 4));
+            if (available() >= size + 4) {
+                ServerToClientMessage message = readServerToClientMessage();
+                lastMessagesMutex.lock();
+                lastMessages.add(message);
+                lastMessagesCondition.signal();
+                lastMessagesMutex.unlock();
+                objectEventReceiver.dataReceivedEvent(this, message);
+            }
+        }
     }
 
     @Override
     // MODIFIES: this
     // EFFECTS: disconnects client from the server and stops the client.
     public void stop() {
-        ServerToClientMessage lastMessage = readServerToClientMessage();
-        if (lastMessage != null && lastMessage.isKickMessage()) {
-            MainFrame.getFrame().updateErrorMessage(lastMessage.getKickMessage());
+        lastMessagesMutex.lock();
+        if (lastMessages.size() > 0) {
+            lastMessages.removeIf(serverToClientMessage -> !serverToClientMessage.isKickMessage());
+            if (lastMessages.size() > 0) {
+                ServerToClientMessage message = lastMessages.poll();
+                assert (message != null);
+                MainFrame.getFrame().updateErrorMessage(message.getKickMessage());
+                lastMessages.clear();
+            }
         }
         super.stop();
     }

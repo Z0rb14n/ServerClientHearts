@@ -1,8 +1,8 @@
 package ui.console;
 
-import ui.client.MainFrame;
 import util.Card;
 import util.Deck;
+import util.GameClient;
 
 import java.util.Scanner;
 
@@ -47,11 +47,16 @@ final class Command {
     void runCommand() {
         try {
             if (ip != null) {
-                MainFrame.getFrame().attemptLoadClient(ip);
+                GameClient.getInstance().connect(ip);
             } else if (chatMsg != null) {
-                MainFrame.getFrame().sendChatMessage(chatMsg);
+                GameClient.ClientLogger.logMessage("[Command]: Sending message " + chatMsg);
+                GameClient.getInstance().sendChatMessage(chatMsg);
             } else if (cards != null) {
-                MainFrame.getFrame().playCards(cards);
+                if (cards.size() == 3) {
+                    GameClient.getInstance().passCards(cards.get(0), cards.get(1), cards.get(2));
+                } else {
+                    Console.getConsole().addMessage("Invalid number of cards in passCards command");
+                }
             }
         } catch (IllegalArgumentException e) {
             Console.getConsole().addMessage("Invalid arguments/command");

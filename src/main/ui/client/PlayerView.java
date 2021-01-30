@@ -1,5 +1,7 @@
 package ui.client;
 
+import util.GameClient;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -147,14 +149,15 @@ public class PlayerView extends JPanel {
     // MODIFIES: g
     // EFFECTS: paints this component onto the graphics object
     public void paintComponent(Graphics g) {
-        final boolean[] existingPlayers = MainFrame.getFrame().getClientState().getExistingPlayers();
+        final boolean[] existingPlayers = GameClient.getInstance().getOnlinePlayers();
+        final int playerNum = GameClient.getInstance().getClientState().getPlayerNumber();
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setFont(font);
         g.setColor(Color.RED);
         FontMetrics fm = g.getFontMetrics();
-        int x = YOU_TEXT_POSITIONS[MainFrame.getFrame().getClientState().getPlayerNum() - 1][0] - (fm.stringWidth("YOU") / 2);
-        g.drawString("YOU", x, YOU_TEXT_POSITIONS[MainFrame.getFrame().getClientState().getPlayerNum() - 1][1]);
+        int x = YOU_TEXT_POSITIONS[playerNum - 1][0] - (fm.stringWidth("YOU") / 2);
+        g.drawString("YOU", x, YOU_TEXT_POSITIONS[playerNum - 1][1]);
         if (existingPlayers[0]) g.drawImage(catDefault, CAT_COORDINATES[0][0], CAT_COORDINATES[0][1], null);
         else g.drawImage(catOutlineOnly, CAT_COORDINATES[0][0], CAT_COORDINATES[0][1], null);
 

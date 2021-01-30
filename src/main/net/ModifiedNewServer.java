@@ -19,7 +19,7 @@ import static net.ServerToClientMessage.*;
 
 public final class ModifiedNewServer extends ModifiedServer {
     private final LinkedHashMap<String, ModifiedClient> clients = new LinkedHashMap<>(4);
-    private ChatMessageHandler cmh = new ChatMessageHandler();
+    private final ChatMessageHandler cmh = new ChatMessageHandler();
     private final String[] IDS = new String[4];
 
     public ModifiedNewServer(EventReceiver parent) {
@@ -107,9 +107,11 @@ public final class ModifiedNewServer extends ModifiedServer {
     // MODIFIES: this
     // EFFECTS: runs when a client disconnects
     public void onClientDisconnect(ModifiedClient c) {
-        System.out.println("Client disconnected: " + c.ip());
-        informPlayersOnDisconnect(c);
-        removeClientFromEntries(c);
+        if (clients.containsValue(c)) {
+            System.out.println("Client disconnected: " + c.ip());
+            removeClientFromEntries(c);
+            informPlayersOnDisconnect(c);
+        }
     }
 
     // EFFECTS: messages all other clients that a player has joined

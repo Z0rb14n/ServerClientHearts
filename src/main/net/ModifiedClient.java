@@ -11,21 +11,21 @@ import java.net.SocketException;
  */
 public class ModifiedClient implements Runnable {
 
-    private static final int MAX_BUFFER_SIZE = 1 << 27; // 128 MB
+    protected static final int MAX_BUFFER_SIZE = 1 << 27; // 128 MB
 
-    private final EventReceiver eventReceiver;
+    protected EventReceiver eventReceiver;
 
-    private volatile Thread thread;
-    private Socket socket;
+    protected volatile Thread thread;
+    protected Socket socket;
 
-    private InputStream input;
-    private OutputStream output;
+    protected InputStream input;
+    protected OutputStream output;
 
-    private final Object bufferLock = new Object[0];
+    protected final Object bufferLock = new Object[0];
 
-    private byte[] buffer = new byte[32768];
-    private int bufferIndex;
-    private int bufferLast;
+    protected byte[] buffer = new byte[32768];
+    protected int bufferIndex;
+    protected int bufferLast;
 
 
     /**
@@ -69,10 +69,14 @@ public class ModifiedClient implements Runnable {
      * finished with the Client.
      */
     public void stop() {
-        if (thread != null) {
+        if (thread != null && eventReceiver != null) {
             eventReceiver.disconnectEvent(this);
         }
         dispose();
+    }
+
+    public void setEventReceiver(EventReceiver er) {
+        this.eventReceiver = er;
     }
 
 
@@ -141,7 +145,7 @@ public class ModifiedClient implements Runnable {
                     // read returns -1 if end-of-stream occurs (for example if the host disappears)
                     if (readCount == -1) {
                         System.err.println("Client got end-of-stream.");
-                        eventReceiver.endOfStreamEvent(this);
+                        if (eventReceiver != null) eventReceiver.endOfStreamEvent(this);
                         stop();
                         return;
                     }
@@ -177,7 +181,7 @@ public class ModifiedClient implements Runnable {
                     }
 
                     // now post an event
-                    eventReceiver.dataReceivedEvent(this);
+                    if (eventReceiver != null) eventReceiver.dataReceivedEvent(this);
                 }
             } catch (IOException e) {
                 //errorMessage("run", e);
@@ -358,6 +362,29 @@ public class ModifiedClient implements Runnable {
         }
     }
 
+    /**
+     * Grab whatever is in the serial buffer, and stuff it into a
+     * byte buffer passed in by the user. This is more memory/time
+     * efficient than readBytes() returning a byte[] array.
+     * <p>
+     * Returns an int for how many bytes were read. If more bytes
+     * are available than can fit into the byte array, only those
+     * that will fit are read.
+     *
+     * @param bytebuffer passed in byte array to be altered
+     * @return how many bytes were read
+     */
+    public int readBytesWithoutRemoval(byte[] bytebuffer) {
+        synchronized (bufferLock) {
+            if (bufferIndex == bufferLast) return 0;
+
+            int length = bufferLast - bufferIndex;
+            if (length > bytebuffer.length) length = bytebuffer.length;
+            System.arraycopy(buffer, bufferIndex, bytebuffer, 0, length);
+            return length;
+        }
+    }
+
 
     /**
      * Reads from the port into a buffer of bytes up to and including a
@@ -374,7 +401,7 @@ public class ModifiedClient implements Runnable {
      * @param interesting character designated to mark the end of the data
      * @return read bytes
      */
-    public byte[] readBytesUntil(int interesting) {
+    protected byte[] readBytesUntil(int interesting) {
         byte what = (byte) interesting;
 
         synchronized (bufferLock) {
@@ -416,7 +443,7 @@ public class ModifiedClient implements Runnable {
      * @param byteBuffer passed in byte array to be altered
      * @return number of bytes read
      */
-    public int readBytesUntil(int interesting, byte[] byteBuffer) {
+    protected int readBytesUntil(int interesting, byte[] byteBuffer) {
         byte what = (byte) interesting;
 
         synchronized (bufferLock) {

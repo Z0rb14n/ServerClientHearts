@@ -115,7 +115,7 @@ public final class ServerToClientMessage implements Serializable {
     }
 
     // EFFECTS: returns the ID if the message is an ID message
-    String getID() {
+    public String getID() {
         return ID;
     }
 
