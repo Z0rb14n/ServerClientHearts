@@ -78,6 +78,7 @@ public class MainFrame extends JFrame {
             repaint();
         } else if (!displayingInputIP) {
             gp.update();
+            repaint();
         }
     }
 

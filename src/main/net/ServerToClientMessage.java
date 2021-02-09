@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 // Represents the message sent from server to client
-public final class ServerToClientMessage implements Serializable {
+public class ServerToClientMessage implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final String INVALID_MSG = "INVALID MESSAGE";
@@ -33,7 +33,7 @@ public final class ServerToClientMessage implements Serializable {
             oos.writeObject(this);
             oos.flush();
             byte[] bytes = bos.toByteArray();
-            if (bytes.length > Constants.MAX_LENGTH) throw new RuntimeException("AAAAAAAAAAAAAAAAAAA");
+            if (bytes.length > Constants.MAX_LENGTH) throw new RuntimeException("Byte array length over max length");
             ByteBuffer bb = ByteBuffer.allocate(4 + bytes.length);
             bb.putInt(bytes.length);
             bb.put(bytes);
@@ -267,7 +267,23 @@ public final class ServerToClientMessage implements Serializable {
         return nextPlayerNumber != 0 && playerNumJustPlayed != 0 && previouslyPlayed != null && expectedSuit != null;
     }
 
-    // Starting new turn (who got rekt by penalties, what penalties)
+    public int getNextPlayerNumber() {
+        return nextPlayerNumber;
+    }
+
+    public int getPlayerNumJustPlayed() {
+        return playerNumJustPlayed;
+    }
+
+    public Suit getExpectedSuit() {
+        return expectedSuit;
+    }
+
+    public Card getPreviouslyPlayed() {
+        return previouslyPlayed;
+    }
+
+    // Starting new turn (who got penalties, what penalties)
     private boolean startingNewTurn = false;
     private Deck newPenaltyCards = new Deck();
     private int playerWhoStartsNext = 0;
@@ -281,6 +297,14 @@ public final class ServerToClientMessage implements Serializable {
         scm.newPenaltyCards = newPenaltyCards.copy();
         scm.playerWhoStartsNext = winner;
         return scm;
+    }
+
+    public int getPlayerWhoStartsNext() {
+        return playerWhoStartsNext;
+    }
+
+    public Deck getNewPenaltyCards() {
+        return newPenaltyCards;
     }
 
     // EFFECTS: determines if this message is one to indicate a new turn starting
@@ -306,6 +330,18 @@ public final class ServerToClientMessage implements Serializable {
     // EFFECTS: determines if this message is a game end message
     public boolean isGameEndingMessage() {
         return gameEnding;
+    }
+
+    public boolean[] getWinners() {
+        boolean[] array = new boolean[4];
+        System.arraycopy(winners, 0, array, 0, 4);
+        return array;
+    }
+
+    public Deck[] getPenaltyHands() {
+        Deck[] array = new Deck[4];
+        System.arraycopy(penaltyHands, 0, array, 0, 4);
+        return array;
     }
 
     // Reset

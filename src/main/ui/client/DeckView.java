@@ -26,6 +26,7 @@ class DeckView extends JPanel {
     // MODIFIES: this
     // EFFECTS: updates components
     void update() {
+        cv.repaint();
         sov.update();
     }
 

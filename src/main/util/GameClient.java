@@ -1,7 +1,6 @@
 package util;
 
 import net.*;
-import org.jetbrains.annotations.Contract;
 import ui.client.MainFrame;
 import ui.console.Console;
 
@@ -106,8 +105,7 @@ public class GameClient implements net.ObjectEventReceiver {
             if (msg.isKickMessage()) {
                 return false;
             } else {
-                gameState.playerNumber = msg.getPlayerNumber();
-                gameState.clientID = msg.getID();
+                gameState.onGetID(msg.getID(), msg.getPlayerNumber());
                 return true;
             }
         }
@@ -180,11 +178,16 @@ public class GameClient implements net.ObjectEventReceiver {
         boolean result = checkClientActive();
         if (!result) return false;
         if (gameState.isValidCardPass(cardOne, cardTwo, cardThree)) {
-            ClientLogger.logMessage("Attempting to pass cards...");
             networkClient.write(ClientToServerMessage.createNewSubmitThreeCardMessage(cardOne, cardTwo, cardThree));
+            ClientLogger.logMessage("Passed cards!");
+            gameState.playerDeck.remove(cardOne);
+            gameState.playerDeck.remove(cardTwo);
+            gameState.playerDeck.remove(cardThree);
+            MainFrame.getFrame().update();
             return true;
         }
         ClientLogger.logMessage("[ERROR]: cannot pass cards - it contains invalid card(s).");
+        ClientLogger.logMessage(gameState.playerDeck.toString());
         return false;
     }
 
@@ -210,13 +213,40 @@ public class GameClient implements net.ObjectEventReceiver {
         return gameState;
     }
 
+    //<editor-fold desc="Incoming Message Processing">
+
     public void processIncomingMessage(ServerToClientMessage message) {
         if (handleNewChatMessage(message)) return;
         if (handleOnlinePlayerUpdateMessage(message)) return;
         if (handleGameStartMessages(message)) return;
-        if (!gameState.allCardsPassed) {
-            gameState.allCardsPassed = message.isStartingFirstTurnMessage();
+        if (handleStartFirstTurnMessage(message)) return;
+        if (handleNextCardMessage(message)) return;
+        if (handleNewTurnMessage(message)) return;
+        handleGameEndMessage(message);
+    }
+
+    private boolean handleNextCardMessage(ServerToClientMessage msg) {
+        if (msg.isNextCardMessage()) {
+            gameState.onCardPlay(msg.getPreviouslyPlayed(), msg.getPlayerNumJustPlayed(), msg.getNextPlayerNumber(), msg.getExpectedSuit());
+            return true;
         }
+        return false;
+    }
+
+    private boolean handleStartFirstTurnMessage(ServerToClientMessage msg) {
+        if (msg.isStartingFirstTurnMessage()) {
+            gameState.finishPassingCards();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleGameEndMessage(ServerToClientMessage msg) {
+        if (msg.isGameEndingMessage()) {
+            gameState.onGameEnd(msg.getWinners(), msg.getPenaltyHands());
+            return true;
+        }
+        return false;
     }
 
     // MODIFIES: this
@@ -240,7 +270,7 @@ public class GameClient implements net.ObjectEventReceiver {
         int num;
         if (msg.isIDMessage()) {
             System.arraycopy(msg.getExistingPlayers(), 0, onlinePlayers, 0, 4);
-            gameState.playerNumber = msg.getPlayerNumber();
+            gameState.setPlayerNumber(msg.getPlayerNumber());
             onlinePlayers[msg.getPlayerNumber() - 1] = true; // just to be sure
             return true;
         } else if (msg.isPlayerConnectionMessage()) {
@@ -255,16 +285,25 @@ public class GameClient implements net.ObjectEventReceiver {
         return false;
     }
 
-    // MODIFIES: this
-    // EFFECTS: handles gameStarting messages
-    private boolean handleGameStartMessages(ServerToClientMessage msg) {
-        if (msg.isGameStartingMessage()) {
-            gameState.gameStarted = true;
-            gameState.playerDeck = msg.getStartingHand().copy();
+    private boolean handleNewTurnMessage(ServerToClientMessage msg) {
+        if (msg.isStartingNewTurnMessage()) {
+            gameState.onNextTurn(msg.getNewPenaltyCards(), msg.getPlayerWhoStartsNext());
             return true;
         }
         return false;
     }
+
+    // MODIFIES: this
+    // EFFECTS: handles gameStarting messages
+    private boolean handleGameStartMessages(ServerToClientMessage msg) {
+        if (msg.isGameStartingMessage()) {
+            gameState.startGame(msg.getStartingHand().copy());
+            return true;
+        }
+        return false;
+    }
+
+    //</editor-fold>
 
     @Override
     public void dataReceivedEvent(ModifiedClient c, Object o) {
@@ -299,7 +338,6 @@ public class GameClient implements net.ObjectEventReceiver {
             System.out.println(message);
         }
 
-        @Contract(pure = true)
         public static String getLoggerText() {
             return stringBuilder.toString();
         }
@@ -313,12 +351,16 @@ public class GameClient implements net.ObjectEventReceiver {
         private PlayOrder currentPlayOrder = null;
         private PassOrder currentPassOrder = null;
         private final Deck center = new Deck();
+        private Suit requiredSuitToPlay = null;
         private final Deck receivedPassingHand = new Deck();
         private Deck playerDeck = new Deck();
         private final Deck[] penalties = new Deck[4];
         private final int[] numCardsRemaining = new int[4];
         private final int[] numCardsInPassingHand = new int[4];
+        private final boolean[] winners = new boolean[4];
+        private final boolean[] playersThatPassed = new boolean[4];
         private boolean gameStarted = false;
+        private boolean gameEnded = false;
         private boolean startedPassingCards = false;
         private boolean allCardsPassed = false;
         private int nextToPlay = -1;
@@ -331,6 +373,8 @@ public class GameClient implements net.ObjectEventReceiver {
 
         public void reset() {
             currentPlayOrder = null;
+            gameEnded = false;
+            requiredSuitToPlay = null;
             currentPassOrder = null;
             center.clear();
             receivedPassingHand.clear();
@@ -339,6 +383,8 @@ public class GameClient implements net.ObjectEventReceiver {
                 penalties[i] = new Deck();
                 numCardsRemaining[i] = 13;
                 numCardsInPassingHand[i] = 0;
+                winners[i] = false;
+                playersThatPassed[i] = false;
             }
             gameStarted = false;
             startedPassingCards = false;
@@ -346,6 +392,54 @@ public class GameClient implements net.ObjectEventReceiver {
             nextToPlay = -1;
             firstPlayed = -1;
             numRoundsPlayed = 0;
+        }
+
+        private void startGame(Deck startingDeck) {
+            playerDeck = startingDeck.copy();
+            gameStarted = true;
+            startedPassingCards = true;
+            ClientLogger.logMessage("Player hand: " + startingDeck);
+        }
+
+        private void finishPassingCards() {
+            allCardsPassed = true;
+        }
+
+        private void onNextTurn(Deck newPenalties, int player) {
+            penalties[player - 1].add(newPenalties);
+            nextToPlay = player;
+            requiredSuitToPlay = null;
+        }
+
+        private void onCardPlay(Card prevPlayed, int justPlayed, int nextToPlay, Suit requiredSuit) {
+            this.nextToPlay = nextToPlay;
+            if (firstPlayed == -1) firstPlayed = justPlayed;
+            requiredSuitToPlay = requiredSuit;
+            center.add(prevPlayed);
+        }
+
+        private void setPlayerNumber(int number) {
+            this.playerNumber = number;
+        }
+
+        private void onGetID(String ID, int number) {
+            this.playerNumber = number;
+            this.clientID = ID;
+        }
+
+        private void onGameEnd(boolean[] winners, Deck[] penalties) {
+            gameEnded = true;
+            System.arraycopy(winners, 0, this.winners, 0, 4);
+            System.arraycopy(penalties, 0, this.penalties, 0, 4);
+        }
+
+        public boolean hasGameEnded() {
+            return gameEnded;
+        }
+
+        public boolean[] getWinners() {
+            assert (gameEnded);
+            return winners;
         }
 
         public boolean isValidCardPass(Card c1, Card c2, Card c3) {

@@ -130,6 +130,7 @@ public final class ModifiedNewServer extends ModifiedServer {
         int playerNum = getClientNumber(c);
         if (playerNum == 0) return;
         write(createDisconnectMessage(playerNum));
+        System.out.println("Written out disconnect message.");
     }
 
     // EFFECTS: returns client number (1-4), 0 if non-existent

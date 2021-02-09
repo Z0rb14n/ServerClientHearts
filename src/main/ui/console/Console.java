@@ -6,7 +6,7 @@ import java.awt.*;
 // Represents the console window frame
 public class Console extends JFrame {
     private static final Dimension SIZE = new Dimension(600, 600);
-    private ConsolePanel consolePanel;
+    private final ConsolePanel consolePanel;
     private static Console singleton;
 
     // EFFECTS: initializes the console window frame with given title
@@ -50,6 +50,7 @@ public class Console extends JFrame {
     // MODIFIES: this
     // EFFECTS: adds a given message to console output
     public void addMessage(String output) {
+        System.out.println(output);
         consolePanel.addMessage(output);
     }
 }
