@@ -5,13 +5,13 @@ The project for the server-client based Hearts game I'm trying to make.
 ## Getting Started
 
 To run the project,
-1. Make sure you have Java 8 installed (Processing's libraries requires Java 8)
-2. Download the required libraries (Processing's net library and Processing core, JUnit 5)
-3. Run ui.javaver.Main (for the Client) or ui.SCHServer for the server.
+1. Make sure you have Java 8 installed (project was only tested on Java 8)
+2. Download the required libraries (JUnit 5, JetBrains annotations library)
+3. Run ui.client.Main (for the Client) or ui.server.Main for the server.
 
-### Prequisites
+### Prerequisites
 
-Java 8, Processing's net library, Processing's core library, and JUnit 5.
+Java 8, JUnit 5, and the JetBrains annotations library.
 
 ## Running the tests
 
