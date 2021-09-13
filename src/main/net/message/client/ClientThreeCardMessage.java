@@ -2,8 +2,8 @@ package net.message.client;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import util.Card;
-import util.Deck;
+import util.card.Card;
+import util.card.Deck;
 
 import java.util.Objects;
 

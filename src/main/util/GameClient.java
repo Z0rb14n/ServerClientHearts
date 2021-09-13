@@ -10,6 +10,9 @@ import net.message.client.ClientThreeCardMessage;
 import net.message.server.*;
 import ui.client.MainFrame;
 import ui.console.Console;
+import util.card.Card;
+import util.card.Deck;
+import util.card.Suit;
 
 import java.io.Serializable;
 import java.util.*;

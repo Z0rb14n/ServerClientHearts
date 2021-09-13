@@ -5,9 +5,9 @@ import net.message.client.ClientChatMessage;
 import net.message.client.ClientToServerMessage;
 import net.message.server.*;
 import ui.server.ServerFrame;
-import util.Card;
-import util.Deck;
-import util.Suit;
+import util.card.Card;
+import util.card.Deck;
+import util.card.Suit;
 
 import java.io.IOException;
 import java.io.InvalidClassException;

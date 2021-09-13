@@ -327,8 +327,6 @@ public class ModifiedClient implements Runnable {
             output.write(data);
             output.flush();   // hmm, not sure if a good idea
         } catch (Exception e) { // null pointer or serial port dead
-            //errorMessage("write", e);
-            //e.printStackTrace();
             //disconnect(e);
             e.printStackTrace();
             stop();
@@ -344,8 +342,6 @@ public class ModifiedClient implements Runnable {
             output.flush();   // hmm, not sure if a good idea
             System.out.println("Writing data of length " + data.length);
         } catch (Exception e) { // null pointer or serial port dead
-            //errorMessage("write", e);
-            //e.printStackTrace();
             //disconnect(e);
             e.printStackTrace();
             stop();

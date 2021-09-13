@@ -1,15 +1,24 @@
 package ui.console;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import ui.console.command.Command;
+import ui.console.command.InvalidCommandException;
+
 import javax.swing.*;
 import java.awt.*;
 
-// Represents the console window frame
+/**
+ * Represents main console window frame
+ */
 public class Console extends JFrame {
     private static final Dimension SIZE = new Dimension(600, 600);
     private final ConsolePanel consolePanel;
     private static Console singleton;
 
-    // EFFECTS: initializes the console window frame with given title
+    /**
+     * Initializes console window frame with given title/size
+     */
     private Console() {
         super("Console");
         setResizable(false);
@@ -21,9 +30,12 @@ public class Console extends JFrame {
         setVisible(true);
     }
 
-    // MODIFIES: Console
-    // EFFECTS: ensures there only exists one console instance, while maintaining global access to that instance
-    //          see Singleton Design Pattern, Gang of Four
+    /**
+     * Gets the main singleton instance of the console
+     *
+     * @return main static instance
+     */
+    @NotNull
     public static Console getConsole() {
         if (singleton == null) {
             singleton = new Console();
@@ -31,24 +43,36 @@ public class Console extends JFrame {
         return singleton;
     }
 
-    // MODIFIES: this
-    // EFFECTS: parses and runs the inputted command
-    void runCommand(String input) {
+    /**
+     * Parses and runs the input command
+     *
+     * @param input new command input
+     */
+    @Contract(mutates = "this")
+    void runCommand(@NotNull String input) {
         addCommand(input);
         try {
-            new Command(input).runCommand();
+            Command.constructCommand(input).execute();
         } catch (InvalidCommandException ignored) {
         }
     }
 
-    // MODIFIES: this
-    // EFFECTS: adds the given command to the console panel
-    private void addCommand(String input) {
+    /**
+     * Adds given command to console panel
+     *
+     * @param input string of input command
+     */
+    @Contract(mutates = "this")
+    private void addCommand(@NotNull String input) {
         consolePanel.addCommand(input);
     }
 
-    // MODIFIES: this
-    // EFFECTS: adds a given message to console output
+    /**
+     * Adds a given message to console output
+     *
+     * @param output string of output
+     */
+    @Contract(mutates = "this")
     public void addMessage(String output) {
         System.out.println(output);
         consolePanel.addMessage(output);

@@ -10,6 +10,9 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+
+// TODO Reset card view after play button is pressed
+
 // Represents the view of the cats/players
 public class PlayerView extends JPanel {
     private static final BufferedImage catDefault;
@@ -101,7 +104,7 @@ public class PlayerView extends JPanel {
 
         if (existingPlayers[3]) g.drawImage(catFaceLeft, CAT_COORDINATES[3][0], CAT_COORDINATES[3][1], null);
         else g.drawImage(catOutlineOnly, CAT_COORDINATES[3][0], CAT_COORDINATES[3][1], null);
-        g.drawImage(bicycleCat, 0, 0, null);
+        //g.drawImage(bicycleCat, 0, 0, null);
     }
 
     // EFFECTS: returns a resized image to the new width and new height

@@ -1,8 +1,8 @@
 package ui.client;
 
-import util.Card;
-import util.Deck;
 import util.GameClient;
+import util.card.Card;
+import util.card.Deck;
 
 import javax.swing.*;
 import java.awt.*;

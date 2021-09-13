@@ -1,12 +1,12 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import util.Card;
-import util.Deck;
-import util.Suit;
 import util.SuitOrder;
+import util.card.Card;
+import util.card.Deck;
+import util.card.Suit;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static util.Suit.*;
+import static util.card.Suit.*;
 
 // TODO FINISH TESTS
 
@@ -44,6 +44,7 @@ class SuitOrderTest {
         assertEquals(3, so.locateSuit(Spade));
         assertEquals(4, so.locateSuit(Club));
         try {
+            //noinspection ResultOfMethodCallIgnored
             so.locateSuit(null);
             fail();
         } catch (IllegalArgumentException ignored) {

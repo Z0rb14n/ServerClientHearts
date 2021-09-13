@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Test;
-import util.Card;
-import util.Suit;
+import util.card.Card;
+import util.card.Suit;
 
 import static org.junit.jupiter.api.Assertions.*;
 

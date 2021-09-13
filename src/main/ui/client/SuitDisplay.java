@@ -1,8 +1,8 @@
 package ui.client;
 
 import util.GameClient;
-import util.Suit;
 import util.SuitOrder;
+import util.card.Suit;
 
 import javax.swing.*;
 import java.awt.*;

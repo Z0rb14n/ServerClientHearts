@@ -1,8 +1,8 @@
 package net.message.server;
 
 import org.jetbrains.annotations.NotNull;
-import util.Card;
-import util.Suit;
+import util.card.Card;
+import util.card.Suit;
 
 import java.util.Objects;
 

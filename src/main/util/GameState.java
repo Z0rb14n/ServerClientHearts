@@ -1,6 +1,9 @@
 package util;
 
 import ui.server.ServerFrame;
+import util.card.Card;
+import util.card.Deck;
+import util.card.Suit;
 
 // TODO SEND PLAYING/PASSING ORDER OVER SERVERTOCLIENTMESSAGE
 

@@ -174,4 +174,8 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
         }
         super.stop();
     }
+
+    public int getPlayerNum() {
+        return playerNum;
+    }
 }

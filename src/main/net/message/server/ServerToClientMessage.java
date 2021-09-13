@@ -1,7 +1,7 @@
 package net.message.server;
 
 import net.message.NetworkMessage;
-import util.Deck;
+import util.card.Deck;
 
 public interface ServerToClientMessage extends NetworkMessage {
     /**

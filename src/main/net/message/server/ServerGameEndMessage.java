@@ -1,6 +1,6 @@
 package net.message.server;
 
-import util.Deck;
+import util.card.Deck;
 
 import java.util.Arrays;
 

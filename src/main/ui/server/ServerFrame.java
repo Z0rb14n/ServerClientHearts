@@ -3,10 +3,10 @@ package ui.server;
 import net.*;
 import net.message.client.ClientCardMessage;
 import net.message.client.ClientThreeCardMessage;
-import util.Card;
-import util.Deck;
 import util.GameState;
-import util.Suit;
+import util.card.Card;
+import util.card.Deck;
+import util.card.Suit;
 
 import javax.swing.*;
 import java.awt.*;

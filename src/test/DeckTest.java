@@ -1,12 +1,12 @@
 import org.junit.jupiter.api.Test;
-import util.Card;
-import util.Deck;
 import util.SuitOrder;
+import util.card.Card;
+import util.card.Deck;
 
 import java.io.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static util.Suit.*;
+import static util.card.Suit.*;
 
 class DeckTest {
     @Test
@@ -100,11 +100,6 @@ class DeckTest {
         SuitOrder so = new SuitOrder();
         Deck deck = new Deck();
         assertEquals(so, deck.getOrder());
-        try {
-            deck.setOrder(null);
-            fail();
-        } catch (IllegalArgumentException ignored) {
-        }
         so.moveSuitToLocation(Diamond, 1);
         assertNotEquals(so, deck.getOrder());
         deck.setOrder(so);

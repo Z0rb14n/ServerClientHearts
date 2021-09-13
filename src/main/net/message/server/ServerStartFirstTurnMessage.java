@@ -1,7 +1,7 @@
 package net.message.server;
 
 import org.jetbrains.annotations.NotNull;
-import util.Deck;
+import util.card.Deck;
 
 import java.util.Objects;
 

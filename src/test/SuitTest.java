@@ -1,10 +1,10 @@
 import org.junit.jupiter.api.Test;
-import util.Suit;
+import util.card.Suit;
 
 import static net.Constants.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import static util.Suit.*;
+import static util.card.Suit.*;
 
 class SuitTest {
     @Test
