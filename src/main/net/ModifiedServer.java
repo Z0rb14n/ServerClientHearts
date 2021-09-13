@@ -198,6 +198,19 @@ public class ModifiedServer implements Runnable {
         }
     }
 
+    public void writeNoLength(byte[] data) {
+        synchronized (clientsLock) {
+            int index = 0;
+            while (index < clients.size()) {
+                if (clients.get(index).active()) {
+                    clients.get(index).writeNoLength(data);
+                    index++;
+                } else {
+                    removeIndex(index);
+                }
+            }
+        }
+    }
 
     public void write(byte[] data) {
         synchronized (clientsLock) {

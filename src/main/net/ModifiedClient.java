@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
 
 /**
  * Processing's Client class but modified to not use PApplet
@@ -321,11 +322,27 @@ public class ModifiedClient implements Runnable {
         }
     }
 
-    public void write(byte[] data) {
+    public void writeNoLength(byte[] data) {
         try {
             output.write(data);
             output.flush();   // hmm, not sure if a good idea
+        } catch (Exception e) { // null pointer or serial port dead
+            //errorMessage("write", e);
+            //e.printStackTrace();
+            //disconnect(e);
+            e.printStackTrace();
+            stop();
+        }
+    }
 
+    public void write(byte[] data) {
+        try {
+            ByteBuffer buffer = ByteBuffer.allocate(4);
+            buffer.putInt(data.length);
+            output.write(buffer.array());
+            output.write(data);
+            output.flush();   // hmm, not sure if a good idea
+            System.out.println("Writing data of length " + data.length);
         } catch (Exception e) { // null pointer or serial port dead
             //errorMessage("write", e);
             //e.printStackTrace();

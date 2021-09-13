@@ -1,21 +1,21 @@
 package net;
 
+import net.message.NetworkMessage;
+import net.message.client.ClientChatMessage;
+import net.message.client.ClientToServerMessage;
+import net.message.server.*;
 import ui.server.ServerFrame;
 import util.Card;
 import util.Deck;
 import util.Suit;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InvalidClassException;
-import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.util.LinkedHashMap;
 import java.util.UUID;
 
-import static net.Constants.ERR_INVALID_MSG;
-import static net.Constants.ERR_TOO_MANY_PLAYERS;
-import static net.ServerToClientMessage.*;
+import static net.Constants.*;
 
 public final class ModifiedNewServer extends ModifiedServer {
     private final LinkedHashMap<String, ModifiedClient> clients = new LinkedHashMap<>(4);
@@ -31,7 +31,11 @@ public final class ModifiedNewServer extends ModifiedServer {
     // MODIFIES: this
     // EFFECTS: resets the server (i.e. clears all remaining messages and writes out a reset message)
     public void reset() {
-        write(createResetMessage());
+        try {
+            write(new ServerGameResetMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // EFFECTS: determines whether there is not enough space for other players
@@ -44,7 +48,7 @@ public final class ModifiedNewServer extends ModifiedServer {
     public void onGameStart(Deck[] decks) {
         if (decks.length != 4) throw new IllegalArgumentException();
         for (int i = 0; i < 4; i++) {
-            sendNthClientMessage(i + 1, createStartGameMessage(decks[i]));
+            sendNthClientMessage(i + 1, new ServerStartGameMessage(decks[i]));
         }
 
     }
@@ -54,29 +58,41 @@ public final class ModifiedNewServer extends ModifiedServer {
     public void startFirstTurn(int starter, Deck[] hands, Deck[] newCards) {
         if (starter < 1 || starter > 4) throw new IllegalArgumentException("Invalid argument: " + starter);
         if (hands.length != 4) throw new IllegalArgumentException();
-        sendNthClientMessage(1, createStartFirstTurnMessage(newCards[0], starter));
-        sendNthClientMessage(2, createStartFirstTurnMessage(newCards[1], starter));
-        sendNthClientMessage(3, createStartFirstTurnMessage(newCards[2], starter));
-        sendNthClientMessage(4, createStartFirstTurnMessage(newCards[3], starter));
+        sendNthClientMessage(1, new ServerStartFirstTurnMessage(newCards[0], starter));
+        sendNthClientMessage(2, new ServerStartFirstTurnMessage(newCards[1], starter));
+        sendNthClientMessage(3, new ServerStartFirstTurnMessage(newCards[2], starter));
+        sendNthClientMessage(4, new ServerStartFirstTurnMessage(newCards[3], starter));
 
     }
 
     // MODIFIES: this
     // EFFECTS: informs players that a card has been played and requests the next card
     public void requestNextCard(int justPlayed, int nextPlayerNum, Deck center, Card played, Suit required) {
-        write(createRequestNextCardMessage(played, justPlayed, nextPlayerNum, required));
+        try {
+            write(new ServerRequestNextCardMessage(played, justPlayed, required, nextPlayerNum));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // MODIFIES: this
     // EFFECTS: informs players that a round has ended and requests the "winner" (or loser) plays next
     public void startNewTurn(int winner, Deck addedPenalties) {
-        write(createStartNextTurnMessage(winner, addedPenalties));
+        try {
+            write(new ServerNextTurnMessage(addedPenalties, winner));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // MODIFIES: this
     // EFFECTS: informs players that the game has ended
     public void endGame(boolean[] winners, int points, Deck[] penaltyHands) {
-        write(createGameEndMessage(winners, penaltyHands));
+        try {
+            write(new ServerGameEndMessage(penaltyHands, winners));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // MODIFIES: this
@@ -85,7 +101,11 @@ public final class ModifiedNewServer extends ModifiedServer {
         System.out.println("New client " + c.ip() + " connected to server  " + ModifiedServer.ip());
         int spot = firstEmptySpace();
         if (spot == -1) {
-            c.write(createKickMessage(ERR_TOO_MANY_PLAYERS).toByteArr());
+            try {
+                c.write(NetworkMessage.packetToByteArray(new ServerKickMessage(ERR_TOO_MANY_PLAYERS)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             disconnect(c);
         } else {
             String id = UUID.randomUUID().toString();
@@ -96,7 +116,18 @@ public final class ModifiedNewServer extends ModifiedServer {
                     existing[i] = true;
                 }
             }
-            c.write(createIDMessage(id, (spot + 1), existing).toByteArr());
+            try {
+                c.write(NetworkMessage.packetToByteArray(new ServerIDMessage(id, (spot + 1), existing)));
+            } catch (IOException e) {
+                e.printStackTrace();
+                try {
+                    c.write(NetworkMessage.packetToByteArray(new ServerKickMessage(ERR_KICKED)));
+                } catch (IOException ex) {
+                    e.printStackTrace();
+                } finally {
+                    disconnect(c);
+                }
+            }
             clients.put(id, c);
             IDS[spot] = id;
             informPlayersPlayerJoined(spot + 1);
@@ -116,7 +147,7 @@ public final class ModifiedNewServer extends ModifiedServer {
 
     // EFFECTS: messages all other clients that a player has joined
     private void informPlayersPlayerJoined(int playerNumber) {
-        ServerToClientMessage scm = createConnectionMessage(playerNumber);
+        ServerToClientMessage scm = new ServerPlayerConnectionMessage(playerNumber);
         for (int i = 0; i < IDS.length; i++) {
             if (IDS[i] != null && i != playerNumber - 1) {
                 sendNthClientMessage(i + 1, scm);
@@ -129,8 +160,12 @@ public final class ModifiedNewServer extends ModifiedServer {
     private void informPlayersOnDisconnect(ModifiedClient c) {
         int playerNum = getClientNumber(c);
         if (playerNum == 0) return;
-        write(createDisconnectMessage(playerNum));
-        System.out.println("Written out disconnect message.");
+        try {
+            write(new ServerPlayerDisconnectionMessage(playerNum));
+            System.out.println("Written out disconnect message.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // EFFECTS: returns client number (1-4), 0 if non-existent
@@ -150,11 +185,14 @@ public final class ModifiedNewServer extends ModifiedServer {
 
     // MODIFIES: this
     // EFFECTS: handles this chat message
-    private void handleChatMessage(ClientToServerMessage csm, ModifiedClient sender) {
+    private void handleChatMessage(ClientChatMessage csm, ModifiedClient sender) {
         if (csm == null) throw new IllegalArgumentException("csm cannot be null");
-        if (!csm.isChatMessage()) throw new IllegalArgumentException("Called handleChatMessage on non-chat message");
-        ServerToClientMessage scm = ServerToClientMessage.createChatMessage(csm.getChatMessage(), getClientNumber(sender));
-        write(scm);
+        try {
+            write(new ServerChatMessage(csm.getChatMessage(), getClientNumber(sender)));
+        } catch (IOException e) {
+            e.printStackTrace();
+            // no need to kick - just a chat message
+        }
     }
 
     // MODIFIES: this
@@ -166,7 +204,11 @@ public final class ModifiedNewServer extends ModifiedServer {
     // MODIFIES: this
     // EFFECTS: kicks the client with given message
     public void kick(ModifiedClient c, String msg) {
-        c.write(ServerToClientMessage.createKickMessage(msg).toByteArr());
+        try {
+            c.write(NetworkMessage.packetToByteArray(new ServerKickMessage(msg)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         disconnect(c);
         System.out.println("Client kicked: " + c.ip());
         removeClientFromEntries(c);
@@ -174,8 +216,9 @@ public final class ModifiedNewServer extends ModifiedServer {
 
     // MODIFIES: this
     // EFFECTS: writes out a ServerToClientMessage to clients
-    public void write(ServerToClientMessage msg) {
-        write(msg.toByteArr());
+    public void write(ServerToClientMessage msg) throws IOException {
+
+        write(NetworkMessage.packetToByteArray(msg));
     }
 
     // EFFECTS: reads a ClientToServer message from a client
@@ -196,14 +239,14 @@ public final class ModifiedNewServer extends ModifiedServer {
             System.arraycopy(arr, 0, msgBuffer, bytesRead, arr.length);
             bytesRead += arr.length;
         }
-        ByteArrayInputStream bis = new ByteArrayInputStream(msgBuffer);
-        try (ObjectInputStream in = new ObjectInputStream(bis)) {
-            return (ClientToServerMessage) in.readObject();
+        System.out.println("ReadClientToServerMessageLength: " + length);
+        try {
+            return (ClientToServerMessage) NetworkMessage.packetFromByteArray(msgBuffer);
         } catch (ClassNotFoundException | InvalidClassException | ClassCastException e) {
             kickInvalid(getClientNumber(c));
             return null;
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e.getMessage(), e.getCause());
         }
     }
 
@@ -240,7 +283,11 @@ public final class ModifiedNewServer extends ModifiedServer {
     // EFFECTS: sends Nth client a message
     private void sendNthClientMessage(int n, ServerToClientMessage scm) {
         if (IDS[n - 1] == null) return;
-        clients.get(IDS[n - 1]).write(scm.toByteArr());
+        try {
+            clients.get(IDS[n - 1]).write(NetworkMessage.packetToByteArray(scm));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // EFFECTS: returns the first empty index (0-3) for IDs
@@ -273,10 +320,10 @@ public final class ModifiedNewServer extends ModifiedServer {
                     ClientToServerMessage csm = readClientToServerMessage(c);
                     if (csm == null) continue;
                     System.out.print(csm);
-                    if (!csm.isValidMessage()) {
+                    if (!csm.isValid()) {
                         kickInvalid(getClientNumber(c));
-                    } else if (csm.isChatMessage()) {
-                        handleChatMessage(csm, c);
+                    } else if (csm instanceof ClientChatMessage) {
+                        handleChatMessage((ClientChatMessage) csm, c);
                         System.out.print("handled chat message.");
                     } else {
                         ServerFrame.getInstance().addNewMessage(new MessagePair(c, csm));

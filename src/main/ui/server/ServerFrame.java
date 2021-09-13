@@ -1,6 +1,8 @@
 package ui.server;
 
 import net.*;
+import net.message.client.ClientCardMessage;
+import net.message.client.ClientThreeCardMessage;
 import util.Card;
 import util.Deck;
 import util.GameState;
@@ -17,8 +19,8 @@ public class ServerFrame extends JFrame implements EventReceiver {
     private static final Dimension SIZE = new Dimension(640, 480);
     private final Timer updateTimer = new Timer(100, e -> repaint());
     private final ArrayDeque<MessagePair> clientMessages = new ArrayDeque<>();
-    private ModifiedNewServer newServer = new ModifiedNewServer(this);
-    private GameState gameState = new GameState();
+    private final ModifiedNewServer newServer = new ModifiedNewServer(this);
+    private final GameState gameState = new GameState();
 
     public static ServerFrame getInstance() {
         if (ourInstance == null) {
@@ -141,20 +143,21 @@ public class ServerFrame extends JFrame implements EventReceiver {
         while (!clientMessages.isEmpty()) {
             MessagePair msg = clientMessages.poll();
             // ASSUMES THERE'S ONLY PLAY MESSAGES
-            if (!msg.msg.isValidMessage() && !msg.msg.isNewCardPlayedMessage() && !msg.msg.isFirstThreeCardsMessage()) {
+
+            if (!msg.msg.isValid() && !(msg.msg instanceof ClientCardMessage) && !(msg.msg instanceof ClientThreeCardMessage)) {
                 System.err.println("Received non-play message for play message handler");
                 newServer.kick(msg.modifiedClient, ERR_INVALID_MSG); // this only accepts play messages
             }
             int clientNum = newServer.getClientNumber(msg.modifiedClient);
-            if (msg.msg.isFirstThreeCardsMessage()) {
+            if (msg.msg instanceof ClientThreeCardMessage) {
                 if (clientNum != 0) {
-                    Deck deck = msg.msg.getThreeCards();
+                    Deck deck = ((ClientThreeCardMessage) msg.msg).getCards();
                     gameState.playCard(clientNum, deck.get(0), deck.get(1), deck.get(2));
                 }
-            } else if (msg.msg.isNewCardPlayedMessage()) {
+            } else if (msg.msg instanceof ClientCardMessage) {
                 try {
                     if (clientNum != 0) {
-                        Card card = msg.msg.getCard();
+                        Card card = ((ClientCardMessage) msg.msg).getCard();
                         gameState.playCard(clientNum, card);
                     }
                 } catch (IllegalArgumentException e) {

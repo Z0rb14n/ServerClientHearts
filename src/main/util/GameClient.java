@@ -1,6 +1,13 @@
 package util;
 
-import net.*;
+import net.ConnectionException;
+import net.Constants;
+import net.ModifiedClient;
+import net.ModifiedNewClient;
+import net.message.client.ClientCardMessage;
+import net.message.client.ClientChatMessage;
+import net.message.client.ClientThreeCardMessage;
+import net.message.server.*;
 import ui.client.MainFrame;
 import ui.console.Console;
 
@@ -102,11 +109,15 @@ public class GameClient implements net.ObjectEventReceiver {
             ServerToClientMessage msg = networkClient.removeServerToClientMessage();
             assert (msg != null);
             waitingForMessageMutex.unlock();
-            if (msg.isKickMessage()) {
+            if (msg instanceof ServerKickMessage) {
                 return false;
-            } else {
-                gameState.onGetID(msg.getID(), msg.getPlayerNumber());
+            } else if (msg instanceof ServerIDMessage) {
+                ServerIDMessage idMessage = (ServerIDMessage) msg;
+                gameState.onGetID(idMessage.getID(), idMessage.getPlayerNumber());
                 return true;
+            } else {
+                System.out.println("[GameClient::getClientIDFromServer]: WARNING: did not receive ID message. Returning false");
+                return false;
             }
         }
 
@@ -166,7 +177,7 @@ public class GameClient implements net.ObjectEventReceiver {
         if (!result) return false;
         if (gameState.isValidCardPlay(c)) {
             ClientLogger.logMessage("Attempting to send card " + c.toString());
-            networkClient.write(ClientToServerMessage.createNewCardPlayedMessage(c));
+            networkClient.write(new ClientCardMessage(c));
             return true;
         }
         ClientLogger.logMessage("[ERROR]: cannot play card " + c.toString() + ": it is not a valid card play.");
@@ -178,7 +189,7 @@ public class GameClient implements net.ObjectEventReceiver {
         boolean result = checkClientActive();
         if (!result) return false;
         if (gameState.isValidCardPass(cardOne, cardTwo, cardThree)) {
-            networkClient.write(ClientToServerMessage.createNewSubmitThreeCardMessage(cardOne, cardTwo, cardThree));
+            networkClient.write(new ClientThreeCardMessage(cardOne, cardTwo, cardThree));
             ClientLogger.logMessage("Passed cards!");
             gameState.playerDeck.remove(cardOne);
             gameState.playerDeck.remove(cardTwo);
@@ -195,7 +206,7 @@ public class GameClient implements net.ObjectEventReceiver {
         ClientLogger.logMessage("Sending chat message " + msg + "...");
         boolean result = checkClientActive();
         if (!result) return false;
-        networkClient.write(ClientToServerMessage.createNewChatMessage(msg));
+        networkClient.write(new ClientChatMessage(msg));
         return true;
     }
 
@@ -216,91 +227,78 @@ public class GameClient implements net.ObjectEventReceiver {
     //<editor-fold desc="Incoming Message Processing">
 
     public void processIncomingMessage(ServerToClientMessage message) {
-        if (handleNewChatMessage(message)) return;
-        if (handleOnlinePlayerUpdateMessage(message)) return;
-        if (handleGameStartMessages(message)) return;
-        if (handleStartFirstTurnMessage(message)) return;
-        if (handleNextCardMessage(message)) return;
-        if (handleNewTurnMessage(message)) return;
-        handleGameEndMessage(message);
+        if (message instanceof ServerRequestNextCardMessage) {
+            handleNextCardMessage((ServerRequestNextCardMessage) message);
+        } else if (message instanceof ServerChatMessage) {
+            handleNewChatMessage((ServerChatMessage) message);
+        } else if (message instanceof ServerIDMessage || message instanceof ServerPlayerDisconnectionMessage || message instanceof ServerPlayerConnectionMessage) {
+            handleOnlinePlayerUpdateMessage(message);
+        } else if (message instanceof ServerStartGameMessage) {
+            handleGameStartMessages((ServerStartGameMessage) message);
+        } else if (message instanceof ServerStartFirstTurnMessage) {
+            handleStartFirstTurnMessage((ServerStartFirstTurnMessage) message);
+        } else if (message instanceof ServerNextTurnMessage) {
+            handleNewTurnMessage((ServerNextTurnMessage) message);
+        } else if (message instanceof ServerGameEndMessage) {
+            handleGameEndMessage((ServerGameEndMessage) message);
+        }
     }
 
-    private boolean handleNextCardMessage(ServerToClientMessage msg) {
-        if (msg.isNextCardMessage()) {
-            gameState.onCardPlay(msg.getPreviouslyPlayed(), msg.getPlayerNumJustPlayed(), msg.getNextPlayerNumber(), msg.getExpectedSuit());
-            return true;
-        }
-        return false;
+    private void handleNextCardMessage(ServerRequestNextCardMessage msg) {
+        gameState.onCardPlay(msg.getPreviouslyPlayed(), msg.getPlayerNumJustPlayed(), msg.getNextPlayerNumber(), msg.getExpectedSuit());
     }
 
-    private boolean handleStartFirstTurnMessage(ServerToClientMessage msg) {
-        if (msg.isStartingFirstTurnMessage()) {
-            gameState.finishPassingCards();
-            return true;
-        }
-        return false;
+    private void handleStartFirstTurnMessage(ServerStartFirstTurnMessage msg) {
+        gameState.finishPassingCards(msg);
     }
 
-    private boolean handleGameEndMessage(ServerToClientMessage msg) {
-        if (msg.isGameEndingMessage()) {
-            gameState.onGameEnd(msg.getWinners(), msg.getPenaltyHands());
-            return true;
-        }
-        return false;
+    private void handleGameEndMessage(ServerGameEndMessage msg) {
+        gameState.onGameEnd(msg.getWinners(), msg.getPenaltyHands());
     }
 
     // MODIFIES: this
     // EFFECTS: handles player chat message
-    private boolean handleNewChatMessage(ServerToClientMessage msg) {
-        if (msg.isChatMessage()) {
-            ChatMessage cm = new ChatMessage(msg.getChatMessageSender(), msg.getChatMessage());
-            if (chatMessages.size() == MAX_CHAT_MESSAGES) {
-                ClientLogger.logMessage("[WARN]: Removed chat message " + chatMessages.remove());
-            }
-            chatMessages.add(cm);
-            MainFrame.getFrame().addChatMessage(cm);
-            return true;
+    private void handleNewChatMessage(ServerChatMessage msg) {
+        ChatMessage cm = new ChatMessage(msg.getPlayerNumber(), msg.getMessage());
+        if (chatMessages.size() == MAX_CHAT_MESSAGES) {
+            ClientLogger.logMessage("[WARN]: Removed chat message " + chatMessages.remove());
         }
-        return false;
+        chatMessages.add(cm);
+        MainFrame.getFrame().addChatMessage(cm);
     }
 
     // MODIFIES: this
     // EFFECTS: handles new player addition/removal messages (includes ID message)
     private boolean handleOnlinePlayerUpdateMessage(ServerToClientMessage msg) {
         int num;
-        if (msg.isIDMessage()) {
-            System.arraycopy(msg.getExistingPlayers(), 0, onlinePlayers, 0, 4);
-            gameState.setPlayerNumber(msg.getPlayerNumber());
-            onlinePlayers[msg.getPlayerNumber() - 1] = true; // just to be sure
+        if (msg instanceof ServerIDMessage) {
+            ServerIDMessage idMessage = (ServerIDMessage) msg;
+            System.arraycopy(idMessage.getExistingPlayers(), 0, onlinePlayers, 0, 4);
+            gameState.setPlayerNumber(idMessage.getPlayerNumber());
+            onlinePlayers[idMessage.getPlayerNumber() - 1] = true; // just to be sure
             return true;
-        } else if (msg.isPlayerConnectionMessage()) {
-            num = msg.getNewConnectedPlayer();
+        } else if (msg instanceof ServerPlayerConnectionMessage) {
+            ServerPlayerConnectionMessage playerConnectionMessage = (ServerPlayerConnectionMessage) msg;
+            num = playerConnectionMessage.getNewPlayerNumber();
             onlinePlayers[num - 1] = true;
             return true;
-        } else if (msg.isPlayerDisconnectMessage()) {
-            num = msg.getDisconnectedPlayerNumber();
+        } else if (msg instanceof ServerPlayerDisconnectionMessage) {
+            ServerPlayerDisconnectionMessage playerDisconnectionMessage = (ServerPlayerDisconnectionMessage) msg;
+            num = playerDisconnectionMessage.getPlayerNumber();
             onlinePlayers[num - 1] = false;
             return true;
         }
         return false;
     }
 
-    private boolean handleNewTurnMessage(ServerToClientMessage msg) {
-        if (msg.isStartingNewTurnMessage()) {
-            gameState.onNextTurn(msg.getNewPenaltyCards(), msg.getPlayerWhoStartsNext());
-            return true;
-        }
-        return false;
+    private void handleNewTurnMessage(ServerNextTurnMessage msg) {
+        gameState.onNextTurn(msg.getNewPenaltyCards(), msg.getPlayerWhoStartsNext());
     }
 
     // MODIFIES: this
     // EFFECTS: handles gameStarting messages
-    private boolean handleGameStartMessages(ServerToClientMessage msg) {
-        if (msg.isGameStartingMessage()) {
-            gameState.startGame(msg.getStartingHand().copy());
-            return true;
-        }
-        return false;
+    private void handleGameStartMessages(ServerStartGameMessage msg) {
+        gameState.startGame(msg.getClientHand().copy());
     }
 
     //</editor-fold>
@@ -401,7 +399,7 @@ public class GameClient implements net.ObjectEventReceiver {
             ClientLogger.logMessage("Player hand: " + startingDeck);
         }
 
-        private void finishPassingCards() {
+        private void finishPassingCards(ServerStartFirstTurnMessage ignored) {
             allCardsPassed = true;
         }
 

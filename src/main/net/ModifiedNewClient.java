@@ -1,9 +1,14 @@
 package net;
 
+import net.message.NetworkMessage;
+import net.message.client.ClientToServerMessage;
+import net.message.server.ServerIDMessage;
+import net.message.server.ServerKickMessage;
+import net.message.server.ServerToClientMessage;
 import ui.client.MainFrame;
 import ui.console.Console;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -52,11 +57,13 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
         assert (lastMessages.size() != 0);
         ServerToClientMessage msg = lastMessages.peek();
         lastMessagesMutex.unlock();
-        if (msg.isKickMessage()) {
-            throw new ConnectionException(ERR_KICKED + msg.getKickMessage());
+        if (msg instanceof ServerKickMessage) {
+            throw new ConnectionException(ERR_KICKED + ((ServerKickMessage) msg).getMessage());
         } else {
-            clientID = msg.getID();
-            playerNum = msg.getPlayerNumber();
+            assert msg instanceof ServerIDMessage;
+
+            clientID = ((ServerIDMessage) msg).getID();
+            playerNum = ((ServerIDMessage) msg).getPlayerNumber();
         }
     }
 
@@ -77,14 +84,13 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
         assert (result == arrLength);
         assert (available() >= arrLength);
         byte[] msgBuffer = readBytes(arrLength);
-        ByteArrayInputStream bis = new ByteArrayInputStream(msgBuffer);
-        try (ObjectInputStream in = new ObjectInputStream(bis)) {
-            ServerToClientMessage scm = (ServerToClientMessage) in.readObject();
-            if (scm.isKickMessage()) {
-                Console.getConsole().addMessage("Received kick message from server: " + scm.getKickMessage());
+        try {
+            ServerToClientMessage scm = (ServerToClientMessage) NetworkMessage.packetFromByteArray(msgBuffer);
+            if (scm instanceof ServerKickMessage) {
+                Console.getConsole().addMessage("Received kick message from server: " + ((ServerKickMessage) scm).getMessage());
             }
             return scm;
-        } catch (IOException | ClassNotFoundException | ClassCastException e) {
+        } catch (IOException | ClassNotFoundException e) {
             System.err.println("Are you sure this is an actual server?");
             throw new RuntimeException(e.getMessage());
         }
@@ -93,12 +99,10 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
     // MODIFIES: this
     // EFFECTS: writes out a ClientToServerMessage to the server
     public void write(ClientToServerMessage msg) {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream out = new ObjectOutputStream(bos)) {
-            out.writeObject(msg);
-            out.flush();
-            byte[] yourBytes = bos.toByteArray();
-            writeInt(yourBytes.length);
-            write(yourBytes);
+        try {
+            byte[] bytes = NetworkMessage.packetToByteArray(msg);
+            writeInt(bytes.length);
+            writeNoLength(bytes);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -113,7 +117,7 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
     // EFFECTS: writes out the byte representation of an integer to the server
     private void writeInt(int a) {
         byte[] bytes = ByteBuffer.allocate(4).putInt(a).array();
-        write(bytes);
+        writeNoLength(bytes);
     }
 
     // EFFECTS: gets current client ID
@@ -157,11 +161,14 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
     public void stop() {
         lastMessagesMutex.lock();
         if (lastMessages.size() > 0) {
-            lastMessages.removeIf(serverToClientMessage -> !serverToClientMessage.isKickMessage());
+            lastMessages.removeIf(serverToClientMessage -> !(serverToClientMessage instanceof ServerKickMessage));
             if (lastMessages.size() > 0) {
                 ServerToClientMessage message = lastMessages.poll();
                 assert (message != null);
-                MainFrame.getFrame().updateErrorMessage(message.getKickMessage());
+                if (message instanceof ServerKickMessage)
+                    MainFrame.getFrame().updateErrorMessage(((ServerKickMessage) message).getMessage());
+                else
+                    MainFrame.getFrame().updateErrorMessage("You got kicked from the server. Kick message not received, however.");
                 lastMessages.clear();
             }
         }
