@@ -1,7 +1,7 @@
-package ui.console.command;
+package client.console.command;
 
+import client.console.Console;
 import org.jetbrains.annotations.NotNull;
-import ui.console.Console;
 import util.GameClient;
 import util.card.Card;
 import util.card.Deck;

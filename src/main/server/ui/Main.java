@@ -1,6 +1,4 @@
-package ui.server;
-
-// TODO move ServerFrame logic to its own class (i.e. non-UI code not in UI)
+package server.ui;
 
 /**
  * Entry point to run the server

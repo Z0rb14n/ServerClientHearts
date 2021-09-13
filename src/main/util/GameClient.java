@@ -1,5 +1,7 @@
 package util;
 
+import client.console.Console;
+import client.ui.MainFrame;
 import net.ConnectionException;
 import net.Constants;
 import net.ModifiedClient;
@@ -8,8 +10,6 @@ import net.message.client.ClientCardMessage;
 import net.message.client.ClientChatMessage;
 import net.message.client.ClientThreeCardMessage;
 import net.message.server.*;
-import ui.client.MainFrame;
-import ui.console.Console;
 import util.card.Card;
 import util.card.Deck;
 import util.card.Suit;

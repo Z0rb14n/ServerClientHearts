@@ -1,6 +1,6 @@
 package util;
 
-import ui.server.ServerFrame;
+import server.ui.ServerFrame;
 import util.card.Card;
 import util.card.Deck;
 import util.card.Suit;
@@ -188,14 +188,14 @@ public class GameState {
                 }
                 if (center.size() == 4) endTurn();
                 else {
-                    ServerFrame.getInstance().requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
+                    ServerFrame.getInstance().gameServer.requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
                 }
             }
         }
     }
 
     private void kickInvalid(int playerNum) {
-        ServerFrame.getInstance().requestKickInvalidMessage(playerNum);
+        ServerFrame.getInstance().gameServer.requestKickInvalidMessage(playerNum);
     }
 
     // REQUIRES: center.size == 4
@@ -211,7 +211,7 @@ public class GameState {
         currentSuitToPlay = null; // can play whatever suit
         checkGameEnd();
         if (!gameEnded) {
-            ServerFrame.getInstance().startNewTurn(startingPlayer, deck);
+            ServerFrame.getInstance().gameServer.startNewTurn(startingPlayer, deck);
         }
     }
 
@@ -252,7 +252,7 @@ public class GameState {
     private void checkGameEnd() {
         if (numTurns != 14) return;
         gameEnded = true;
-        ServerFrame.getInstance().endGame(gameWinner(), gameWinnerPoints(), penalties);
+        ServerFrame.getInstance().gameServer.endGame(gameWinner(), allPenaltyPoints(), penalties);
     }
 
     // EFFECTS: returns current winner
@@ -266,6 +266,15 @@ public class GameState {
         return result;
     }
 
+    /**
+     * Returns the penalty points of all hands
+     *
+     * @return penalty points of all hands
+     */
+    private int[] allPenaltyPoints() {
+        return new int[]{hands[0].penaltyPoints(), hands[1].penaltyPoints(), hands[2].penaltyPoints(), hands[3].penaltyPoints()};
+    }
+
     // EFFECTS: returns point count of current winner
     private int gameWinnerPoints() {
         return Math.min(Math.min(hands[0].penaltyPoints(), hands[1].penaltyPoints()), Math.min(hands[2].penaltyPoints(), hands[3].penaltyPoints()));
@@ -276,7 +285,7 @@ public class GameState {
     private void startFirstTurn() {
         threeOfClubsNeeded = true;
         startingPlayer = gameStarter();
-        ServerFrame.getInstance().startFirstTurn(startingPlayer);
+        ServerFrame.getInstance().gameServer.startFirstTurn(startingPlayer);
         numTurns = 1;
     }
 

@@ -1,12 +1,12 @@
 package net;
 
+import client.console.Console;
+import client.ui.MainFrame;
 import net.message.NetworkMessage;
 import net.message.client.ClientToServerMessage;
 import net.message.server.ServerIDMessage;
 import net.message.server.ServerKickMessage;
 import net.message.server.ServerToClientMessage;
-import ui.client.MainFrame;
-import ui.console.Console;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

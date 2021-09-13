@@ -4,7 +4,7 @@ import net.message.NetworkMessage;
 import net.message.client.ClientChatMessage;
 import net.message.client.ClientToServerMessage;
 import net.message.server.*;
-import ui.server.ServerFrame;
+import server.ui.ServerFrame;
 import util.card.Card;
 import util.card.Deck;
 import util.card.Suit;
@@ -87,7 +87,7 @@ public final class ModifiedNewServer extends ModifiedServer {
 
     // MODIFIES: this
     // EFFECTS: informs players that the game has ended
-    public void endGame(boolean[] winners, int points, Deck[] penaltyHands) {
+    public void endGame(boolean[] winners, int[] points, Deck[] penaltyHands) {
         try {
             write(new ServerGameEndMessage(penaltyHands, winners));
         } catch (IOException e) {
@@ -326,7 +326,7 @@ public final class ModifiedNewServer extends ModifiedServer {
                         handleChatMessage((ClientChatMessage) csm, c);
                         System.out.print("handled chat message.");
                     } else {
-                        ServerFrame.getInstance().addNewMessage(new MessagePair(c, csm));
+                        ServerFrame.getInstance().gameServer.addNewMessage(new MessagePair(c, csm));
                     }
                     c = available(); // get next client
                 }

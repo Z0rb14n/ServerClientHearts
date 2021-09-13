@@ -1,8 +1,8 @@
-package ui.client;
+package client.ui;
 
 // TODO FINISH GUI
 
-import ui.console.Console;
+import client.console.Console;
 import util.ChatMessage;
 import util.GameClient;
 

@@ -1,9 +1,9 @@
-package ui.console;
+package client.console;
 
+import client.console.command.Command;
+import client.console.command.InvalidCommandException;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import ui.console.command.Command;
-import ui.console.command.InvalidCommandException;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,4 +1,4 @@
-package ui.client;
+package client.ui;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -13,9 +13,9 @@ import java.awt.event.MouseEvent;
 // Represents the first panel seen (i.e. to connect to the server)
 class ConnectionPanel extends JPanel {
     private static final Font font = new Font("Arial", Font.PLAIN, 24);
-    private IPEnterBox ipBox;
-    private IPEnterButton ipEnterButton;
-    private JLabel errorDisplayer = new JLabel("");
+    private final IPEnterBox ipBox;
+    private final IPEnterButton ipEnterButton;
+    private final JLabel errorDisplayer = new JLabel("");
 
     // EFFECTS: initializes connection panel with ip enter box and button
     ConnectionPanel() {

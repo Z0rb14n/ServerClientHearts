@@ -1,64 +1,38 @@
-package ui.server;
+package server;
 
 import net.*;
 import net.message.client.ClientCardMessage;
 import net.message.client.ClientThreeCardMessage;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import util.GameState;
 import util.card.Card;
 import util.card.Deck;
 import util.card.Suit;
 
-import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayDeque;
 
 import static net.Constants.ERR_INVALID_MSG;
 
-public class ServerFrame extends JFrame implements EventReceiver {
-    private static ServerFrame ourInstance;
-    private static final Dimension SIZE = new Dimension(640, 480);
-    private final Timer updateTimer = new Timer(100, e -> repaint());
+public class GameServer implements EventReceiver {
     private final ArrayDeque<MessagePair> clientMessages = new ArrayDeque<>();
     private final ModifiedNewServer newServer = new ModifiedNewServer(this);
     private final GameState gameState = new GameState();
 
-    public static ServerFrame getInstance() {
-        if (ourInstance == null) {
-            ourInstance = new ServerFrame();
-        }
-        return ourInstance;
-    }
-
-    private ServerFrame() {
-        super("Server Client Hearts Server");
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(SIZE);
-        setBackground(Color.WHITE);
-        setSize(SIZE);
-        updateTimer.start();
-        setVisible(true);
-    }
-
-    @Override
-    // MODIFIES: g, this
-    // EFFECTS: paints the given graphics object and updates the frame
-    public void paint(Graphics g) {
-        super.paint(g);
-        update();
-    }
-
-    @Override
-    // MODIFIES: this
-    // EFFECTS: disposes the jframe
+    /**
+     * Disposes/frees the resources of this GameServer
+     */
+    @Contract(mutates = "this")
     public void dispose() {
-        updateTimer.stop();
         newServer.stop();
-        super.dispose();
+        clientMessages.clear();
     }
 
-    // MODIFIES: this
-    // EFFECTS: updates the game state
-    private void update() {
+    /**
+     * Updates the game state
+     */
+    @Contract(mutates = "this")
+    public void update() {
         if (!gameState.isGameStarted() && newServer.isFull()) {
             startGame();
         }
@@ -67,78 +41,127 @@ public class ServerFrame extends JFrame implements EventReceiver {
         }
     }
 
-    // MODIFIES: this
-    // EFFECTS: adds the message to the server and processes it
+    /**
+     * Adds a message pair to a queue/backlog of messages to process
+     *
+     * @param mp message pair to add
+     */
+    @Contract(mutates = "this")
     public void addNewMessage(MessagePair mp) {
         clientMessages.add(mp);
     }
 
-    // EFFECTS: determines whether there is a new non-chat message to process
+    /**
+     * @return true if there is a new non-chat message to process
+     */
+    @Contract(pure = true)
     public boolean hasNewMessage() {
         return !clientMessages.isEmpty();
     }
 
     //<editor-fold desc="Events (i.e. Client/Disconnect events)">
+
+    /**
+     * Runs when a client connects to the server
+     *
+     * @param s Server in question
+     * @param c client that connected
+     */
     @Override
-    // MODIFIES: this
-    // EFFECTS: runs when a client connects to the server
+    @Contract(mutates = "this")
     public void clientConnectionEvent(ModifiedServer s, ModifiedClient c) {
         newServer.onClientConnect(c);
     }
 
+    /**
+     * Runs when a client has disconnected - remove a client from the entry list
+     *
+     * @param c client that has just disconnected
+     */
     @Override
-    // MODIFIES: this
-    // EFFECTS: after a client has disconnected, remove them from the entries list
+    @Contract(mutates = "this")
     public void disconnectEvent(ModifiedClient c) {
         newServer.onClientDisconnect(c);
     }
     //</editor-fold>
 
-    // EFFECTS: returns whether there is another client message to process
+    /**
+     * @return true if there is a client message to process from the backlog
+     */
+    @Contract(pure = true)
     private boolean hasNewAction() {
         return !clientMessages.isEmpty();
     }
 
-    // MODIFIES: this
-    // EFFECTS: starts the current game of hearts and transitions to "pass cards" stage
+    /**
+     * Starts the current game of hearts and transitions to "pass cards" stage
+     */
+    @Contract(mutates = "this")
     private void startGame() {
         gameState.startGame();
         newServer.onGameStart(gameState.getHandsInOrder());
     }
 
-
-    // MODIFIES: this
-    // EFFECTS: asks player to play 3C
+    /**
+     * Asks the starting player to play the three of clubs
+     *
+     * @param starter player number to start
+     */
+    @Contract(mutates = "this")
     public void startFirstTurn(int starter) {
         newServer.startFirstTurn(starter, gameState.getHandsInOrder(), gameState.getPassingHands());
     }
 
-    // MODIFIES: this
-    // EFFECTS: asks next player to play a card
-    public void requestNextCard(int justPlayed, int playerNumOfNextPlayer, Card played, Suit required) {
+    /**
+     * Asks the next player to play a card
+     *
+     * @param justPlayed            player number that just played
+     * @param playerNumOfNextPlayer player number of next person to player
+     * @param played                Card played
+     * @param required              Suit required
+     */
+    @Contract(mutates = "this")
+    public void requestNextCard(int justPlayed, int playerNumOfNextPlayer, @NotNull Card played, @NotNull Suit required) {
         newServer.requestNextCard(justPlayed, playerNumOfNextPlayer, gameState.getCenter(), played, required);
     }
 
-    // MODIFIES: this
-    // EFFECTS: starts new turn and writes messages to players, given "winner" (player number 1-4)
-    public void startNewTurn(int winner, Deck addedPenalties) {
+    /**
+     * Starts a new turn and writes messages to players, given a "winner"
+     *
+     * @param winner         player number of winner from 1-4
+     * @param addedPenalties penalties to add to his hand
+     */
+    @Contract(mutates = "this")
+    public void startNewTurn(int winner, @NotNull Deck addedPenalties) {
         newServer.startNewTurn(winner, addedPenalties);
     }
 
-    // MODIFIES: this
-    // EFFECTS: when game has ended - writes messages to players (who won, etc.)
-    public void endGame(boolean[] winner, int points, Deck[] penaltyHands) {
+    /**
+     * When the game has endeed, write messages to players (i.e. who won, etc.)
+     *
+     * @param winner       winners of the game
+     * @param points       points of each player
+     * @param penaltyHands penalties of each player
+     */
+    @Contract(mutates = "this")
+    public void endGame(boolean[] winner, int[] points, Deck[] penaltyHands) {
         newServer.endGame(winner, points, penaltyHands);
     }
 
-    // MODIFIES: this
-    // EFFECTS: kicks a player due to an invalid message
+    /**
+     * Kicks a player due to an invalid message
+     *
+     * @param playerNum player num to kick
+     */
+    @Contract(mutates = "this")
     public void requestKickInvalidMessage(int playerNum) {
         newServer.kickInvalid(playerNum);
     }
 
-    // MODIFIES: this
-    // EFFECTS: handles the messages in queue
+    /**
+     * Handles the play messages in the queue
+     */
+    @Contract(mutates = "this")
     private void handleMessages() {
         while (!clientMessages.isEmpty()) {
             MessagePair msg = clientMessages.poll();
@@ -168,8 +191,10 @@ public class ServerFrame extends JFrame implements EventReceiver {
         }
     }
 
-    // MODIFIES: this
-    // EFFECTS: resets the server/games
+    /**
+     * Resets the server/game
+     */
+    @Contract(mutates = "this")
     public void reset() {
         clientMessages.clear();
         newServer.reset();

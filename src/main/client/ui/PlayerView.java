@@ -1,4 +1,4 @@
-package ui.client;
+package client.ui;
 
 import util.GameClient;
 
