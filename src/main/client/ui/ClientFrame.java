@@ -2,15 +2,18 @@ package client.ui;
 
 // TODO FINISH GUI
 
+import client.GameClient;
 import client.console.Console;
 import util.ChatMessage;
-import util.GameClient;
 
 import javax.swing.*;
 import java.awt.*;
 
-// Represents the main JFrame the user interacts with
-public class MainFrame extends JFrame {
+/**
+ * Main JFrame the user interacts with on the client
+ */
+public class ClientFrame extends JFrame {
+    public static boolean useConsole = true;
     private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
     private final static String CONNECTION_TIMEOUT = "Timed out.";
     private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
@@ -18,19 +21,19 @@ public class MainFrame extends JFrame {
     private boolean displayingInputIP = true;
     private final GamePanel gp = new GamePanel();
     private ConnectionPanel cp = new ConnectionPanel();
-    private static MainFrame singleton;
+    private static ClientFrame singleton;
 
     // MODIFIES: this
     // EFFECTS: ensures there is only one MainFrame in existence
-    public static MainFrame getFrame() {
+    public static ClientFrame getFrame() {
         if (singleton == null) {
-            singleton = new MainFrame();
+            singleton = new ClientFrame();
         }
         return singleton;
     }
 
     // EFFECTS: initializes the JFrame with an update updateTimer and a message receiver thread
-    private MainFrame() {
+    private ClientFrame() {
         super("Server Client Hearts Client");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setBackground(Color.WHITE);
@@ -38,7 +41,8 @@ public class MainFrame extends JFrame {
         setSize(WINDOW_DIMENSION);
         cp.initialize();
         add(cp);
-        Console.getConsole(); // creates the console window
+        if (useConsole)
+            Console.getConsole(); // creates the console window
         pack();
         setVisible(true);
     }
@@ -108,11 +112,13 @@ public class MainFrame extends JFrame {
         GameClient.NetworkInstantiationResult result = GameClient.getInstance().connect(ip);
         switch (result) {
             case ALREADY_CONNECTED:
-                Console.getConsole().addMessage("Attempted to connect to client when one was already connected");
+                if (ClientFrame.useConsole)
+                    Console.getConsole().addMessage("Attempted to connect to client when one was already connected");
                 break;
             case SUCCESS:
-                Console.getConsole().addMessage("Successful connection. Player num: " + GameClient.getInstance().getClientState().getPlayerNumber()
-                        + ", ID: " + GameClient.getInstance().getClientID());
+                if (ClientFrame.useConsole)
+                    Console.getConsole().addMessage("Successful connection. Player num: " + GameClient.getInstance().getClientState().getPlayerNumber()
+                            + ", ID: " + GameClient.getInstance().getClientID());
                 cp.updateErrorDisplayed("");
                 cp.setVisible(false);
                 remove(cp);
@@ -122,16 +128,19 @@ public class MainFrame extends JFrame {
                 repaint();
                 break;
             case TIMED_OUT:
-                Console.getConsole().addMessage("Connection timed out.");
+                if (ClientFrame.useConsole)
+                    Console.getConsole().addMessage("Connection timed out.");
                 cp.updateErrorDisplayed(CONNECTION_TIMEOUT);
                 break;
             case KICKED:
                 cp.updateErrorDisplayed(TOO_MANY_PLAYERS_MSG);
-                Console.getConsole().addMessage("Too many players.");
+
+                if (ClientFrame.useConsole) Console.getConsole().addMessage("Too many players.");
                 break;
             default:
                 cp.updateErrorDisplayed(DEFAULT_COULD_NOT_CONNECT);
-                Console.getConsole().addMessage("Could not connect.");
+
+                if (ClientFrame.useConsole) Console.getConsole().addMessage("Could not connect.");
                 break;
         }
     }

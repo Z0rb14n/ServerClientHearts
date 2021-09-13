@@ -1,6 +1,6 @@
 package client.ui;
 
-import util.GameClient;
+import client.GameClient;
 
 import javax.swing.*;
 import java.awt.event.*;

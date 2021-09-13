@@ -1,6 +1,6 @@
 package client.ui;
 
-import util.GameClient;
+import client.GameClient;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -102,7 +102,7 @@ public class PlayerView extends JPanel {
         if (existingPlayers[2]) g.drawImage(catBackOnly, CAT_COORDINATES[2][0], CAT_COORDINATES[2][1], null);
         else g.drawImage(catOutlineOnly, CAT_COORDINATES[2][0], CAT_COORDINATES[2][1], null);
 
-        if (existingPlayers[3]) g.drawImage(catFaceLeft, CAT_COORDINATES[3][0], CAT_COORDINATES[3][1], null);
+        if (existingPlayers[3]) g.drawImage(catFaceRight, CAT_COORDINATES[3][0], CAT_COORDINATES[3][1], null);
         else g.drawImage(catOutlineOnly, CAT_COORDINATES[3][0], CAT_COORDINATES[3][1], null);
         //g.drawImage(bicycleCat, 0, 0, null);
     }

@@ -1,27 +1,24 @@
-package util;
+package client;
 
 import client.console.Console;
-import client.ui.MainFrame;
-import net.ConnectionException;
-import net.Constants;
-import net.ModifiedClient;
-import net.ModifiedNewClient;
+import client.ui.ClientFrame;
+import net.*;
 import net.message.client.ClientCardMessage;
 import net.message.client.ClientChatMessage;
 import net.message.client.ClientThreeCardMessage;
 import net.message.server.*;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import util.ChatMessage;
 import util.card.Card;
-import util.card.Deck;
-import util.card.Suit;
 
-import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static net.Constants.DEFAULT_TIMEOUT;
 
-public class GameClient implements net.ObjectEventReceiver {
+public class GameClient implements ObjectEventReceiver {
     public static final int MAX_CHAT_MESSAGES = 100;
     private final ClientGameState gameState = new ClientGameState();
     private final Queue<ChatMessage> chatMessages = new ArrayDeque<>(MAX_CHAT_MESSAGES);
@@ -197,7 +194,7 @@ public class GameClient implements net.ObjectEventReceiver {
             gameState.playerDeck.remove(cardOne);
             gameState.playerDeck.remove(cardTwo);
             gameState.playerDeck.remove(cardThree);
-            MainFrame.getFrame().update();
+            ClientFrame.getFrame().update();
             return true;
         }
         ClientLogger.logMessage("[ERROR]: cannot pass cards - it contains invalid card(s).");
@@ -234,8 +231,8 @@ public class GameClient implements net.ObjectEventReceiver {
             handleNextCardMessage((ServerRequestNextCardMessage) message);
         } else if (message instanceof ServerChatMessage) {
             handleNewChatMessage((ServerChatMessage) message);
-        } else if (message instanceof ServerIDMessage || message instanceof ServerPlayerDisconnectionMessage || message instanceof ServerPlayerConnectionMessage) {
-            handleOnlinePlayerUpdateMessage(message);
+        } else if (message instanceof ServerPlayerDisconnectionMessage) {
+            handleServerPlayerDisconnectionMessage((ServerPlayerDisconnectionMessage) message);
         } else if (message instanceof ServerStartGameMessage) {
             handleGameStartMessages((ServerStartGameMessage) message);
         } else if (message instanceof ServerStartFirstTurnMessage) {
@@ -244,6 +241,10 @@ public class GameClient implements net.ObjectEventReceiver {
             handleNewTurnMessage((ServerNextTurnMessage) message);
         } else if (message instanceof ServerGameEndMessage) {
             handleGameEndMessage((ServerGameEndMessage) message);
+        } else if (message instanceof ServerIDMessage) {
+            handleServerIDMessage((ServerIDMessage) message);
+        } else if (message instanceof ServerPlayerConnectionMessage) {
+            handleServerPlayerConnectionMessage((ServerPlayerConnectionMessage) message);
         }
     }
 
@@ -267,31 +268,39 @@ public class GameClient implements net.ObjectEventReceiver {
             ClientLogger.logMessage("[WARN]: Removed chat message " + chatMessages.remove());
         }
         chatMessages.add(cm);
-        MainFrame.getFrame().addChatMessage(cm);
+        ClientFrame.getFrame().addChatMessage(cm);
     }
 
-    // MODIFIES: this
-    // EFFECTS: handles new player addition/removal messages (includes ID message)
-    private boolean handleOnlinePlayerUpdateMessage(ServerToClientMessage msg) {
-        int num;
-        if (msg instanceof ServerIDMessage) {
-            ServerIDMessage idMessage = (ServerIDMessage) msg;
-            System.arraycopy(idMessage.getExistingPlayers(), 0, onlinePlayers, 0, 4);
-            gameState.setPlayerNumber(idMessage.getPlayerNumber());
-            onlinePlayers[idMessage.getPlayerNumber() - 1] = true; // just to be sure
-            return true;
-        } else if (msg instanceof ServerPlayerConnectionMessage) {
-            ServerPlayerConnectionMessage playerConnectionMessage = (ServerPlayerConnectionMessage) msg;
-            num = playerConnectionMessage.getNewPlayerNumber();
-            onlinePlayers[num - 1] = true;
-            return true;
-        } else if (msg instanceof ServerPlayerDisconnectionMessage) {
-            ServerPlayerDisconnectionMessage playerDisconnectionMessage = (ServerPlayerDisconnectionMessage) msg;
-            num = playerDisconnectionMessage.getPlayerNumber();
-            onlinePlayers[num - 1] = false;
-            return true;
-        }
-        return false;
+    /**
+     * Handles the initial ID message and initial player information
+     *
+     * @param idMessage Sent ServerIDMessage
+     */
+    @Contract(mutates = "this")
+    private void handleServerIDMessage(@NotNull ServerIDMessage idMessage) {
+        System.arraycopy(idMessage.getExistingPlayers(), 0, onlinePlayers, 0, 4);
+        gameState.setPlayerNumber(idMessage.getPlayerNumber());
+        onlinePlayers[idMessage.getPlayerNumber() - 1] = true; // just to be sure
+    }
+
+    /**
+     * Handles a single player addition message
+     *
+     * @param playerConnectionMessage message sent by the server
+     */
+    @Contract(mutates = "this")
+    private void handleServerPlayerConnectionMessage(@NotNull ServerPlayerConnectionMessage playerConnectionMessage) {
+        onlinePlayers[playerConnectionMessage.getNewPlayerNumber() - 1] = true;
+    }
+
+    /**
+     * Handles a single player disconnection message
+     *
+     * @param disconnectMessage message sent by the server
+     */
+    @Contract(mutates = "this")
+    private void handleServerPlayerDisconnectionMessage(@NotNull ServerPlayerDisconnectionMessage disconnectMessage) {
+        onlinePlayers[disconnectMessage.getPlayerNumber() - 1] = false;
     }
 
     private void handleNewTurnMessage(ServerNextTurnMessage msg) {
@@ -313,218 +322,17 @@ public class GameClient implements net.ObjectEventReceiver {
         messageReceivedCondition.signal();
         waitingForMessageMutex.unlock();
         ServerToClientMessage message = (ServerToClientMessage) o;
+        if (ClientFrame.useConsole)
+            Console.getConsole().addMessage("New Message from Server: " + message);
         processIncomingMessage(message);
-        Console.getConsole().addMessage("New Message from Server: " + message);
-        MainFrame.getFrame().update();
+        ClientFrame.getFrame().update();
     }
 
     @Override
     public void endOfStreamEvent(ModifiedClient c) {
         System.out.println("CLIENT RECEIVED END OF STREAM - KICK/HOST DISCONNECT.");
-        MainFrame.getFrame().switchToDisplayIPInput();
+        ClientFrame.getFrame().switchToDisplayIPInput();
         reset();
     }
 
-    public static class ClientLogger {
-        private static final StringBuilder stringBuilder = new StringBuilder();
-        private static final ArrayList<String> messages = new ArrayList<>(100);
-
-        public static List<String> getMessages() {
-            return Collections.unmodifiableList(messages);
-        }
-
-        public static void logMessage(String message) {
-            stringBuilder.append(message).append("\n");
-            messages.add(message);
-            System.out.println(message);
-        }
-
-        public static String getLoggerText() {
-            return stringBuilder.toString();
-        }
-    }
-
-    public static class ClientGameState implements Serializable {
-        private static final long serialVersionUID = 69420L;
-
-        private String clientID;
-        private int playerNumber = -1;
-        private PlayOrder currentPlayOrder = null;
-        private PassOrder currentPassOrder = null;
-        private final Deck center = new Deck();
-        private Suit requiredSuitToPlay = null;
-        private final Deck receivedPassingHand = new Deck();
-        private Deck playerDeck = new Deck();
-        private final Deck[] penalties = new Deck[4];
-        private final int[] numCardsRemaining = new int[4];
-        private final int[] numCardsInPassingHand = new int[4];
-        private final boolean[] winners = new boolean[4];
-        private final boolean[] playersThatPassed = new boolean[4];
-        private boolean gameStarted = false;
-        private boolean gameEnded = false;
-        private boolean startedPassingCards = false;
-        private boolean allCardsPassed = false;
-        private int nextToPlay = -1;
-        private int firstPlayed = -1;
-        private int numRoundsPlayed = 0;
-
-        public ClientGameState() {
-            reset();
-        }
-
-        public void reset() {
-            currentPlayOrder = null;
-            gameEnded = false;
-            requiredSuitToPlay = null;
-            currentPassOrder = null;
-            center.clear();
-            receivedPassingHand.clear();
-            playerDeck.clear();
-            for (int i = 0; i < 4; i++) {
-                penalties[i] = new Deck();
-                numCardsRemaining[i] = 13;
-                numCardsInPassingHand[i] = 0;
-                winners[i] = false;
-                playersThatPassed[i] = false;
-            }
-            gameStarted = false;
-            startedPassingCards = false;
-            allCardsPassed = false;
-            nextToPlay = -1;
-            firstPlayed = -1;
-            numRoundsPlayed = 0;
-        }
-
-        private void startGame(Deck startingDeck) {
-            playerDeck = startingDeck.copy();
-            gameStarted = true;
-            startedPassingCards = true;
-            ClientLogger.logMessage("Player hand: " + startingDeck);
-        }
-
-        private void finishPassingCards(ServerStartFirstTurnMessage ignored) {
-            allCardsPassed = true;
-        }
-
-        private void onNextTurn(Deck newPenalties, int player) {
-            penalties[player - 1].add(newPenalties);
-            nextToPlay = player;
-            requiredSuitToPlay = null;
-        }
-
-        private void onCardPlay(Card prevPlayed, int justPlayed, int nextToPlay, Suit requiredSuit) {
-            this.nextToPlay = nextToPlay;
-            if (firstPlayed == -1) firstPlayed = justPlayed;
-            requiredSuitToPlay = requiredSuit;
-            center.add(prevPlayed);
-        }
-
-        private void setPlayerNumber(int number) {
-            this.playerNumber = number;
-        }
-
-        private void onGetID(String ID, int number) {
-            this.playerNumber = number;
-            this.clientID = ID;
-        }
-
-        private void onGameEnd(boolean[] winners, Deck[] penalties) {
-            gameEnded = true;
-            System.arraycopy(winners, 0, this.winners, 0, 4);
-            System.arraycopy(penalties, 0, this.penalties, 0, 4);
-        }
-
-        public boolean hasGameEnded() {
-            return gameEnded;
-        }
-
-        public boolean[] getWinners() {
-            assert (gameEnded);
-            return winners;
-        }
-
-        public boolean isValidCardPass(Card c1, Card c2, Card c3) {
-            return startedPassingCards && !allCardsPassed && playerDeck.contains(c1) && playerDeck.contains(c2) && playerDeck.contains(c3);
-        }
-
-        public boolean isValidCardPlay(Card c) {
-            return canPlay() && playerDeck.contains(c);
-        }
-
-        public boolean canPlay() {
-            return playerNumber == nextToPlay;
-        }
-
-        public boolean shouldPlayThreeOfClubs() {
-            return center.size() == 0 && numRoundsPlayed == 0;
-        }
-
-        public int getPlayerNumber() {
-            return playerNumber;
-        }
-
-        public PlayOrder getCurrentPlayOrder() {
-            return currentPlayOrder;
-        }
-
-        public PassOrder getCurrentPassOrder() {
-            return currentPassOrder;
-        }
-
-        public Deck getCenter() {
-            return center.copy();
-        }
-
-        public Deck getReceivedPassingHand() {
-            return receivedPassingHand.copy();
-        }
-
-        public Deck getPlayerDeck() {
-            return playerDeck.copy();
-        }
-
-        public Deck[] getPenalties() {
-            Deck[] decks = new Deck[4];
-            for (int i = 0; i < 4; i++) {
-                decks[i] = penalties[i].copy();
-            }
-            return decks;
-        }
-
-        public int[] getNumCardsRemaining() {
-            int[] array = new int[4];
-            System.arraycopy(numCardsRemaining, 0, array, 0, 4);
-            return array;
-        }
-
-        public int[] getNumCardsInPassingHand() {
-            int[] array = new int[4];
-            System.arraycopy(numCardsInPassingHand, 0, array, 0, 4);
-            return array;
-        }
-
-        public boolean isGameStarted() {
-            return gameStarted;
-        }
-
-        public boolean isStartedPassingCards() {
-            return startedPassingCards;
-        }
-
-        public boolean isAllCardsPassed() {
-            return allCardsPassed;
-        }
-
-        public int getNextToPlay() {
-            return nextToPlay;
-        }
-
-        public int getFirstPlayed() {
-            return firstPlayed;
-        }
-
-        public int getNumRoundsPlayed() {
-            return numRoundsPlayed;
-        }
-    }
 }

@@ -1,7 +1,7 @@
 package net;
 
 import client.console.Console;
-import client.ui.MainFrame;
+import client.ui.ClientFrame;
 import net.message.NetworkMessage;
 import net.message.client.ClientToServerMessage;
 import net.message.server.ServerIDMessage;
@@ -32,7 +32,8 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
         objectEventReceiver = parent;
         if (!active()) {
             stop();
-            Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
+            if (ClientFrame.useConsole)
+                Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
             throw new ConnectionException(ERR_TIMED_OUT);
         } else {
             getClientIDFromServer();
@@ -87,7 +88,8 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
         try {
             ServerToClientMessage scm = (ServerToClientMessage) NetworkMessage.packetFromByteArray(msgBuffer);
             if (scm instanceof ServerKickMessage) {
-                Console.getConsole().addMessage("Received kick message from server: " + ((ServerKickMessage) scm).getMessage());
+                if (ClientFrame.useConsole)
+                    Console.getConsole().addMessage("Received kick message from server: " + ((ServerKickMessage) scm).getMessage());
             }
             return scm;
         } catch (IOException | ClassNotFoundException e) {
@@ -166,9 +168,9 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
                 ServerToClientMessage message = lastMessages.poll();
                 assert (message != null);
                 if (message instanceof ServerKickMessage)
-                    MainFrame.getFrame().updateErrorMessage(((ServerKickMessage) message).getMessage());
+                    ClientFrame.getFrame().updateErrorMessage(((ServerKickMessage) message).getMessage());
                 else
-                    MainFrame.getFrame().updateErrorMessage("You got kicked from the server. Kick message not received, however.");
+                    ClientFrame.getFrame().updateErrorMessage("You got kicked from the server. Kick message not received, however.");
                 lastMessages.clear();
             }
         }

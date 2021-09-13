@@ -1,7 +1,8 @@
 package client.ui;
 
+import client.ClientLogger;
+import client.GameClient;
 import util.ChatMessage;
-import util.GameClient;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -45,7 +46,7 @@ class ChatPanel extends JPanel {
     // MODIFIES: this
     // EFFECTS: updates the displayed chat message
     void update(List<ChatMessage> messages) {
-        LinkedList<ChatMessage> listOfMessages = new LinkedList<ChatMessage>(messages);
+        LinkedList<ChatMessage> listOfMessages = new LinkedList<>(messages);
         StringBuilder sb = new StringBuilder();
         Iterator<ChatMessage> iterator = listOfMessages.descendingIterator();
         while (iterator.hasNext()) {
@@ -75,7 +76,7 @@ class ChatPanel extends JPanel {
             jtf.setBorder(new EmptyBorder(2, 2, 2, 2));
             jtf.addActionListener(e -> {
                 if (jtf.getText().length() != 0) {
-                    GameClient.ClientLogger.logMessage("[ChatPanel]: Sending message " + jtf.getText());
+                    ClientLogger.logMessage("[ChatPanel]: Sending message " + jtf.getText());
                     GameClient.getInstance().sendChatMessage(jtf.getText());
                     jtf.setText("");
                 }
@@ -86,7 +87,7 @@ class ChatPanel extends JPanel {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     if (e.getButton() == MouseEvent.BUTTON1) {
-                        GameClient.ClientLogger.logMessage("[ChatPanel]: Sending message " + jtf.getText());
+                        ClientLogger.logMessage("[ChatPanel]: Sending message " + jtf.getText());
                         GameClient.getInstance().sendChatMessage(jtf.getText());
                         jtf.setText("");
                     }

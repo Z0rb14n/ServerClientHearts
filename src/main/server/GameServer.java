@@ -5,7 +5,6 @@ import net.message.client.ClientCardMessage;
 import net.message.client.ClientThreeCardMessage;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import util.GameState;
 import util.card.Card;
 import util.card.Deck;
 import util.card.Suit;
@@ -17,7 +16,7 @@ import static net.Constants.ERR_INVALID_MSG;
 public class GameServer implements EventReceiver {
     private final ArrayDeque<MessagePair> clientMessages = new ArrayDeque<>();
     private final ModifiedNewServer newServer = new ModifiedNewServer(this);
-    private final GameState gameState = new GameState();
+    private final ServerGameState gameState = new ServerGameState();
 
     /**
      * Disposes/frees the resources of this GameServer
@@ -156,6 +155,7 @@ public class GameServer implements EventReceiver {
     @Contract(mutates = "this")
     public void requestKickInvalidMessage(int playerNum) {
         newServer.kickInvalid(playerNum);
+
     }
 
     /**

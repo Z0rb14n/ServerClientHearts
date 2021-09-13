@@ -1,16 +1,25 @@
 package client.ui;
 
-import util.GameClient;
+import client.ClientGameState;
+import client.GameClient;
 
 import javax.swing.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 // Represents the view of the Deck
 class DeckView extends JPanel {
     private final PlayButton pb = new PlayButton();
     private final CardView cv = new CardView(this);
     private final SuitOrderView sov = new SuitOrderView();
+    private final ClientGameState clientGameState = GameClient.getInstance().getClientState();
+
+    boolean isOnThreeCardState() {
+        return !clientGameState.getPlayersThatPassed()[clientGameState.getPlayerNumber() - 1] &&
+                clientGameState.isStartedPassingCards();
+    }
+
+    boolean isOnOneCardState() {
+        return clientGameState.canPlay();
+    }
 
     // EFFECTS: initializes DeckView and its components
     DeckView() {
@@ -37,44 +46,28 @@ class DeckView extends JPanel {
     }
 
     // Represents the play button that plays cards
-    private class PlayButton extends JButton implements MouseListener {
+    private class PlayButton extends JButton {
         // EFFECTS: initializes the text and the mouse listener
         PlayButton() {
             super("Play");
             setEnabled(false);
-            addMouseListener(this);
+            addActionListener(e -> {
+                if (cv.getActiveCards().size() == 3) {
+                    GameClient.getInstance().passCards(cv.getActiveCards().get(0), cv.getActiveCards().get(1), cv.getActiveCards().get(2));
+                    cv.setAllCardsInactive();
+                } else if (cv.getActiveCards().size() == 1) {
+                    GameClient.getInstance().playCard(cv.getActiveCards().get(0));
+                    cv.setAllCardsInactive();
+                }
+            });
         }
 
         void update() {
-            if (GameClient.getInstance().getClientState().isAllCardsPassed())
+            if (isOnThreeCardState())
+                setEnabled(cv.getNumberSelectedCards() == 3);
+            else if (isOnOneCardState())
                 setEnabled(cv.getNumberSelectedCards() == 1);
-            else setEnabled(cv.getNumberSelectedCards() == 3);
+            else setEnabled(false);
         }
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (cv.getActiveCards().size() == 3) {
-                GameClient.getInstance().passCards(cv.getActiveCards().get(0), cv.getActiveCards().get(1), cv.getActiveCards().get(2));
-            }
-        }
-
-        //<editor-fold desc="Ignore">
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-        }
-
-        @Override
-        public void mouseEntered(MouseEvent e) {
-        }
-
-        @Override
-        public void mouseExited(MouseEvent e) {
-        }
-        //</editor-fold>
     }
 }

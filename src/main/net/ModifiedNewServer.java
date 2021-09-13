@@ -150,6 +150,7 @@ public final class ModifiedNewServer extends ModifiedServer {
         ServerToClientMessage scm = new ServerPlayerConnectionMessage(playerNumber);
         for (int i = 0; i < IDS.length; i++) {
             if (IDS[i] != null && i != playerNumber - 1) {
+                System.out.println("Informing player " + (i + 1));
                 sendNthClientMessage(i + 1, scm);
             }
         }
@@ -209,8 +210,8 @@ public final class ModifiedNewServer extends ModifiedServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("Kicking client: " + c.ip());
         disconnect(c);
-        System.out.println("Client kicked: " + c.ip());
         removeClientFromEntries(c);
     }
 

@@ -76,7 +76,7 @@ class ConnectionPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (ipBox.getText().length() != 0) {
-                    MainFrame.getFrame().attemptLoadClient(ipBox.getText());
+                    ClientFrame.getFrame().attemptLoadClient(ipBox.getText());
                 }
             }
         }
@@ -114,7 +114,7 @@ class ConnectionPanel extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     System.out.print(ipBox.getText());
-                    MainFrame.getFrame().attemptLoadClient(ipBox.getText());
+                    ClientFrame.getFrame().attemptLoadClient(ipBox.getText());
                 }
             }
         }

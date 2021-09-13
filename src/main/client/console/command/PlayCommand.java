@@ -1,8 +1,8 @@
 package client.console.command;
 
+import client.GameClient;
 import client.console.Console;
 import org.jetbrains.annotations.NotNull;
-import util.GameClient;
 import util.card.Card;
 import util.card.Deck;
 

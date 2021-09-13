@@ -1,6 +1,8 @@
-package util;
+package server;
 
 import server.ui.ServerFrame;
+import util.PassOrder;
+import util.PlayOrder;
 import util.card.Card;
 import util.card.Deck;
 import util.card.Suit;
@@ -8,7 +10,7 @@ import util.card.Suit;
 // TODO SEND PLAYING/PASSING ORDER OVER SERVERTOCLIENTMESSAGE
 
 // Represents the state of the server (i.e. has the game started?)
-public class GameState {
+public class ServerGameState {
     private static final PlayOrder PLAYING_ORDER = PlayOrder.ASCENDING_NUM;
     private static final PassOrder PASS_ORDER = PassOrder.ASCENDING_NUM;
     private boolean isGameStarted;
@@ -25,7 +27,7 @@ public class GameState {
     private int startingPlayer; // who played the first card, (1-4)
 
     // EFFECTS: initializes variables with default settings
-    public GameState() {
+    public ServerGameState() {
         reset();
     }
 

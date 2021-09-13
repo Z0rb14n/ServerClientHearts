@@ -1,8 +1,8 @@
 package client.console.command;
 
+import client.GameClient;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import util.GameClient;
 
 import java.util.regex.Pattern;
 

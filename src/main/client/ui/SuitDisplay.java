@@ -1,6 +1,6 @@
 package client.ui;
 
-import util.GameClient;
+import client.GameClient;
 import util.SuitOrder;
 import util.card.Suit;
 
