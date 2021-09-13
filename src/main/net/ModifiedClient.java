@@ -5,25 +5,28 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
 
-// Represents Processing's Client class but modified to not use PApplet
+/**
+ * Processing's Client class but modified to not use PApplet
+ */
 public class ModifiedClient implements Runnable {
 
-    private static final int MAX_BUFFER_SIZE = 1 << 27; // 128 MB
+    protected static final int MAX_BUFFER_SIZE = 1 << 27; // 128 MB
 
-    private EventReceiver eventReceiver;
+    protected EventReceiver eventReceiver;
 
-    private volatile Thread thread;
-    private Socket socket;
+    protected volatile Thread thread;
+    protected Socket socket;
 
-    private InputStream input;
-    private OutputStream output;
+    protected InputStream input;
+    protected OutputStream output;
 
-    private final Object bufferLock = new Object[0];
+    protected final Object bufferLock = new Object[0];
 
-    private byte[] buffer = new byte[32768];
-    private int bufferIndex;
-    private int bufferLast;
+    protected byte[] buffer = new byte[32768];
+    protected int bufferIndex;
+    protected int bufferLast;
 
 
     /**
@@ -49,7 +52,7 @@ public class ModifiedClient implements Runnable {
 
     /**
      * @param socket any object of type Socket
-     * @throws IOException
+     * @throws IOException thrown on failure to get input/output streams
      */
     public ModifiedClient(EventReceiver parent, Socket socket) throws IOException {
         this.eventReceiver = parent;
@@ -63,32 +66,25 @@ public class ModifiedClient implements Runnable {
     }
 
     /**
-     * ( begin auto-generated from Client_stop.xml )
-     * <p>
-     * Disconnects from the server. Use to shut the connection when you're
+     * Disconnects from the server - use to shut the connection when you're
      * finished with the Client.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref client:client
-     * @brief Disconnects from the server
-     * @usage application
      */
     public void stop() {
-        if (thread != null) {
+        if (thread != null && eventReceiver != null) {
             eventReceiver.disconnectEvent(this);
         }
         dispose();
     }
 
+    public void setEventReceiver(EventReceiver er) {
+        this.eventReceiver = er;
+    }
+
 
     /**
-     * Disconnect from the server: internal use only.
-     * <p>
-     * This should only be called by the internal functions in PApplet,
-     * use stop() instead from within your own applets.
+     * Disconnect from the server, but does not trigger a disconnect event.
      */
-    public void dispose() {
+    protected void dispose() {
         thread = null;
         try {
             if (input != null) {
@@ -150,7 +146,7 @@ public class ModifiedClient implements Runnable {
                     // read returns -1 if end-of-stream occurs (for example if the host disappears)
                     if (readCount == -1) {
                         System.err.println("Client got end-of-stream.");
-                        eventReceiver.endOfStreamEvent(this);
+                        if (eventReceiver != null) eventReceiver.endOfStreamEvent(this);
                         stop();
                         return;
                     }
@@ -186,7 +182,7 @@ public class ModifiedClient implements Runnable {
                     }
 
                     // now post an event
-                    eventReceiver.dataReceivedEvent(this);
+                    if (eventReceiver != null) eventReceiver.dataReceivedEvent(this);
                 }
             } catch (IOException e) {
                 //errorMessage("run", e);
@@ -197,16 +193,10 @@ public class ModifiedClient implements Runnable {
 
 
     /**
-     * ( begin auto-generated from Client_active.xml )
-     * <p>
      * Returns true if this client is still active and hasn't run
      * into any trouble.
-     * <p>
-     * ( end auto-generated )
      *
-     * @webref client:client
-     * @brief Returns true if this client is still active
-     * @usage application
+     * @return true if this client is still active and hasn't run into any trouble.
      */
     public boolean active() {
         return (thread != null);
@@ -214,15 +204,9 @@ public class ModifiedClient implements Runnable {
 
 
     /**
-     * ( begin auto-generated from Client_ip.xml )
-     * <p>
      * Returns the IP address of the computer to which the Client is attached.
-     * <p>
-     * ( end auto-generated )
      *
-     * @webref client:client
-     * @usage application
-     * @brief Returns the IP address of the machine as a String
+     * @return string containing IP address of the computer to which the Client is attached.
      */
     public String ip() {
         if (socket != null) {
@@ -233,16 +217,10 @@ public class ModifiedClient implements Runnable {
 
 
     /**
-     * ( begin auto-generated from Client_available.xml )
-     * <p>
      * Returns the number of bytes available. When any client has bytes
      * available from the server, it returns the number of bytes.
-     * <p>
-     * ( end auto-generated )
      *
-     * @webref client:client
-     * @usage application
-     * @brief Returns the number of bytes in the buffer waiting to be read
+     * @return number of bytes available
      */
     public int available() {
         synchronized (bufferLock) {
@@ -252,15 +230,7 @@ public class ModifiedClient implements Runnable {
 
 
     /**
-     * ( begin auto-generated from Client_clear.xml )
-     * <p>
-     * Empty the buffer, removes all the data stored there.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref client:client
-     * @usage application
-     * @brief Clears the buffer
+     * Empty the buffer - removes all the data stored there.
      */
     public void clear() {
         synchronized (bufferLock) {
@@ -271,98 +241,14 @@ public class ModifiedClient implements Runnable {
 
 
     /**
-     * ( begin auto-generated from Client_read.xml )
-     * <p>
-     * Returns a number between 0 and 255 for the next byte that's waiting in
-     * the buffer. Returns -1 if there is no byte, although this should be
-     * avoided by first cheacking <b>available()</b> to see if any data is available.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref client:client
-     * @usage application
-     * @brief Returns a value from the buffer
-     */
-    public int read() {
-        synchronized (bufferLock) {
-            if (bufferIndex == bufferLast) return -1;
-
-            int outgoing = buffer[bufferIndex++] & 0xff;
-            if (bufferIndex == bufferLast) {  // rewind
-                bufferIndex = 0;
-                bufferLast = 0;
-            }
-            return outgoing;
-        }
-    }
-
-
-    /**
-     * ( begin auto-generated from Client_readChar.xml )
-     * <p>
-     * Returns the next byte in the buffer as a char. Returns -1 or 0xffff if
-     * nothing is there.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref client:client
-     * @usage application
-     * @brief Returns the next byte in the buffer as a char
-     */
-    public char readChar() {
-        synchronized (bufferLock) {
-            if (bufferIndex == bufferLast) return (char) (-1);
-            return (char) read();
-        }
-    }
-
-
-    /**
-     * ( begin auto-generated from Client_readBytes.xml )
-     * <p>
-     * Reads a group of bytes from the buffer. The version with no parameters
-     * returns a byte array of all data in the buffer. This is not efficient,
-     * but is easy to use. The version with the <b>byteBuffer</b> parameter is
-     * more memory and time efficient. It grabs the data in the buffer and puts
-     * it into the byte array passed in and returns an int value for the number
-     * of bytes read. If more bytes are available than can fit into the
-     * <b>byteBuffer</b>, only those that fit are read.
-     * <p>
-     * ( end auto-generated )
-     * <h3>Advanced</h3>
-     * Return a byte array of anything that's in the serial buffer.
-     * Not particularly memory/speed efficient, because it creates
-     * a byte array on each read, but it's easier to use than
-     * readBytes(byte b[]) (see below).
-     *
-     * @webref client:client
-     * @usage application
-     * @brief Reads everything in the buffer
-     */
-    public byte[] readBytes() {
-        synchronized (bufferLock) {
-            if (bufferIndex == bufferLast) return null;
-
-            int length = bufferLast - bufferIndex;
-            byte[] outgoing = new byte[length];
-            System.arraycopy(buffer, bufferIndex, outgoing, 0, length);
-
-            bufferIndex = 0;  // rewind
-            bufferLast = 0;
-            return outgoing;
-        }
-    }
-
-
-    /**
-     * <h3>Advanced</h3>
      * Return a byte array of anything that's in the serial buffer
      * up to the specified maximum number of bytes.
      * Not particularly memory/speed efficient, because it creates
      * a byte array on each read, but it's easier to use than
-     * readBytes(byte b[]) (see below).
+     * readBytes(byte b[]).
      *
      * @param max the maximum number of bytes to read
+     * @return read bytes
      */
     public byte[] readBytes(int max) {
         synchronized (bufferLock) {
@@ -385,7 +271,6 @@ public class ModifiedClient implements Runnable {
 
 
     /**
-     * <h3>Advanced</h3>
      * Grab whatever is in the serial buffer, and stuff it into a
      * byte buffer passed in by the user. This is more memory/time
      * efficient than readBytes() returning a byte[] array.
@@ -395,6 +280,7 @@ public class ModifiedClient implements Runnable {
      * that will fit are read.
      *
      * @param bytebuffer passed in byte array to be altered
+     * @return how many bytes were read
      */
     public int readBytes(byte[] bytebuffer) {
         synchronized (bufferLock) {
@@ -413,209 +299,52 @@ public class ModifiedClient implements Runnable {
         }
     }
 
-
     /**
-     * ( begin auto-generated from Client_readBytesUntil.xml )
+     * Grab whatever is in the serial buffer, and stuff it into a
+     * byte buffer passed in by the user. This is more memory/time
+     * efficient than readBytes() returning a byte[] array.
      * <p>
-     * Reads from the port into a buffer of bytes up to and including a
-     * particular character. If the character isn't in the buffer, 'null' is
-     * returned. The version with no <b>byteBuffer</b> parameter returns a byte
-     * array of all data up to and including the <b>interesting</b> byte. This
-     * is not efficient, but is easy to use. The version with the
-     * <b>byteBuffer</b> parameter is more memory and time efficient. It grabs
-     * the data in the buffer and puts it into the byte array passed in and
-     * returns an int value for the number of bytes read. If the byte buffer is
-     * not large enough, -1 is returned and an error is printed to the message
-     * area. If nothing is in the buffer, 0 is returned.
-     * <p>
-     * ( end auto-generated )
+     * Returns an int for how many bytes were read. If more bytes
+     * are available than can fit into the byte array, only those
+     * that will fit are read.
      *
-     * @param interesting character designated to mark the end of the data
-     * @webref client:client
-     * @usage application
-     * @brief Reads from the buffer of bytes up to and including a particular character
+     * @param bytebuffer passed in byte array to be altered
+     * @return how many bytes were read
      */
-    public byte[] readBytesUntil(int interesting) {
-        byte what = (byte) interesting;
-
-        synchronized (bufferLock) {
-            if (bufferIndex == bufferLast) return null;
-
-            int found = -1;
-            for (int k = bufferIndex; k < bufferLast; k++) {
-                if (buffer[k] == what) {
-                    found = k;
-                    break;
-                }
-            }
-            if (found == -1) return null;
-
-            int length = found - bufferIndex + 1;
-            byte[] outgoing = new byte[length];
-            System.arraycopy(buffer, bufferIndex, outgoing, 0, length);
-
-            bufferIndex += length;
-            if (bufferIndex == bufferLast) {
-                bufferIndex = 0; // rewind
-                bufferLast = 0;
-            }
-            return outgoing;
-        }
-    }
-
-
-    /**
-     * <h3>Advanced</h3>
-     * Reads from the serial port into a buffer of bytes until a
-     * particular character. If the character isn't in the serial
-     * buffer, then 'null' is returned.
-     * <p>
-     * If outgoing[] is not big enough, then -1 is returned,
-     * and an error message is printed on the console.
-     * If nothing is in the buffer, zero is returned.
-     * If 'interesting' byte is not in the buffer, then 0 is returned.
-     *
-     * @param byteBuffer passed in byte array to be altered
-     */
-    public int readBytesUntil(int interesting, byte[] byteBuffer) {
-        byte what = (byte) interesting;
-
+    public int readBytesWithoutRemoval(byte[] bytebuffer) {
         synchronized (bufferLock) {
             if (bufferIndex == bufferLast) return 0;
 
-            int found = -1;
-            for (int k = bufferIndex; k < bufferLast; k++) {
-                if (buffer[k] == what) {
-                    found = k;
-                    break;
-                }
-            }
-            if (found == -1) return 0;
-
-            int length = found - bufferIndex + 1;
-            if (length > byteBuffer.length) {
-                System.err.println("readBytesUntil() byte buffer is" +
-                        " too small for the " + length +
-                        " bytes up to and including char " + interesting);
-                return -1;
-            }
-            //byte outgoing[] = new byte[length];
-            System.arraycopy(buffer, bufferIndex, byteBuffer, 0, length);
-
-            bufferIndex += length;
-            if (bufferIndex == bufferLast) {
-                bufferIndex = 0;  // rewind
-                bufferLast = 0;
-            }
+            int length = bufferLast - bufferIndex;
+            if (length > bytebuffer.length) length = bytebuffer.length;
+            System.arraycopy(buffer, bufferIndex, bytebuffer, 0, length);
             return length;
         }
     }
 
-
-    /**
-     * ( begin auto-generated from Client_readString.xml )
-     * <p>
-     * Returns the all the data from the buffer as a String. This method
-     * assumes the incoming characters are ASCII. If you want to transfer
-     * Unicode data, first convert the String to a byte stream in the
-     * representation of your choice (i.e. UTF8 or two-byte Unicode data), and
-     * send it as a byte array.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @webref client:client
-     * @usage application
-     * @brief Returns the buffer as a String
-     */
-    public String readString() {
-        byte[] b = readBytes();
-        if (b == null) return null;
-        return new String(b);
-    }
-
-
-    /**
-     * ( begin auto-generated from Client_readStringUntil.xml )
-     * <p>
-     * Combination of <b>readBytesUntil()</b> and <b>readString()</b>. Returns
-     * <b>null</b> if it doesn't find what you're looking for.
-     * <p>
-     * ( end auto-generated )
-     * <h3>Advanced</h3>
-     * <p/>
-     * If you want to move Unicode data, you can first convert the
-     * String to a byte stream in the representation of your choice
-     * (i.e. UTF8 or two-byte Unicode data), and send it as a byte array.
-     *
-     * @param interesting character designated to mark the end of the data
-     * @webref client:client
-     * @usage application
-     * @brief Returns the buffer as a String up to and including a particular character
-     */
-    public String readStringUntil(int interesting) {
-        byte[] b = readBytesUntil(interesting);
-        if (b == null) return null;
-        return new String(b);
-    }
-
-
-    /**
-     * ( begin auto-generated from Client_write.xml )
-     * <p>
-     * Writes data to a server specified when constructing the client.
-     * <p>
-     * ( end auto-generated )
-     *
-     * @param data data to write
-     * @webref client:client
-     * @usage application
-     * @brief Writes bytes, chars, ints, bytes[], Strings
-     */
-    public void write(int data) {  // will also cover char
-        try {
-            output.write(data & 0xff);  // for good measure do the &
-            output.flush();   // hmm, not sure if a good idea
-
-        } catch (Exception e) { // null pointer or serial port dead
-            //errorMessage("write", e);
-            //e.printStackTrace();
-            //dispose();
-            //disconnect(e);
-            e.printStackTrace();
-            stop();
-        }
-    }
-
-
-    public void write(byte[] data) {
+    public void writeNoLength(byte[] data) {
         try {
             output.write(data);
             output.flush();   // hmm, not sure if a good idea
-
         } catch (Exception e) { // null pointer or serial port dead
-            //errorMessage("write", e);
-            //e.printStackTrace();
             //disconnect(e);
             e.printStackTrace();
             stop();
         }
     }
 
-
-    /**
-     * <h3>Advanced</h3>
-     * Write a String to the output. Note that this doesn't account
-     * for Unicode (two bytes per char), nor will it send UTF8
-     * characters.. It assumes that you mean to send a byte buffer
-     * (most often the case for networking and serial i/o) and
-     * will only use the bottom 8 bits of each char in the string.
-     * (Meaning that internally it uses String.getBytes)
-     * <p>
-     * If you want to move Unicode data, you can first convert the
-     * String to a byte stream in the representation of your choice
-     * (i.e. UTF8 or two-byte Unicode data), and send it as a byte array.
-     */
-    public void write(String data) {
-        write(data.getBytes());
+    public void write(byte[] data) {
+        try {
+            ByteBuffer buffer = ByteBuffer.allocate(4);
+            buffer.putInt(data.length);
+            output.write(buffer.array());
+            output.write(data);
+            output.flush();   // hmm, not sure if a good idea
+            System.out.println("Writing data of length " + data.length);
+        } catch (Exception e) { // null pointer or serial port dead
+            //disconnect(e);
+            e.printStackTrace();
+            stop();
+        }
     }
 }

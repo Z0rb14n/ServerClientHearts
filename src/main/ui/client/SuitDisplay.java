@@ -1,14 +1,15 @@
 package ui.client;
 
-import util.Suit;
+import util.GameClient;
 import util.SuitOrder;
+import util.card.Suit;
 
 import javax.swing.*;
 import java.awt.*;
 
 // Represents the display of the suits in SuitOrderViews
 class SuitDisplay extends JPanel {
-    private JLabel actualSuit;
+    private final JLabel actualSuit;
 
     // EFFECTS: initializes the suit display with given header JLabel and a suit display
     SuitDisplay() {
@@ -32,7 +33,7 @@ class SuitDisplay extends JPanel {
     // EFFECTS: adjusts SuitDisplay according to current MainFrame deck state
     void update() {
         StringBuilder sb = new StringBuilder();
-        Suit[] so = MainFrame.getFrame().getClientState().getDeck().getOrder().getSuitOrder();
+        Suit[] so = GameClient.getInstance().getClientState().getPlayerDeck().getOrder().getSuitOrder();
         for (int i = so.length - 1; i >= 0; i--) {
             sb.append(so[i].getCharacter());
             if (i != 0) sb.append(" < ");

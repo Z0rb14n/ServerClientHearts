@@ -1,6 +1,7 @@
 package ui.client;
 
 import util.ChatMessage;
+import util.GameClient;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -11,11 +12,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 // Represents the chat window on the right hand side of the screen
 class ChatPanel extends JPanel {
-    private JTextArea chatArea = new JTextArea(10, 20);
-    private JScrollPane jsp = new JScrollPane(chatArea);
+    private final JTextArea chatArea = new JTextArea(10, 20);
+    private final JScrollPane jsp = new JScrollPane(chatArea);
     private static final Color CHAT_GREY = new Color(150, 150, 150, 255);
     private static final Color CHAT_ACTIVE = new Color(50, 50, 50, 255);
 
@@ -35,14 +37,17 @@ class ChatPanel extends JPanel {
     // MODIFIES: this
     // EFFECTS: appends the chat message onto the bottom of the chat area
     void appendMessage(ChatMessage c) {
+        chatArea.invalidate();
         chatArea.append("\n" + c.toString());
+        chatArea.validate();
     }
 
     // MODIFIES: this
     // EFFECTS: updates the displayed chat message
-    void update(LinkedList<ChatMessage> messages) {
+    void update(List<ChatMessage> messages) {
+        LinkedList<ChatMessage> listOfMessages = new LinkedList<ChatMessage>(messages);
         StringBuilder sb = new StringBuilder();
-        Iterator<ChatMessage> iterator = messages.descendingIterator();
+        Iterator<ChatMessage> iterator = listOfMessages.descendingIterator();
         while (iterator.hasNext()) {
             sb.append(iterator.next()).append("\n");
         }
@@ -70,7 +75,8 @@ class ChatPanel extends JPanel {
             jtf.setBorder(new EmptyBorder(2, 2, 2, 2));
             jtf.addActionListener(e -> {
                 if (jtf.getText().length() != 0) {
-                    MainFrame.getFrame().sendChatMessage(jtf.getText());
+                    GameClient.ClientLogger.logMessage("[ChatPanel]: Sending message " + jtf.getText());
+                    GameClient.getInstance().sendChatMessage(jtf.getText());
                     jtf.setText("");
                 }
             });
@@ -80,7 +86,8 @@ class ChatPanel extends JPanel {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     if (e.getButton() == MouseEvent.BUTTON1) {
-                        MainFrame.getFrame().sendChatMessage(jtf.getText());
+                        GameClient.ClientLogger.logMessage("[ChatPanel]: Sending message " + jtf.getText());
+                        GameClient.getInstance().sendChatMessage(jtf.getText());
                         jtf.setText("");
                     }
                 }

@@ -1,12 +1,20 @@
 package util;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import util.card.Card;
+import util.card.Suit;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Objects;
 
-import static util.Suit.*;
+import static util.card.Suit.*;
 
-// Represents an ordering of cards
+/**
+ * Represents an ordering of cards that can sort a Deck object
+ */
 public class SuitOrder implements Comparator<Card>, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -16,13 +24,20 @@ public class SuitOrder implements Comparator<Card>, Serializable {
     //{top,secondTop,secondBottom,bottom};
     private Suit[] suits = new Suit[4];
 
-    // EFFECTS: initializes a default suit order
+    /**
+     * Initializes a default suit order.
+     * <p>
+     * The default is Hearts > Diamonds > Spades > Clubs
+     */
     public SuitOrder() {
-        // Defaults: Hearts > Diamonds > Spades > Clubs
         reset();
     }
 
-    // EFFECTS: returns a deep copy of this suit order
+    /**
+     * @return deep copy of this suit order
+     */
+    @NotNull
+    @Contract(pure = true)
     public SuitOrder copy() {
         SuitOrder so = new SuitOrder();
         so.sortByValue = this.sortByValue;
@@ -33,12 +48,18 @@ public class SuitOrder implements Comparator<Card>, Serializable {
         return so;
     }
 
-    // EFFECTS: returns whether or not the SuitOrder results are reversed
+    /**
+     * @return true if SuitOrder results should be reversed
+     */
+    @Contract(pure = true)
     public boolean isReversed() {
         return reverse;
     }
 
-    // EFFECTS: returns whether or not this suit order is the default suit order
+    /**
+     * @return true if this suit order is the default suit order
+     */
+    @Contract(pure = true)
     public boolean isDefault() {
         if (reverse) return false;
         if (sortByValue) return false;
@@ -48,49 +69,76 @@ public class SuitOrder implements Comparator<Card>, Serializable {
         return true;
     }
 
-    // EFFECTS: returns whether or not this SuitOrder is sorting by value
+    /**
+     * @return true if suit order is sorting by value instead of suit
+     */
+    @Contract(pure = true)
     public boolean isSortingByValue() {
         return sortByValue;
     }
 
-    // MODIFIES: this
-    // EFFECTS: sets whether or not to reverse the suit order
+    /**
+     * Sets if the suit order should be reversed
+     *
+     * @param value new suit order reversal state
+     */
+    @Contract(mutates = "this")
     public void setReverse(boolean value) {
         reverse = value;
     }
 
-    // MODIFIES: this
-    // EFFECTS: sets whether or not this suit order is sorting by value
+    /**
+     * Sets if the suit order should be sorting by value
+     *
+     * @param val new suit order value sorting state
+     */
+    @Contract(mutates = "this")
     public void setSortByValue(boolean val) {
         sortByValue = val;
     }
 
-    // MODIFIES: this
-    // EFFECTS: moves a suit to top, shifts everything else down
-    public void moveSuitToTop(Suit a) {
-        moveSuitToLocation(a, 1);
+    /**
+     * Moves a suit to the highest priority and shift everything else down
+     *
+     * @param suit Suit to shift to the highest priority
+     */
+    @Contract(mutates = "this")
+    public void moveSuitToTop(@NotNull Suit suit) {
+        moveSuitToLocation(suit, 1);
     }
 
-    // EFFECTS: returns the order of the suits
+    /**
+     * @return a copy of the internal ordering of the suits
+     */
+    @Contract(pure = true)
     public Suit[] getSuitOrder() {
         Suit[] temp = new Suit[4];
         System.arraycopy(suits, 0, temp, 0, 4);
         return temp;
     }
 
-    // MODIFIES: this
-    // EFFECTS: resets SuitOrder
+    /**
+     * Internally resets this suit order to the default values
+     */
+    @Contract(mutates = "this")
     public void reset() {
         reverse = false;
         sortByValue = false;
         System.arraycopy(DEFAULT, 0, suits, 0, 4);
     }
 
-    // MODIFIES: this
-    // EFFECTS: moves a suit to specific location (1-4, or index + 1)
-    public void moveSuitToLocation(Suit a, int location) {
-        if (location < 1 || location > 4) throw new IllegalArgumentException();
-        final int prevLocation = locateSuit(a);
+    /**
+     * Moves a suit to a specific location, shifting suits down/up if needed
+     *
+     * @param suit     Suit to move to
+     * @param location Location to move to (range [1-4], or index+1)
+     * @throws IllegalArgumentException if location is out of range [1-4]
+     */
+    @Contract(mutates = "this")
+    public void moveSuitToLocation(@NotNull Suit suit, int location) {
+        if (location < 1 || location > 4)
+            throw new IllegalArgumentException("Location is out of range [1-4]: " + location);
+        final int prevLocation = locateSuit(suit);
         if (prevLocation == location) return;
         if (prevLocation > location) {
             // shifts everything down 1
@@ -100,43 +148,75 @@ public class SuitOrder implements Comparator<Card>, Serializable {
             // shifts everything up 1
             System.arraycopy(suits, prevLocation, suits, prevLocation - 1, location - prevLocation);
         }
-        suits[location - 1] = a;
+        suits[location - 1] = suit;
     }
 
-    // MODIFIES: this
-    // EFFECTS: moves suit a to bottom, shifts everything else up
-    public void moveSuitToBottom(Suit a) {
-        moveSuitToLocation(a, 4);
+    /**
+     * Moves a suit to the bottom, shifting everything else up
+     *
+     * @param suit Suit to move to the bottom
+     */
+    @Contract(mutates = "this")
+    public void moveSuitToBottom(@NotNull Suit suit) {
+        moveSuitToLocation(suit, 4);
     }
 
-    // EFFECTS: returns position from top (e.g. top is 1, bottom is 4)
-    public int locateSuit(Suit a) {
-        if (suits[0].equals(a)) return 1;
-        if (suits[1].equals(a)) return 2;
-        if (suits[2].equals(a)) return 3;
-        if (suits[3].equals(a)) return 4;
-        throw new IllegalArgumentException();
+    /**
+     * Locates the position of the suit in this suit order (top = 1; bottom is 4)
+     *
+     * @param suit Suit to locate
+     * @return position in suit order (from 1-4)
+     * @throws IllegalArgumentException if suit cannot be found
+     */
+    @Contract(pure = true)
+    public int locateSuit(Suit suit) {
+        if (suits[0].equals(suit)) return 1;
+        if (suits[1].equals(suit)) return 2;
+        if (suits[2].equals(suit)) return 3;
+        if (suits[3].equals(suit)) return 4;
+        throw new IllegalArgumentException("Suit not found: " + suit);
     }
 
-    // EFFECTS: returns 1 if a.suit > b.suit, 0 if equal, -1 if a.suit < b.suit
-    public int suitCompare(Card a, Card b) {
-        return suitCompare(a.getSuit(),b.getSuit());
+    /**
+     * Compare two cards strictly by suit
+     *
+     * @return 1 if a.suit > b.suit; 0 if equal; -1 if a.suit < b.suit
+     */
+    @Contract(pure = true)
+    public int suitCompare(@NotNull Card a, @NotNull Card b) {
+        return suitCompare(a.getSuit(), b.getSuit());
     }
 
-    // EFFECTS: returns 1 if a > b, 0 if equal, -1 if a < b
+    /**
+     * Compare two suits by location within the suit order
+     *
+     * @return 1 if a.suit > b.suit; 0 if equal; -1 otherwise
+     * @implNote locateSuit returns smaller numbers with higher priority, so the Integer.compare() call
+     * will have arguments reversed
+     */
+    @Contract(pure = true)
     public int suitCompare(Suit a, Suit b) {
         return Integer.compare(locateSuit(b), locateSuit(a));
-        // order is reversed (locateSuit(b),locateSuit(a)) because locateSuit returns small numbers if top, large if bottom
     }
 
-    // EFFECTS: returns 1 if a.value > b.value, 0 if equal, -1 if a.value < b.value
-    public int valueCompare(Card a, Card b) {
+    /**
+     * Compare two cards strictly by its value
+     *
+     * @return 1 if a.value > b.value; 0 if equal; -1 if a.value < b.value
+     */
+    @Contract(pure = true)
+    public int valueCompare(@NotNull Card a, @NotNull Card b) {
         return Integer.compare(a.getValue(), b.getValue());
     }
 
+    /**
+     * Compare two cards given internal ordering
+     *
+     * @return 1 if a > b; 0 if a and b are equal; -1 otherwise
+     */
     @Override
-    // EFFECTS: returns 1 if a > b, 0 if a == b, -1 if a < b
-    public int compare(Card a, Card b) {
+    @Contract(pure = true)
+    public int compare(@NotNull Card a, @NotNull Card b) {
         if (reverse) {
             if (!sortByValue && suitCompare(a, b) != 0) return -suitCompare(a, b);
             else return -valueCompare(a, b);
@@ -147,7 +227,7 @@ public class SuitOrder implements Comparator<Card>, Serializable {
     }
 
     @Override
-    // EFFECTS: returns true if the two objects are equal
+    @Contract(pure = true)
     public boolean equals(Object o) {
         if (!(o instanceof SuitOrder)) return false;
         SuitOrder so = (SuitOrder) o;
@@ -155,12 +235,8 @@ public class SuitOrder implements Comparator<Card>, Serializable {
     }
 
     @Override
-    // EFFECTS: returns hash code of this SuitOrder
+    @Contract(pure = true)
     public int hashCode() {
-        int result = 17;
-        result = 31 * result + (sortByValue ? 0 : 1);
-        result = 31 * result + Arrays.hashCode(suits);
-        result = 31 * result + (reverse ? 0 : 1);
-        return result;
+        return Objects.hash(sortByValue, Arrays.hashCode(suits), reverse);
     }
 }

@@ -1,14 +1,16 @@
 package ui.client;
 
+import util.GameClient;
+
 import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 // Represents the view of the Deck
 class DeckView extends JPanel {
-    private PlayButton pb = new PlayButton();
-    private CardView cv = new CardView(this);
-    private SuitOrderView sov = new SuitOrderView();
+    private final PlayButton pb = new PlayButton();
+    private final CardView cv = new CardView(this);
+    private final SuitOrderView sov = new SuitOrderView();
 
     // EFFECTS: initializes DeckView and its components
     DeckView() {
@@ -24,6 +26,7 @@ class DeckView extends JPanel {
     // MODIFIES: this
     // EFFECTS: updates components
     void update() {
+        cv.repaint();
         sov.update();
     }
 
@@ -43,13 +46,16 @@ class DeckView extends JPanel {
         }
 
         void update() {
-            if (MainFrame.getFrame().getClientState().hasCardsPassed()) setEnabled(cv.getNumberSelectedCards() == 1);
+            if (GameClient.getInstance().getClientState().isAllCardsPassed())
+                setEnabled(cv.getNumberSelectedCards() == 1);
             else setEnabled(cv.getNumberSelectedCards() == 3);
         }
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            MainFrame.getFrame().playCards(cv.getActiveCards());
+            if (cv.getActiveCards().size() == 3) {
+                GameClient.getInstance().passCards(cv.getActiveCards().get(0), cv.getActiveCards().get(1), cv.getActiveCards().get(2));
+            }
         }
 
         //<editor-fold desc="Ignore">

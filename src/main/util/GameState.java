@@ -1,6 +1,9 @@
 package util;
 
 import ui.server.ServerFrame;
+import util.card.Card;
+import util.card.Deck;
+import util.card.Suit;
 
 // TODO SEND PLAYING/PASSING ORDER OVER SERVERTOCLIENTMESSAGE
 
@@ -124,7 +127,7 @@ public class GameState {
 
     // EFFECTS: determines whether the player (1-4) has played a card already (i.e. is in the center)
     private boolean hasPlayedCard(int playerNum) {
-        return PLAYING_ORDER.hasPlayerPlayed(startingPlayer, center.deckSize(), playerNum);
+        return PLAYING_ORDER.hasPlayerPlayed(startingPlayer, center.size(), playerNum);
     }
 
     // EFFECTS: determines whether the player is not the next player to play
@@ -134,7 +137,7 @@ public class GameState {
 
     // EFFECTS: determines the player number of player next to play
     private int nextToPlay() {
-        return PLAYING_ORDER.nextPlayer(startingPlayer, center.deckSize());
+        return PLAYING_ORDER.nextPlayer(startingPlayer, center.size());
     }
 
     // MODIFIES: this, server
@@ -159,11 +162,11 @@ public class GameState {
             else if (!passingHands[playerNum - 1].isEmpty()) kickInvalid(playerNum); // no passing cards twice
             else {
                 Deck newDeck = new Deck();
-                newDeck.addCard(a);
-                hands[playerNum - 1].removeCard(a);
+                newDeck.add(a);
+                hands[playerNum - 1].remove(a);
                 for (Card card : c) {
-                    newDeck.addCard(card);
-                    hands[playerNum - 1].removeCard(card);
+                    newDeck.add(card);
+                    hands[playerNum - 1].remove(card);
                 }
                 passingHands[playerNum - 1] = newDeck;
                 checkPassCards();
@@ -176,14 +179,14 @@ public class GameState {
             else if (threeOfClubsNeeded && !a.is3C()) kickInvalid(playerNum); // you have to play 3C if starting
             else if (isPlayingOutOfOrder(playerNum)) kickInvalid(playerNum); // can't play out of order
             else {
-                center.addCard(a);
-                hands[playerNum - 1].removeCard(a);
+                center.add(a);
+                hands[playerNum - 1].remove(a);
                 if (threeOfClubsNeeded) threeOfClubsNeeded = false;
                 if (currentSuitToPlay == null) {
                     currentSuitToPlay = a.getSuit(); // if starting new turn, set new suit
                     startingPlayer = playerNum;
                 }
-                if (center.deckSize() == 4) endTurn();
+                if (center.size() == 4) endTurn();
                 else {
                     ServerFrame.getInstance().requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
                 }
@@ -199,12 +202,12 @@ public class GameState {
     // MODIFIES: this
     // EFFECTS: ends current turn and starts a new one
     private void endTurn() {
-        assert (center.deckSize() == 4);
+        assert (center.size() == 4);
         numTurns++;
         startingPlayer = trickWinner(); // set new starting player
         Deck deck = center.copy();
         deck.removeNonPenaltyCards();
-        penalties[startingPlayer - 1].addAll(deck); // distribute penalties
+        penalties[startingPlayer - 1].add(deck); // distribute penalties
         currentSuitToPlay = null; // can play whatever suit
         checkGameEnd();
         if (!gameEnded) {
@@ -215,7 +218,7 @@ public class GameState {
     // REQUIRES: center.size == 4
     // EFFECTS: returns the player number that "won" the trick (1-4)
     private int trickWinner() {
-        assert (center.deckSize() == 4);
+        assert (center.size() == 4);
         // works only because index starts at 0 instead of 1
         return PLAYING_ORDER.nextPlayer(startingPlayer, center.highestIndexOfSuit(currentSuitToPlay));
     }
@@ -227,7 +230,7 @@ public class GameState {
             if (d.isEmpty()) return;
         }
         for (int i = 0; i < 4; i++) {
-            hands[PASS_ORDER.toPass(i + 1) - 1].addAll(passingHands[i]);
+            hands[PASS_ORDER.toPass(i + 1) - 1].add(passingHands[i]);
         }
         allCardsPassed = true;
 

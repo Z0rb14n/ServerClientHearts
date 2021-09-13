@@ -1,21 +1,35 @@
 package net;
 
+import net.message.NetworkMessage;
+import net.message.client.ClientToServerMessage;
+import net.message.server.ServerIDMessage;
+import net.message.server.ServerKickMessage;
+import net.message.server.ServerToClientMessage;
 import ui.client.MainFrame;
 import ui.console.Console;
-import util.Deck;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayDeque;
+import java.util.Queue;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
-import static net.Constants.ERR_TIMED_OUT;
-import static net.Constants.PORT;
+import static net.Constants.*;
 
-public final class ModifiedNewClient extends ModifiedClient {
+public final class ModifiedNewClient extends ModifiedClient implements EventReceiver {
+    private final ObjectEventReceiver objectEventReceiver;
+    private final Queue<ServerToClientMessage> lastMessages = new ArrayDeque<>(10);
     private String clientID;
     private int playerNum;
 
-    public ModifiedNewClient(EventReceiver parent, String ip) {
-        super(parent, ip, Constants.PORT);
+    private final ReentrantLock lastMessagesMutex = new ReentrantLock();
+    private final Condition lastMessagesCondition = lastMessagesMutex.newCondition();
+
+    public ModifiedNewClient(ObjectEventReceiver parent, String ip) throws ConnectionException {
+        super(null, ip, Constants.PORT);
+        setEventReceiver(this);
+        objectEventReceiver = parent;
         if (!active()) {
             stop();
             Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
@@ -25,65 +39,58 @@ public final class ModifiedNewClient extends ModifiedClient {
         }
     }
 
-
-    // MODIFIES: this
-    // EFFECTS: gets the client ID from the server
-    //          throws ConnectionException if kicked from the server
+    /**
+     * Gets client ID from the server.
+     *
+     * @throws ConnectionException if kicked from the server
+     * @throws RuntimeException    if interrupted when waiting for a ClientID message
+     */
     private void getClientIDFromServer() {
-        // continuously wait until you get a message
-        while (available() <= 0) {
+        lastMessagesMutex.lock();
+        if (lastMessages.size() == 0) {
             try {
-                Thread.sleep(10);
-            } catch (InterruptedException ignored) {
+                lastMessagesCondition.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException("Interrupted upon waiting for clientID message.");
             }
         }
-        ServerToClientMessage msg = readServerToClientMessage();
-        assert (msg != null);
-        if (msg.isKickMessage()) {
-            throw new ConnectionException(msg.getKickMessage());
+        assert (lastMessages.size() != 0);
+        ServerToClientMessage msg = lastMessages.peek();
+        lastMessagesMutex.unlock();
+        if (msg instanceof ServerKickMessage) {
+            throw new ConnectionException(ERR_KICKED + ((ServerKickMessage) msg).getMessage());
         } else {
-            clientID = msg.getID();
-            playerNum = msg.getPlayerNumber();
-            MainFrame.getFrame().catchExtraMessages(msg);
+            assert msg instanceof ServerIDMessage;
+
+            clientID = ((ServerIDMessage) msg).getID();
+            playerNum = ((ServerIDMessage) msg).getPlayerNumber();
         }
     }
 
-    private boolean msgFinished = true;
 
-    // EFFECTS: returns the message sent by the server
-    //    NOTE: THIS WILL COMPLETELY FREEZE EXECUTION UNTIL THE MESSAGE IS FULLY SENT.
-    public ServerToClientMessage readServerToClientMessage() {
-        if (!msgFinished)
-            throw new RuntimeException("AAAA UR INTERNET IS SLOW AAAAA - tried to read a new message when one was already being read");
-        msgFinished = false;
-        int bytesRead = 0;
-        if (available() == 0) {
-            Console.getConsole().addMessage("Tried to read ServerToClientMessage when available() == 0. Returning null.");
-            return null;
-        }
-        while (available() < 4) {
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException ignored) {
-            }
-        }
-        int arrLength = readInt();
-        if (arrLength < 0) throw new RuntimeException("NEGATIVE SIZE OF MESSAGE");
-        byte[] msgBuffer = new byte[arrLength];
-        while (bytesRead < msgBuffer.length) {
-            byte[] arr = readBytes(msgBuffer.length - bytesRead);
-            System.arraycopy(arr, 0, msgBuffer, bytesRead, arr.length);
-            bytesRead += arr.length;
-        }
-        msgFinished = true;
-        ByteArrayInputStream bis = new ByteArrayInputStream(msgBuffer);
-        try (ObjectInputStream in = new ObjectInputStream(bis)) {
-            ServerToClientMessage scm = (ServerToClientMessage) in.readObject();
-            if (scm.isKickMessage()) {
-                Console.getConsole().addMessage("Received kick message from server: " + scm.getKickMessage());
+    /**
+     * Reads a server to client message inside the buffer.
+     * <p>
+     * Assumes that client already has read enough bytes.
+     *
+     * @return read ServerToClientMessage
+     */
+    private ServerToClientMessage readServerToClientMessage() {
+        assert (available() > 4);
+        readBytesWithoutRemoval(sizeBuffer);
+        assert (ByteBuffer.wrap(sizeBuffer).getInt() >= 0);
+        int arrLength = ByteBuffer.wrap(sizeBuffer).getInt();
+        int result = readInt();
+        assert (result == arrLength);
+        assert (available() >= arrLength);
+        byte[] msgBuffer = readBytes(arrLength);
+        try {
+            ServerToClientMessage scm = (ServerToClientMessage) NetworkMessage.packetFromByteArray(msgBuffer);
+            if (scm instanceof ServerKickMessage) {
+                Console.getConsole().addMessage("Received kick message from server: " + ((ServerKickMessage) scm).getMessage());
             }
             return scm;
-        } catch (IOException | ClassNotFoundException | ClassCastException e) {
+        } catch (IOException | ClassNotFoundException e) {
             System.err.println("Are you sure this is an actual server?");
             throw new RuntimeException(e.getMessage());
         }
@@ -92,12 +99,10 @@ public final class ModifiedNewClient extends ModifiedClient {
     // MODIFIES: this
     // EFFECTS: writes out a ClientToServerMessage to the server
     public void write(ClientToServerMessage msg) {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream out = new ObjectOutputStream(bos)) {
-            out.writeObject(msg);
-            out.flush();
-            byte[] yourBytes = bos.toByteArray();
-            writeInt(yourBytes.length);
-            write(yourBytes);
+        try {
+            byte[] bytes = NetworkMessage.packetToByteArray(msg);
+            writeInt(bytes.length);
+            writeNoLength(bytes);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -112,7 +117,7 @@ public final class ModifiedNewClient extends ModifiedClient {
     // EFFECTS: writes out the byte representation of an integer to the server
     private void writeInt(int a) {
         byte[] bytes = ByteBuffer.allocate(4).putInt(a).array();
-        write(bytes);
+        writeNoLength(bytes);
     }
 
     // EFFECTS: gets current client ID
@@ -120,33 +125,57 @@ public final class ModifiedNewClient extends ModifiedClient {
         return clientID;
     }
 
-    // EFFECTS: returns the player number
-    public int getPlayerNum() {
-        return playerNum;
+    public ServerToClientMessage removeServerToClientMessage() {
+        lastMessagesMutex.lock();
+        ServerToClientMessage message = lastMessages.remove();
+        lastMessagesMutex.unlock();
+        return message;
     }
 
-    // MODIFIES: this
-    // EFFECTS: sends chat message to server
-    public void sendChatMessage(String msg) {
-        write(ClientToServerMessage.createNewChatMessage(msg));
+    public int numMessages() {
+        return lastMessages.size();
     }
 
-    // MODIFIES: this
-    // EFFECTS: sends a card played message to server
-    public void sendCardsPlayedMessage(Deck cards) {
-        if (cards.deckSize() != 3 && cards.deckSize() != 1) throw new IllegalArgumentException();
-        if (cards.deckSize() == 1) write(ClientToServerMessage.createNewCardPlayedMessage(cards.get(0)));
-        if (cards.deckSize() == 3) write(ClientToServerMessage.createNewSubmitThreeCardMessage(cards));
+    private final byte[] sizeBuffer = new byte[4];
+
+    @Override
+    public void dataReceivedEvent(ModifiedClient c) {
+        int result = readBytesWithoutRemoval(sizeBuffer);
+        if (result == 4) {
+            int size = ByteBuffer.wrap(sizeBuffer).getInt();
+            System.out.println("Data received! Amount available: " + available() + ", amount required: " + (size + 4));
+            if (available() >= size + 4) {
+                ServerToClientMessage message = readServerToClientMessage();
+                lastMessagesMutex.lock();
+                lastMessages.add(message);
+                lastMessagesCondition.signal();
+                lastMessagesMutex.unlock();
+                objectEventReceiver.dataReceivedEvent(this, message);
+            }
+        }
     }
 
     @Override
     // MODIFIES: this
     // EFFECTS: disconnects client from the server and stops the client.
     public void stop() {
-        ServerToClientMessage lastMessage = readServerToClientMessage();
-        if (lastMessage != null && lastMessage.isKickMessage()) {
-            MainFrame.getFrame().updateErrorMessage(lastMessage.getKickMessage());
+        lastMessagesMutex.lock();
+        if (lastMessages.size() > 0) {
+            lastMessages.removeIf(serverToClientMessage -> !(serverToClientMessage instanceof ServerKickMessage));
+            if (lastMessages.size() > 0) {
+                ServerToClientMessage message = lastMessages.poll();
+                assert (message != null);
+                if (message instanceof ServerKickMessage)
+                    MainFrame.getFrame().updateErrorMessage(((ServerKickMessage) message).getMessage());
+                else
+                    MainFrame.getFrame().updateErrorMessage("You got kicked from the server. Kick message not received, however.");
+                lastMessages.clear();
+            }
         }
         super.stop();
+    }
+
+    public int getPlayerNum() {
+        return playerNum;
     }
 }

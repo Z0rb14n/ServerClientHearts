@@ -1,13 +1,20 @@
 package ui.console;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import javax.swing.*;
 import java.awt.*;
 
-// Represents the console panel
+/**
+ * Represents the main console view panel
+ */
 class ConsolePanel extends JPanel {
-    private TextArea ta;
+    private final TextArea ta;
 
-    // EFFECTS: initializes console panel with correct layout and text area
+    /**
+     * Initializes console panel with correct layout and text area
+     */
     ConsolePanel() {
         super();
         setLayout(new BorderLayout());
@@ -17,14 +24,22 @@ class ConsolePanel extends JPanel {
         setVisible(true);
     }
 
-    // MODIFIES: this
-    // EFFECTS: adds a command to the console panel
-    void addCommand(String input) {
+    /**
+     * Adds a command to the console panel/text area
+     *
+     * @param input line to add
+     */
+    @Contract(mutates = "this")
+    void addCommand(@NotNull String input) {
         ta.addCommand(input);
     }
 
-    // MODIFIES: this
-    // EFFECTS: adds a given output to the console panel
+    /**
+     * Adds a given line of output to the console panel
+     *
+     * @param message line to add
+     */
+    @Contract(mutates = "this")
     void addMessage(String message) {
         ta.addOutput(message);
     }

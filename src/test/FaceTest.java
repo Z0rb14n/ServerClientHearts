@@ -1,5 +1,5 @@
 import org.junit.jupiter.api.Test;
-import util.Face;
+import util.card.Face;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;

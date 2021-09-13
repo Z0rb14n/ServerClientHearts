@@ -1,7 +1,8 @@
 package ui.client;
 
-import util.Card;
-import util.Deck;
+import util.GameClient;
+import util.card.Card;
+import util.card.Deck;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,7 +20,7 @@ class CardView extends JPanel implements MouseListener {
     private static final int BORDER_THICKNESS = 2;
     private static final int SIZE_BUFFER = 4 * BORDER_THICKNESS;
     private static final int HEIGHT_OFFSET = 20;
-    private DeckView parent;
+    private final DeckView parent;
     // EFFECTS: initializes CardView
     CardView(DeckView parent) {
         super();
@@ -30,7 +31,7 @@ class CardView extends JPanel implements MouseListener {
     }
 
     private int numSelected = 0;
-    private boolean[] activeCards = new boolean[13];
+    private final boolean[] activeCards = new boolean[13];
 
     // EFFECTS: returns the number of selected cards
     int getNumberSelectedCards() {
@@ -40,8 +41,9 @@ class CardView extends JPanel implements MouseListener {
     // EFFECTS: returns the active cards
     Deck getActiveCards() {
         Deck deck = new Deck();
-        for (int i = 0; i < MainFrame.getFrame().getClientState().getDeck().deckSize(); i++) {
-            if (activeCards[i]) deck.addCard(MainFrame.getFrame().getClientState().getDeck().get(i));
+        Deck clientDeck = GameClient.getInstance().getClientState().getPlayerDeck();
+        for (int i = 0; i < clientDeck.size(); i++) {
+            if (activeCards[i]) deck.add(clientDeck.get(i));
         }
         return deck;
     }
@@ -52,8 +54,9 @@ class CardView extends JPanel implements MouseListener {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        Deck d = MainFrame.getFrame().getClientState().getDeck();
-        for (int i = 0; i < d.deckSize(); i++) {
+
+        Deck d = GameClient.getInstance().getClientState().getPlayerDeck();
+        for (int i = 0; i < d.size(); i++) {
             int drawnYPos = getY() + BORDER_THICKNESS + HEIGHT_OFFSET;
             if (activeCards[i]) drawnYPos -= HEIGHT_OFFSET;
             drawCard(g2d, CARD_WIDTH * i + BORDER_THICKNESS, drawnYPos, d.get(i));
@@ -93,10 +96,10 @@ class CardView extends JPanel implements MouseListener {
         // top left of JPanel is 0,0
         int index = Math.floorDiv(e.getX() - BORDER_THICKNESS, CARD_WIDTH);
         System.out.println(index);
-        if (index >= MainFrame.getFrame().getClientState().getDeck().deckSize()) return;
+        if (index >= GameClient.getInstance().getClientState().getPlayerDeck().size()) return;
         System.out.println("Toggling...");
-        if (!MainFrame.getFrame().getClientState().hasCardsPassed()) {
-            if (MainFrame.getFrame().getClientState().getDeck().deckSize() == 13) {
+        if (!GameClient.getInstance().getClientState().isAllCardsPassed()) {
+            if (GameClient.getInstance().getClientState().getPlayerDeck().size() == 13) {
                 if (activeCards[index]) {
                     activeCards[index] = false;
                     numSelected--;

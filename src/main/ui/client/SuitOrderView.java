@@ -1,5 +1,7 @@
 package ui.client;
 
+import util.GameClient;
+
 import javax.swing.*;
 import java.awt.event.*;
 
@@ -7,14 +9,14 @@ import java.awt.event.*;
 
 // Represents the view of the SuitOrder
 class SuitOrderView extends JPanel {
-    private ReverseCheckBox rcb = new ReverseCheckBox();
-    private ResetButton rb = new ResetButton();
-    private SuitDisplay sd = new SuitDisplay();
-    private SortButton sb = new SortButton();
+    private final ReverseCheckBox rcb = new ReverseCheckBox();
+    private final ResetButton rb = new ResetButton();
+    private final SuitDisplay sd = new SuitDisplay();
+    private final SortButton sb = new SortButton();
     private static final String SUIT_STRING = "Suit";
     private static final String VALUE_STRING = "Value";
-    private JRadioButton preferSuit = new JRadioButton(SUIT_STRING, true);
-    private JRadioButton preferValue = new JRadioButton(VALUE_STRING, false);
+    private final JRadioButton preferSuit = new JRadioButton(SUIT_STRING, true);
+    private final JRadioButton preferValue = new JRadioButton(VALUE_STRING, false);
 
     // EFFECTS: initializes SuitOrderView and its components
     SuitOrderView() {
@@ -48,7 +50,7 @@ class SuitOrderView extends JPanel {
     // MODIFIES: this
     // EFFECTS: updates all components
     void update() {
-        boolean isSortingByValue = MainFrame.getFrame().getClientState().getDeck().getOrder().isSortingByValue();
+        boolean isSortingByValue = GameClient.getInstance().getClientState().getPlayerDeck().getOrder().isSortingByValue();
         preferValue.setSelected(isSortingByValue);
         preferSuit.setSelected(!isSortingByValue);
         rcb.update();
@@ -60,7 +62,7 @@ class SuitOrderView extends JPanel {
     // MODIFIES: MainFrame
     // EFFECTS: adjusts the state of the main application's deck's sorting order
     private void setSortOrder(boolean isValue) {
-        MainFrame.getFrame().getClientState().getDeck().getOrder().setSortByValue(isValue);
+        GameClient.getInstance().getClientState().getPlayerDeck().getOrder().setSortByValue(isValue);
         update();
     }
 
@@ -68,21 +70,21 @@ class SuitOrderView extends JPanel {
     // MODIFIES: MainFrame
     // EFFECTS: sorts the main application's deck
     private void sort() {
-        MainFrame.getFrame().getClientState().getDeck().sort();
+        GameClient.getInstance().getClientState().getPlayerDeck().sort();
         update();
     }
 
     // MODIFIES: MainFrame
     // EFFECTS: calls the reset function on the SuitOrder in MainFrame
     private void reset() {
-        MainFrame.getFrame().getClientState().getDeck().getOrder().reset();
+        GameClient.getInstance().getClientState().getPlayerDeck().getOrder().reset();
         update();
     }
 
     // MODIFIES: MainFrame
     // EFFECTS: sets the SuitOrder in MainFrame to reverse or not reverse
     private void setDoReverse(boolean value) {
-        MainFrame.getFrame().getClientState().getDeck().getOrder().setReverse(value);
+        GameClient.getInstance().getClientState().getPlayerDeck().getOrder().setReverse(value);
         update();
     }
 
@@ -97,7 +99,7 @@ class SuitOrderView extends JPanel {
         // MODIFIES: this
         // EFFECTS: updates the reversed check box with current "is reversed" state
         void update() {
-            setSelected(MainFrame.getFrame().getClientState().getDeck().getOrder().isReversed());
+            setSelected(GameClient.getInstance().getClientState().getPlayerDeck().getOrder().isReversed());
             repaint();
         }
 
@@ -128,7 +130,7 @@ class SuitOrderView extends JPanel {
         // MODIFIES: this
         // EFFECTS: updates the reset button to the current state of the client state
         void update() {
-            setEnabled(!MainFrame.getFrame().getClientState().getDeck().getOrder().isDefault());
+            setEnabled(!GameClient.getInstance().getClientState().getPlayerDeck().getOrder().isDefault());
         }
 
         // Represents the Mouse listener that determines if the reset button is clicked
@@ -156,7 +158,7 @@ class SuitOrderView extends JPanel {
         // MODIFIES: this
         // EFFECTS: updates the reset button to the current state of the client state
         void update() {
-            setEnabled(!MainFrame.getFrame().getClientState().getDeck().isSorted());
+            setEnabled(!GameClient.getInstance().getClientState().getPlayerDeck().isSorted());
         }
 
         // Represents the Mouse listener that determines if the reset button is clicked

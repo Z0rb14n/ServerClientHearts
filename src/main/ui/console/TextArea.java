@@ -1,14 +1,21 @@
 package ui.console;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 import javax.swing.*;
 import java.awt.*;
 
-// Represents the console text area
+/**
+ * Represents the main console text area
+ */
 class TextArea extends JPanel {
     private static final String COMMAND_PREFIX = "> ";
-    private JTextArea text = new JTextArea(15, 30);
+    private final JTextArea text = new JTextArea(15, 30);
 
-    // EFFECTS: initializes the text area with given margins and scroll area
+    /**
+     * Initializes text area with given margins and scroll area
+     */
     TextArea() {
         super();
         text.setEditable(false);
@@ -18,16 +25,24 @@ class TextArea extends JPanel {
         setVisible(true);
     }
 
-    // MODIFIES: this
-    // EFFECTS: adds command to the console window
-    void addCommand(String commandInput) {
+    /**
+     * Adds an executed command to the console window
+     *
+     * @param commandInput executed command
+     */
+    @Contract(mutates = "this")
+    void addCommand(@NotNull String commandInput) {
         text.append(COMMAND_PREFIX + commandInput + "\n");
         repaint();
     }
 
-    // MODIFIES: this
-    // EFFECTS: adds output message to console window
-    void addOutput(String input) {
+    /**
+     * Adds an output message to the console window
+     *
+     * @param input line of output to add
+     */
+    @Contract(mutates = "this")
+    void addOutput(@NotNull String input) {
         text.append(input + "\n");
         repaint();
     }
