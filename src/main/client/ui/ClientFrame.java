@@ -14,9 +14,6 @@ import java.awt.*;
  */
 public class ClientFrame extends JFrame {
     public static boolean useConsole = true;
-    private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
-    private final static String CONNECTION_TIMEOUT = "Timed out.";
-    private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
     private final static Dimension WINDOW_DIMENSION = new Dimension(1366, 708);
     private boolean displayingInputIP = true;
     private final GamePanel gp = new GamePanel();
@@ -47,6 +44,19 @@ public class ClientFrame extends JFrame {
         setVisible(true);
     }
 
+    public void switchToGamePanel() {
+        if (displayingInputIP) {
+            invalidate();
+            remove(cp);
+            add(gp);
+            displayingInputIP = false;
+            gp.update();
+            validate();
+        }
+        pack();
+        repaint();
+    }
+
     public void switchToDisplayIPInput() {
         if (!displayingInputIP) {
             invalidate();
@@ -73,13 +83,7 @@ public class ClientFrame extends JFrame {
         if (!GameClient.getInstance().isClientActive() && !displayingInputIP) {
             switchToDisplayIPInput();
         } else if (GameClient.getInstance().isClientActive() && displayingInputIP) {
-            remove(cp);
-            add(gp);
-            displayingInputIP = false;
-            gp.update();
-            invalidate();
-            pack();
-            repaint();
+            switchToGamePanel();
         } else if (!displayingInputIP) {
             gp.update();
             repaint();
@@ -105,43 +109,9 @@ public class ClientFrame extends JFrame {
         repaint();
     }
 
-    // MODIFIES: this
-    // EFFECTS: attempts to load the client with given ip
-    public void attemptLoadClient(String ip) {
-        cp.updateErrorDisplayed("");
-        GameClient.NetworkInstantiationResult result = GameClient.getInstance().connect(ip);
-        switch (result) {
-            case ALREADY_CONNECTED:
-                if (ClientFrame.useConsole)
-                    Console.getConsole().addMessage("Attempted to connect to client when one was already connected");
-                break;
-            case SUCCESS:
-                if (ClientFrame.useConsole)
-                    Console.getConsole().addMessage("Successful connection. Player num: " + GameClient.getInstance().getClientState().getPlayerNumber()
-                            + ", ID: " + GameClient.getInstance().getClientID());
-                cp.updateErrorDisplayed("");
-                cp.setVisible(false);
-                remove(cp);
-                add(gp);
-                invalidate();
-                displayingInputIP = false;
-                repaint();
-                break;
-            case TIMED_OUT:
-                if (ClientFrame.useConsole)
-                    Console.getConsole().addMessage("Connection timed out.");
-                cp.updateErrorDisplayed(CONNECTION_TIMEOUT);
-                break;
-            case KICKED:
-                cp.updateErrorDisplayed(TOO_MANY_PLAYERS_MSG);
-
-                if (ClientFrame.useConsole) Console.getConsole().addMessage("Too many players.");
-                break;
-            default:
-                cp.updateErrorDisplayed(DEFAULT_COULD_NOT_CONNECT);
-
-                if (ClientFrame.useConsole) Console.getConsole().addMessage("Could not connect.");
-                break;
+    public void tryLoadClient(String ip) {
+        if (displayingInputIP) {
+            cp.attemptLoadClient(ip);
         }
     }
 }

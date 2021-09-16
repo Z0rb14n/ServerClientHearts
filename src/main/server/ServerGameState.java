@@ -1,6 +1,8 @@
 package server;
 
-import server.ui.ServerFrame;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
+import server.ui.Main;
 import util.PassOrder;
 import util.PlayOrder;
 import util.card.Card;
@@ -13,18 +15,19 @@ import util.card.Suit;
 public class ServerGameState {
     private static final PlayOrder PLAYING_ORDER = PlayOrder.ASCENDING_NUM;
     private static final PassOrder PASS_ORDER = PassOrder.ASCENDING_NUM;
-    private boolean isGameStarted;
-    private boolean allCardsPassed;
-    private int numTurns;
-    private Suit currentSuitToPlay;
-    private boolean threeOfClubsNeeded;
-    private boolean gameEnded;
+    private boolean isGameStarted = false;
+    private boolean allCardsPassed = false;
+    private int numTurns = 0;
+    private Suit currentSuitToPlay = null;
+    private boolean threeOfClubsNeeded = false;
+    private boolean gameEnded = false;
 
-    private Deck[] hands;      // Hands of each player
-    private Deck[] passingHands; // PassingHands of each player
-    private Deck[] penalties;  // Penalty cards for each player
-    private Deck center;       // center pile
-    private int startingPlayer; // who played the first card, (1-4)
+    private final Deck[] hands = new Deck[4];      // Hands of each player
+    private final Deck[] passingHands = new Deck[4]; // PassingHands of each player
+    private final Deck[] receivingHands = new Deck[4]; // hands being received of each player
+    private final Deck[] penalties = new Deck[4];  // Penalty cards for each player
+    private final Deck center = new Deck();       // center pile
+    private int startingPlayer = -1; // who played the first card, (1-4)
 
     // EFFECTS: initializes variables with default settings
     public ServerGameState() {
@@ -42,10 +45,13 @@ public class ServerGameState {
         isGameStarted = false;
         allCardsPassed = false;
         numTurns = 0;
-        center = new Deck();
-        penalties = new Deck[4];
-        passingHands = new Deck[4];
-        hands = new Deck[4];
+        center.clear();
+        for (int i = 0; i < 4; i++) {
+            penalties[i] = null;
+            passingHands[i] = null;
+            receivingHands[i] = null;
+            hands[i] = null;
+        }
         currentSuitToPlay = null;
         startingPlayer = -1;
         threeOfClubsNeeded = false;
@@ -79,32 +85,6 @@ public class ServerGameState {
     public Deck[] getHandsInOrder() {
         return hands;
     }
-
-    public Deck[] getPassingHands() {
-        return passingHands;
-    }
-
-    //<editor-fold desc="Getters for individual hands">
-    // EFFECTS: gets player one's hand
-    public Deck getPlayerOneHand() {
-        return hands[0];
-    }
-
-    // EFFECTS: gets player two's hand
-    public Deck getPlayerTwoHand() {
-        return hands[1];
-    }
-
-    // EFFECTS: gets player three's hand
-    public Deck getPlayerThreeHand() {
-        return hands[2];
-    }
-
-    // EFFECTS: gets player four's hand
-    public Deck getPlayerFourHand() {
-        return hands[3];
-    }
-    //</editor-fold>
 
     // EFFECTS: gets the center hand
     public Deck getCenter() {
@@ -146,22 +126,22 @@ public class ServerGameState {
     // EFFECTS: receives the card played and updates game state, kicks player if invalid
     public void playCard(int playerNum, Card a, Card... c) {
         if (isInvalidPlay(a, playerNum)) {
-            kickInvalid(playerNum);
+            kickInvalid(playerNum, "Player doesn't have card: ", a);
             return;
         }
         if (!isGameStarted) {
-            kickInvalid(playerNum);
+            kickInvalid(playerNum, "Game hasn't started", a);
             return;
         }
         for (Card card1 : c) {
             if (isInvalidPlay(card1, playerNum)) {
-                kickInvalid(playerNum);
+                kickInvalid(playerNum, "Player doesn't have card: ", card1);
                 return;
             }
         }
         if (!allCardsPassed) {
-            if (c.length != 2) kickInvalid(playerNum); // needs 3 cards
-            else if (!passingHands[playerNum - 1].isEmpty()) kickInvalid(playerNum); // no passing cards twice
+            if (c.length != 2) kickInvalid(playerNum, "Three cards needed", a); // needs 3 cards
+            else if (!passingHands[playerNum - 1].isEmpty()) kickInvalid(playerNum, "No passing cards twice", a);
             else {
                 Deck newDeck = new Deck();
                 newDeck.add(a);
@@ -174,12 +154,16 @@ public class ServerGameState {
                 checkPassCards();
             }
         } else {
-            if (c.length != 0) kickInvalid(playerNum);// you should not be playing more than one card
+            if (c.length != 0)
+                kickInvalid(playerNum, "1 card expected", a);// you should not be playing more than one card
             else if (!matchesCurrentSuit(a, playerNum))
-                kickInvalid(playerNum); // can't play clubs if suit is hearts, etc.
-            else if (hasPlayedCard(playerNum)) kickInvalid(playerNum); // you can't play twice
-            else if (threeOfClubsNeeded && !a.is3C()) kickInvalid(playerNum); // you have to play 3C if starting
-            else if (isPlayingOutOfOrder(playerNum)) kickInvalid(playerNum); // can't play out of order
+                kickInvalid(playerNum, "Incorrect suit: " + currentSuitToPlay, a); // can't play clubs if suit is hearts, etc.
+            else if (hasPlayedCard(playerNum))
+                kickInvalid(playerNum, "You can't play twice", a); // you can't play twice
+            else if (threeOfClubsNeeded && !a.is3C())
+                kickInvalid(playerNum, "You need to play 3C", a); // you have to play 3C if starting
+            else if (isPlayingOutOfOrder(playerNum))
+                kickInvalid(playerNum, "You can't play out of order", a); // can't play out of order
             else {
                 center.add(a);
                 hands[playerNum - 1].remove(a);
@@ -190,14 +174,15 @@ public class ServerGameState {
                 }
                 if (center.size() == 4) endTurn();
                 else {
-                    ServerFrame.getInstance().gameServer.requestNextCard(playerNum, nextToPlay(), a, currentSuitToPlay);
+                    Main.getNetServer().requestNextCard(playerNum, nextToPlay(), center, a, currentSuitToPlay);
                 }
             }
         }
     }
 
-    private void kickInvalid(int playerNum) {
-        ServerFrame.getInstance().gameServer.requestKickInvalidMessage(playerNum);
+    private void kickInvalid(int playerNum, @Nullable String reason, @Nullable Card card) {
+        System.err.println("Invalid Card " + card + ", " + reason);
+        Main.getNetServer().kickInvalid(playerNum);
     }
 
     // REQUIRES: center.size == 4
@@ -211,9 +196,10 @@ public class ServerGameState {
         deck.removeNonPenaltyCards();
         penalties[startingPlayer - 1].add(deck); // distribute penalties
         currentSuitToPlay = null; // can play whatever suit
+        center.clear();
         checkGameEnd();
         if (!gameEnded) {
-            ServerFrame.getInstance().gameServer.startNewTurn(startingPlayer, deck);
+            Main.getNetServer().startNewTurn(startingPlayer, deck);
         }
     }
 
@@ -232,7 +218,9 @@ public class ServerGameState {
             if (d.isEmpty()) return;
         }
         for (int i = 0; i < 4; i++) {
-            hands[PASS_ORDER.toPass(i + 1) - 1].add(passingHands[i]);
+            int receivingPlayerIndex = PASS_ORDER.toPass(i + 1) - 1;
+            hands[receivingPlayerIndex].add(passingHands[i]);
+            receivingHands[receivingPlayerIndex] = passingHands[i];
         }
         allCardsPassed = true;
 
@@ -254,7 +242,7 @@ public class ServerGameState {
     private void checkGameEnd() {
         if (numTurns != 14) return;
         gameEnded = true;
-        ServerFrame.getInstance().gameServer.endGame(gameWinner(), allPenaltyPoints(), penalties);
+        Main.getNetServer().endGame(gameWinner(), allPenaltyPoints(), penalties);
     }
 
     // EFFECTS: returns current winner
@@ -282,12 +270,14 @@ public class ServerGameState {
         return Math.min(Math.min(hands[0].penaltyPoints(), hands[1].penaltyPoints()), Math.min(hands[2].penaltyPoints(), hands[3].penaltyPoints()));
     }
 
-    // MODIFIES: this
-    // EFFECTS: starts the first turn - they MUST play three of clubs
+    /**
+     * Starts the first turn (i.e. player must play 3C)
+     */
+    @Contract(mutates = "this")
     private void startFirstTurn() {
         threeOfClubsNeeded = true;
         startingPlayer = gameStarter();
-        ServerFrame.getInstance().gameServer.startFirstTurn(startingPlayer);
+        Main.getNetServer().startFirstTurn(startingPlayer, hands, receivingHands);
         numTurns = 1;
     }
 

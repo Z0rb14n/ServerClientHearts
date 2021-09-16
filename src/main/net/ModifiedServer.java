@@ -20,11 +20,9 @@ public class ModifiedServer implements Runnable {
     private ArrayList<ModifiedClient> clients = new ArrayList<>(10);
 
     /**
-     * @param parent typically use "this"
-     * @param port   port used to transfer data
+     * @param port port used to transfer data
      */
-    public ModifiedServer(EventReceiver parent, int port) {
-        this.eventReceiver = parent;
+    protected ModifiedServer(int port) {
         try {
             server = new ServerSocket(port);
             thread = new Thread(this);
@@ -108,10 +106,10 @@ public class ModifiedServer implements Runnable {
         }
     }
 
-
-    // the last index used for available. can't just cycle through
-    // the clients in order from 0 each time, because if client 0 won't
-    // shut up, then the rest of the clients will never be heard from.
+    /**
+     * The last index used for available.
+     * Can't just cycle through the clients in order from 0 each time, because if client 0 won't shut up, then the rest of the clients will never be heard from.
+     */
     int lastAvailable = -1;
 
     /**
@@ -158,7 +156,7 @@ public class ModifiedServer implements Runnable {
     /**
      * Disconnect all clients and stop the server: internal use only.
      */
-    public void dispose() {
+    protected void dispose() {
         thread = null;
 
         if (clients != null) {

@@ -1,6 +1,8 @@
 package client;
 
-import net.message.server.ServerStartFirstTurnMessage;
+import net.message.server.*;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import util.PassOrder;
 import util.PlayOrder;
 import util.card.Card;
@@ -8,7 +10,6 @@ import util.card.Deck;
 import util.card.Suit;
 
 import java.io.Serializable;
-
 public class ClientGameState implements Serializable {
     private static final long serialVersionUID = 69420L;
 
@@ -19,7 +20,7 @@ public class ClientGameState implements Serializable {
     private final Deck center = new Deck();
     private Suit requiredSuitToPlay = null;
     private final Deck receivedPassingHand = new Deck();
-    Deck playerDeck = new Deck();
+    final Deck playerDeck = new Deck();
     private final Deck[] penalties = new Deck[4];
     private final int[] numCardsRemaining = new int[4];
     private final int[] numCardsInPassingHand = new int[4];
@@ -60,44 +61,94 @@ public class ClientGameState implements Serializable {
         numRoundsPlayed = 0;
     }
 
-    void startGame(Deck startingDeck) {
-        playerDeck = startingDeck.copy();
+    ///<editor-fold desc="ServerMessage Handlers">
+
+    /**
+     * Internally starts the game
+     *
+     * @param message Initial ServerStartGameMessage
+     */
+    @Contract(mutates = "this")
+    void startGame(@NotNull ServerStartGameMessage message) {
+        playerDeck.clear();
+        playerDeck.add(message.getClientHand());
         gameStarted = true;
         startedPassingCards = true;
-        ClientLogger.logMessage("Player hand: " + startingDeck);
+        ClientLogger.logMessage("[ClientGameStart::startGame]: Player hand: " + playerDeck);
     }
 
-    void finishPassingCards(ServerStartFirstTurnMessage ignored) {
+    /**
+     * Signals that cards are finished passing and 3C must be played
+     *
+     * @param message Message received - given 3 cards
+     */
+    @Contract(mutates = "this")
+    void finishPassingCards(ServerStartFirstTurnMessage message) {
         allCardsPassed = true;
+        playerDeck.add(message.getThreeNewCards());
+        nextToPlay = message.getStartingPlayer();
+        requiredSuitToPlay = Suit.Club;
     }
 
-    void onNextTurn(Deck newPenalties, int player) {
-        penalties[player - 1].add(newPenalties);
-        nextToPlay = player;
+    /**
+     * Starts on the next turn
+     *
+     * @param message Message received
+     */
+    @Contract(mutates = "this")
+    void onNextTurn(ServerNextTurnMessage message) {
+        penalties[message.getPlayerWhoStartsNext() - 1].add(message.getNewPenaltyCards());
+        nextToPlay = message.getPlayerWhoStartsNext();
         requiredSuitToPlay = null;
+        numRoundsPlayed++;
     }
 
-    void onCardPlay(Card prevPlayed, int justPlayed, int nextToPlay, Suit requiredSuit) {
-        this.nextToPlay = nextToPlay;
-        if (firstPlayed == -1) firstPlayed = justPlayed;
-        requiredSuitToPlay = requiredSuit;
-        center.add(prevPlayed);
+    /**
+     * Runs upon a player playing a card
+     *
+     * @param message Message received
+     */
+    @Contract(mutates = "this")
+    void onCardPlay(ServerRequestNextCardMessage message) {
+        nextToPlay = message.getNextPlayerNumber();
+        if (firstPlayed == -1) firstPlayed = message.getPlayerNumJustPlayed();
+        requiredSuitToPlay = message.getExpectedSuit();
+        center.add(message.getPreviouslyPlayed());
     }
 
-    void setPlayerNumber(int number) {
-        this.playerNumber = number;
+    /**
+     * Runs upon the ID message received
+     *
+     * @param message Message received
+     */
+    @Contract(mutates = "this")
+    void onIDMessage(@NotNull ServerIDMessage message) {
+        clientID = message.getID();
+        playerNumber = message.getPlayerNumber();
     }
 
-    void onGetID(String ID, int number) {
-        this.playerNumber = number;
-        this.clientID = ID;
+    /**
+     * Runs upon server game message received - resets the internal state
+     *
+     * @param message ServerGameResetMessage received
+     */
+    @Contract(mutates = "this")
+    void onGameReset(@NotNull ServerGameResetMessage message) {
+        if (message.isValid()) reset();
     }
 
-    void onGameEnd(boolean[] winners, Deck[] penalties) {
+    /**
+     * Runs upon game end message received
+     *
+     * @param message Message received
+     */
+    @Contract(mutates = "this")
+    void onGameEnd(@NotNull ServerGameEndMessage message) {
         gameEnded = true;
-        System.arraycopy(winners, 0, this.winners, 0, 4);
-        System.arraycopy(penalties, 0, this.penalties, 0, 4);
+        System.arraycopy(message.getWinners(), 0, winners, 0, 4);
+        for (int i = 0; i < 4; i++) penalties[i] = message.getPenaltyHands()[i].copy();
     }
+    ///</editor-fold>
 
     public boolean hasGameEnded() {
         return gameEnded;
@@ -113,7 +164,10 @@ public class ClientGameState implements Serializable {
     }
 
     public boolean isValidCardPlay(Card c) {
-        return canPlay() && playerDeck.contains(c);
+        if (shouldPlayThreeOfClubs() && !new Card(Suit.Club, 3).equals(c)) return false;
+        if (!canPlay() || !playerDeck.contains(c)) return false;
+        if (requiredSuitToPlay == null) return true;
+        return !playerDeck.containsSuit(requiredSuitToPlay) || c.getSuit() == requiredSuitToPlay;
     }
 
     public boolean canPlay() {
@@ -145,7 +199,7 @@ public class ClientGameState implements Serializable {
     }
 
     public Deck getPlayerDeck() {
-        return playerDeck.copy();
+        return playerDeck;
     }
 
     public Deck[] getPenalties() {

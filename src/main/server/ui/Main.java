@@ -1,14 +1,14 @@
 package server.ui;
 
-// TODO Disconnect inform not being present on kick
-
+import net.ModifiedNewServer;
 import server.GameServer;
 
 /**
  * Entry point to run the server
  */
-class Main {
+public class Main {
     public static final boolean HEADLESS = true;
+    public static GameServer server;
 
     /**
      * Main Method to instantiate a server
@@ -17,7 +17,7 @@ class Main {
      */
     public static void main(String[] args) {
         if (HEADLESS) {
-            GameServer server = new GameServer();
+            server = new GameServer();
             //noinspection InfiniteLoopStatement
             while (true) {
                 server.update();
@@ -30,5 +30,24 @@ class Main {
         } else {
             ServerFrame.getInstance();
         }
+    }
+
+    /**
+     * Shorthand to return the active GameServer (a singleton is probably not a good idea)
+     *
+     * @return active GameServer
+     */
+    public static GameServer getGameServer() {
+        if (HEADLESS) return server;
+        return ServerFrame.getInstance().gameServer;
+    }
+
+    /**
+     * Shorthand to return the active ModifiedNewServer (a singleton is probably not a good idea)
+     *
+     * @return active ModifiedNewServer
+     */
+    public static ModifiedNewServer getNetServer() {
+        return getGameServer().getNetServer();
     }
 }

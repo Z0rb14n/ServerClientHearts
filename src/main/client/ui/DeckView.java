@@ -2,26 +2,37 @@ package client.ui;
 
 import client.ClientGameState;
 import client.GameClient;
+import org.jetbrains.annotations.Contract;
 
 import javax.swing.*;
 
-// Represents the view of the Deck
+/**
+ * Represents the view of the deck, containing a CardView, SuitOrderView and a play button
+ */
 class DeckView extends JPanel {
     private final PlayButton pb = new PlayButton();
-    private final CardView cv = new CardView(this);
-    private final SuitOrderView sov = new SuitOrderView();
+    final CardView cv = new CardView(this);
+    private final SuitOrderView sov = new SuitOrderView(this);
     private final ClientGameState clientGameState = GameClient.getInstance().getClientState();
 
+    /**
+     * @return true if you should pass 3 cards
+     */
     boolean isOnThreeCardState() {
         return !clientGameState.getPlayersThatPassed()[clientGameState.getPlayerNumber() - 1] &&
-                clientGameState.isStartedPassingCards();
+                clientGameState.isStartedPassingCards() && !clientGameState.isAllCardsPassed();
     }
 
+    /**
+     * @return true if you should play 1 card
+     */
     boolean isOnOneCardState() {
         return clientGameState.canPlay();
     }
 
-    // EFFECTS: initializes DeckView and its components
+    /**
+     * Initializes DeckView and its components (i.e. SuitOrderView, play button and card view)
+     */
     DeckView() {
         super();
         add(pb);
@@ -32,22 +43,32 @@ class DeckView extends JPanel {
         add(sov);
     }
 
-    // MODIFIES: this
-    // EFFECTS: updates components
+    /**
+     * Updates components
+     */
+    @Contract(mutates = "this")
     void update() {
         cv.repaint();
         sov.update();
     }
 
-    // MODIFIES: this
-    // EFFECTS: updates play button (not required to be run every frame)
+    /**
+     * Updates the play button
+     *
+     * @implNote Not required to be run every frame, so set in different method
+     */
+    @Contract(mutates = "this")
     void updatePlayButton() {
         pb.update();
     }
 
-    // Represents the play button that plays cards
+    /**
+     * JButton that when pressed plays cards
+     */
     private class PlayButton extends JButton {
-        // EFFECTS: initializes the text and the mouse listener
+        /**
+         * Initializes the JButton with text and an action listener
+         */
         PlayButton() {
             super("Play");
             setEnabled(false);
@@ -59,15 +80,20 @@ class DeckView extends JPanel {
                     GameClient.getInstance().playCard(cv.getActiveCards().get(0));
                     cv.setAllCardsInactive();
                 }
+                setEnabled(false);
             });
         }
 
+        /**
+         * Updates enabled state based on number of cards and current state
+         */
         void update() {
             if (isOnThreeCardState())
                 setEnabled(cv.getNumberSelectedCards() == 3);
-            else if (isOnOneCardState())
-                setEnabled(cv.getNumberSelectedCards() == 1);
-            else setEnabled(false);
+            else if (isOnOneCardState()) {
+                if (cv.getNumberSelectedCards() == 1 && GameClient.getInstance().getClientState().isValidCardPlay(cv.getActiveCards().get(0)))
+                    setEnabled(true);
+            } else setEnabled(false);
         }
     }
 }

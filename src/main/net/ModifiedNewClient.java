@@ -1,5 +1,6 @@
 package net;
 
+import client.GameClient;
 import client.console.Console;
 import client.ui.ClientFrame;
 import net.message.NetworkMessage;
@@ -62,7 +63,7 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
             throw new ConnectionException(ERR_KICKED + ((ServerKickMessage) msg).getMessage());
         } else {
             assert msg instanceof ServerIDMessage;
-
+            GameClient.getInstance().handleServerIDMessage((ServerIDMessage) msg);
             clientID = ((ServerIDMessage) msg).getID();
             playerNum = ((ServerIDMessage) msg).getPlayerNumber();
         }
@@ -103,8 +104,11 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
     public void write(ClientToServerMessage msg) {
         try {
             byte[] bytes = NetworkMessage.packetToByteArray(msg);
-            writeInt(bytes.length);
-            writeNoLength(bytes);
+            byte[] buffer = new byte[bytes.length + 4];
+            byte[] intBytes = ByteBuffer.allocate(4).putInt(bytes.length).array();
+            System.arraycopy(intBytes, 0, buffer, 0, 4);
+            System.arraycopy(bytes, 0, buffer, 4, bytes.length);
+            writeNoLength(buffer);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -114,12 +118,6 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
     private int readInt() {
         byte[] bytes = readBytes(4);
         return ByteBuffer.wrap(bytes).getInt();
-    }
-
-    // EFFECTS: writes out the byte representation of an integer to the server
-    private void writeInt(int a) {
-        byte[] bytes = ByteBuffer.allocate(4).putInt(a).array();
-        writeNoLength(bytes);
     }
 
     // EFFECTS: gets current client ID

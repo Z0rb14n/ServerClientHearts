@@ -27,20 +27,20 @@ public class GameClient implements ObjectEventReceiver {
     private final Condition messageReceivedCondition = waitingForMessageMutex.newCondition();
     private ModifiedNewClient networkClient;
 
-    //<editor-fold desc="Singleton Design Pattern">
+    ///<editor-fold desc="Singleton Design Pattern">
     private static GameClient instance;
 
     public static GameClient getInstance() {
         if (instance == null) instance = new GameClient();
         return instance;
     }
-    //</editor-fold>
+    ///</editor-fold>
 
     public GameClient() {
         ClientLogger.logMessage("Initialized game client object.");
     }
 
-    //<editor-fold desc="Network Client Instantiation">
+    ///<editor-fold desc="Network Client Instantiation">
     private NetworkInstantiationResult resultFromThread = null;
 
     /**
@@ -112,8 +112,7 @@ public class GameClient implements ObjectEventReceiver {
             if (msg instanceof ServerKickMessage) {
                 return false;
             } else if (msg instanceof ServerIDMessage) {
-                ServerIDMessage idMessage = (ServerIDMessage) msg;
-                gameState.onGetID(idMessage.getID(), idMessage.getPlayerNumber());
+                handleServerIDMessage((ServerIDMessage) msg);
                 return true;
             } else {
                 System.out.println("[GameClient::getClientIDFromServer]: WARNING: did not receive ID message. Returning false");
@@ -142,7 +141,7 @@ public class GameClient implements ObjectEventReceiver {
     public enum NetworkInstantiationResult {
         SUCCESS, TIMED_OUT, KICKED, FAILED, ALREADY_CONNECTED
     }
-    //</editor-fold>
+    ///</editor-fold>
 
     public boolean isClientActive() {
         return networkClient != null && networkClient.active();
@@ -178,6 +177,8 @@ public class GameClient implements ObjectEventReceiver {
         if (gameState.isValidCardPlay(c)) {
             ClientLogger.logMessage("Attempting to send card " + c.toString());
             networkClient.write(new ClientCardMessage(c));
+            gameState.playerDeck.remove(c);
+            ClientFrame.getFrame().update();
             return true;
         }
         ClientLogger.logMessage("[ERROR]: cannot play card " + c.toString() + ": it is not a valid card play.");
@@ -228,36 +229,28 @@ public class GameClient implements ObjectEventReceiver {
 
     public void processIncomingMessage(ServerToClientMessage message) {
         if (message instanceof ServerRequestNextCardMessage) {
-            handleNextCardMessage((ServerRequestNextCardMessage) message);
+            gameState.onCardPlay((ServerRequestNextCardMessage) message);
         } else if (message instanceof ServerChatMessage) {
             handleNewChatMessage((ServerChatMessage) message);
         } else if (message instanceof ServerPlayerDisconnectionMessage) {
             handleServerPlayerDisconnectionMessage((ServerPlayerDisconnectionMessage) message);
         } else if (message instanceof ServerStartGameMessage) {
-            handleGameStartMessages((ServerStartGameMessage) message);
+            gameState.startGame((ServerStartGameMessage) message);
         } else if (message instanceof ServerStartFirstTurnMessage) {
-            handleStartFirstTurnMessage((ServerStartFirstTurnMessage) message);
+            gameState.finishPassingCards((ServerStartFirstTurnMessage) message);
         } else if (message instanceof ServerNextTurnMessage) {
-            handleNewTurnMessage((ServerNextTurnMessage) message);
+            gameState.onNextTurn((ServerNextTurnMessage) message);
         } else if (message instanceof ServerGameEndMessage) {
-            handleGameEndMessage((ServerGameEndMessage) message);
+            gameState.onGameEnd((ServerGameEndMessage) message);
         } else if (message instanceof ServerIDMessage) {
             handleServerIDMessage((ServerIDMessage) message);
         } else if (message instanceof ServerPlayerConnectionMessage) {
             handleServerPlayerConnectionMessage((ServerPlayerConnectionMessage) message);
+        } else if (message instanceof ServerGameResetMessage) {
+            gameState.onGameReset((ServerGameResetMessage) message);
+            reset();
         }
-    }
-
-    private void handleNextCardMessage(ServerRequestNextCardMessage msg) {
-        gameState.onCardPlay(msg.getPreviouslyPlayed(), msg.getPlayerNumJustPlayed(), msg.getNextPlayerNumber(), msg.getExpectedSuit());
-    }
-
-    private void handleStartFirstTurnMessage(ServerStartFirstTurnMessage msg) {
-        gameState.finishPassingCards(msg);
-    }
-
-    private void handleGameEndMessage(ServerGameEndMessage msg) {
-        gameState.onGameEnd(msg.getWinners(), msg.getPenaltyHands());
+        ClientFrame.getFrame().update();
     }
 
     // MODIFIES: this
@@ -277,9 +270,9 @@ public class GameClient implements ObjectEventReceiver {
      * @param idMessage Sent ServerIDMessage
      */
     @Contract(mutates = "this")
-    private void handleServerIDMessage(@NotNull ServerIDMessage idMessage) {
+    public void handleServerIDMessage(@NotNull ServerIDMessage idMessage) {
+        gameState.onIDMessage(idMessage);
         System.arraycopy(idMessage.getExistingPlayers(), 0, onlinePlayers, 0, 4);
-        gameState.setPlayerNumber(idMessage.getPlayerNumber());
         onlinePlayers[idMessage.getPlayerNumber() - 1] = true; // just to be sure
     }
 
@@ -302,17 +295,6 @@ public class GameClient implements ObjectEventReceiver {
     private void handleServerPlayerDisconnectionMessage(@NotNull ServerPlayerDisconnectionMessage disconnectMessage) {
         onlinePlayers[disconnectMessage.getPlayerNumber() - 1] = false;
     }
-
-    private void handleNewTurnMessage(ServerNextTurnMessage msg) {
-        gameState.onNextTurn(msg.getNewPenaltyCards(), msg.getPlayerWhoStartsNext());
-    }
-
-    // MODIFIES: this
-    // EFFECTS: handles gameStarting messages
-    private void handleGameStartMessages(ServerStartGameMessage msg) {
-        gameState.startGame(msg.getClientHand().copy());
-    }
-
     //</editor-fold>
 
     @Override

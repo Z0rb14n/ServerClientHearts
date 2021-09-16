@@ -96,8 +96,8 @@ class CardView extends JPanel implements MouseListener {
     public void mouseClicked(MouseEvent e) {
         // top left of JPanel is 0,0
         int index = Math.floorDiv(e.getX() - BORDER_THICKNESS, CARD_WIDTH);
-        System.out.println("[CardVview::mouseClicked]: " + index);
-        if (index >= GameClient.getInstance().getClientState().getPlayerDeck().size()) return;
+        System.out.println("[CardView::mouseClicked]: " + index);
+        if (index >= GameClient.getInstance().getClientState().getPlayerDeck().size() || index < 0) return;
         if (parent.isOnThreeCardState()) {
             if (activeCards[index]) {
                 activeCards[index] = false;
@@ -107,6 +107,7 @@ class CardView extends JPanel implements MouseListener {
                 numSelected++;
             }
         } else if (parent.isOnOneCardState()) {
+            System.out.println("maya hee");
             if (activeCards[index]) {
                 activeCards[index] = false;
                 numSelected = 0;
@@ -125,6 +126,7 @@ class CardView extends JPanel implements MouseListener {
     @Contract(mutates = "this")
     void setAllCardsInactive() {
         Arrays.fill(activeCards, false);
+        numSelected = 0;
     }
 
     //<editor-fold desc="Ignore">

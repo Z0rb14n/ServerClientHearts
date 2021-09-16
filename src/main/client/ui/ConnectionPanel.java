@@ -1,20 +1,23 @@
 package client.ui;
 
+import client.GameClient;
+import client.console.Console;
+import org.jetbrains.annotations.Contract;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 // Represents the first panel seen (i.e. to connect to the server)
 class ConnectionPanel extends JPanel {
+    private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
+    private final static String CONNECTION_TIMEOUT = "Timed out.";
+    private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
     private static final Font font = new Font("Arial", Font.PLAIN, 24);
     private final IPEnterBox ipBox;
-    private final IPEnterButton ipEnterButton;
+    private final JButton ipEnterButton = new JButton("Connect");
     private final JLabel errorDisplayer = new JLabel("");
 
     // EFFECTS: initializes connection panel with ip enter box and button
@@ -22,7 +25,12 @@ class ConnectionPanel extends JPanel {
         super();
         setBorder(new EmptyBorder(30, 0, 0, 0));
         ipBox = new IPEnterBox();
-        ipEnterButton = new IPEnterButton();
+        ipEnterButton.setFont(font);
+        ipEnterButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        ipEnterButton.addActionListener(e -> {
+            System.out.print(ipBox.getText());
+            ClientFrame.getFrame().tryLoadClient(ipBox.getText());
+        });
     }
 
     // MODIFIES: this
@@ -54,6 +62,44 @@ class ConnectionPanel extends JPanel {
         repaint();
     }
 
+    /**
+     * Attempts to load the client with given IP
+     *
+     * @param ip ip of client
+     */
+    @Contract(mutates = "this")
+    public void attemptLoadClient(String ip) {
+        updateErrorDisplayed("");
+        GameClient.NetworkInstantiationResult result = GameClient.getInstance().connect(ip);
+        switch (result) {
+            case ALREADY_CONNECTED:
+                if (ClientFrame.useConsole)
+                    Console.getConsole().addMessage("Attempted to connect to client when one was already connected");
+                break;
+            case SUCCESS:
+                if (ClientFrame.useConsole)
+                    Console.getConsole().addMessage("Successful connection. Player num: " + GameClient.getInstance().getClientState().getPlayerNumber()
+                            + ", ID: " + GameClient.getInstance().getClientID());
+                updateErrorDisplayed("");
+                setVisible(false);
+                ClientFrame.getFrame().switchToGamePanel();
+                break;
+            case TIMED_OUT:
+                if (ClientFrame.useConsole)
+                    Console.getConsole().addMessage("Connection timed out.");
+                updateErrorDisplayed(CONNECTION_TIMEOUT);
+                break;
+            case KICKED:
+                updateErrorDisplayed(TOO_MANY_PLAYERS_MSG);
+                if (ClientFrame.useConsole) Console.getConsole().addMessage("Too many players.");
+                break;
+            default:
+                updateErrorDisplayed(DEFAULT_COULD_NOT_CONNECT);
+                if (ClientFrame.useConsole) Console.getConsole().addMessage("Could not connect.");
+                break;
+        }
+    }
+
     // EFFECTS: gets the error displayed
     String getErrorDisplayed() {
         return errorDisplayer.getText();
@@ -66,19 +112,14 @@ class ConnectionPanel extends JPanel {
             super(20);
             setFont(font);
             setAlignmentX(Component.CENTER_ALIGNMENT);
-            addActionListener(new onFinalizedInput()); //when they press the enter key
+            addActionListener(e -> {
+                // runs when they press the enter key
+                if (ipBox.getText().length() != 0) {
+                    ClientFrame.getFrame().tryLoadClient(ipBox.getText());
+                }
+            }); //when they press the enter key
             getDocument().addDocumentListener(new whenInputChanges());
             setMaximumSize(getPreferredSize());
-        }
-
-        // Represents an action listener to be run when the user presses the action key
-        private class onFinalizedInput implements ActionListener {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (ipBox.getText().length() != 0) {
-                    ClientFrame.getFrame().attemptLoadClient(ipBox.getText());
-                }
-            }
         }
 
         // Represents a document listener that runs when the ip enter box contents is changed
@@ -97,25 +138,6 @@ class ConnectionPanel extends JPanel {
             @Override
             public void changedUpdate(DocumentEvent e) {
                 ipEnterButton.setEnabled(!ipBox.getText().isEmpty());
-            }
-        }
-    }
-
-    private class IPEnterButton extends JButton {
-        IPEnterButton() {
-            super("Connect");
-            setFont(font);
-            setAlignmentX(Component.CENTER_ALIGNMENT);
-            addMouseListener(new Listener());
-        }
-
-        private class Listener extends MouseAdapter {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON1) {
-                    System.out.print(ipBox.getText());
-                    ClientFrame.getFrame().attemptLoadClient(ipBox.getText());
-                }
             }
         }
     }
