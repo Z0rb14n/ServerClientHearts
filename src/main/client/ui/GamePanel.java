@@ -1,7 +1,7 @@
-package ui.client;
+package client.ui;
 
+import client.GameClient;
 import util.ChatMessage;
-import util.GameClient;
 
 import javax.swing.*;
 import java.awt.*;

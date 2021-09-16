@@ -1,6 +1,7 @@
-package ui.client;
+package client.ui;
 
-import util.GameClient;
+import client.GameClient;
+import org.jetbrains.annotations.Contract;
 import util.card.Card;
 import util.card.Deck;
 
@@ -9,10 +10,11 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.geom.AffineTransform;
+import java.util.Arrays;
 
-// TODO SELECT CARDS FUNCTIONALITY
-
-// Represents the view of the cards (currently empty)
+/**
+ * Represents the view of the cards
+ */
 class CardView extends JPanel implements MouseListener {
     private static final int CARD_WIDTH = 80;
     private static final int CARD_HEIGHT = 150;
@@ -92,23 +94,20 @@ class CardView extends JPanel implements MouseListener {
     // MODIFIES: this
     // EFFECTS: toggles the active cards upon mouse click
     public void mouseClicked(MouseEvent e) {
-        System.out.println(e.getX() + "," + e.getY());
         // top left of JPanel is 0,0
         int index = Math.floorDiv(e.getX() - BORDER_THICKNESS, CARD_WIDTH);
-        System.out.println(index);
-        if (index >= GameClient.getInstance().getClientState().getPlayerDeck().size()) return;
-        System.out.println("Toggling...");
-        if (!GameClient.getInstance().getClientState().isAllCardsPassed()) {
-            if (GameClient.getInstance().getClientState().getPlayerDeck().size() == 13) {
-                if (activeCards[index]) {
-                    activeCards[index] = false;
-                    numSelected--;
-                } else if (numSelected < 3) {
-                    activeCards[index] = true;
-                    numSelected++;
-                }
+        System.out.println("[CardView::mouseClicked]: " + index);
+        if (index >= GameClient.getInstance().getClientState().getPlayerDeck().size() || index < 0) return;
+        if (parent.isOnThreeCardState()) {
+            if (activeCards[index]) {
+                activeCards[index] = false;
+                numSelected--;
+            } else if (numSelected < 3) {
+                activeCards[index] = true;
+                numSelected++;
             }
-        } else {
+        } else if (parent.isOnOneCardState()) {
+            System.out.println("maya hee");
             if (activeCards[index]) {
                 activeCards[index] = false;
                 numSelected = 0;
@@ -119,6 +118,15 @@ class CardView extends JPanel implements MouseListener {
         }
         parent.updatePlayButton();
         repaint();
+    }
+
+    /**
+     * Sets all cards to be inactive
+     */
+    @Contract(mutates = "this")
+    void setAllCardsInactive() {
+        Arrays.fill(activeCards, false);
+        numSelected = 0;
     }
 
     //<editor-fold desc="Ignore">

@@ -1,16 +1,14 @@
-package ui.client;
+package client.ui;
 
+import client.ClientLogger;
+import client.GameClient;
 import util.ChatMessage;
-import util.GameClient;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,6 +26,7 @@ class ChatPanel extends JPanel {
         setBorder(new EmptyBorder(30, 30, 30, 30));
         setLayout(new BorderLayout());
         chatArea.setBorder(new EmptyBorder(5, 5, 5, 5));
+        chatArea.setEnabled(false);
         jsp.setForeground(Color.BLACK);
         jsp.setBackground(CHAT_GREY);
         add(jsp, BorderLayout.CENTER);
@@ -45,15 +44,13 @@ class ChatPanel extends JPanel {
     // MODIFIES: this
     // EFFECTS: updates the displayed chat message
     void update(List<ChatMessage> messages) {
-        LinkedList<ChatMessage> listOfMessages = new LinkedList<ChatMessage>(messages);
+        LinkedList<ChatMessage> listOfMessages = new LinkedList<>(messages);
         StringBuilder sb = new StringBuilder();
-        Iterator<ChatMessage> iterator = listOfMessages.descendingIterator();
-        while (iterator.hasNext()) {
-            sb.append(iterator.next()).append("\n");
+        for (ChatMessage listOfMessage : listOfMessages) {
+            sb.append(listOfMessage).append("\n");
         }
         if (sb.length() == 0) return;
-        sb.substring(0, sb.length() - 1); // remove extra \n
-        chatArea.setText(sb.toString());
+        chatArea.setText(sb.substring(0, sb.length() - 1)); // remove extra \n
         repaint();
     }
 
@@ -64,7 +61,7 @@ class ChatPanel extends JPanel {
     }
 
     // EFFECTS: represents the chat input area
-    private class ChatInput extends JPanel {
+    private static class ChatInput extends JPanel {
         // EFFECTS: initializes the chat input area
         ChatInput() {
             super();
@@ -75,22 +72,17 @@ class ChatPanel extends JPanel {
             jtf.setBorder(new EmptyBorder(2, 2, 2, 2));
             jtf.addActionListener(e -> {
                 if (jtf.getText().length() != 0) {
-                    GameClient.ClientLogger.logMessage("[ChatPanel]: Sending message " + jtf.getText());
+                    ClientLogger.logMessage("[ChatPanel]: Sending message " + jtf.getText());
                     GameClient.getInstance().sendChatMessage(jtf.getText());
                     jtf.setText("");
                 }
             });
             add(jtf);
             JButton button = new JButton("Send");
-            button.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (e.getButton() == MouseEvent.BUTTON1) {
-                        GameClient.ClientLogger.logMessage("[ChatPanel]: Sending message " + jtf.getText());
-                        GameClient.getInstance().sendChatMessage(jtf.getText());
-                        jtf.setText("");
-                    }
-                }
+            button.addActionListener(e -> {
+                ClientLogger.logMessage("[ChatPanel]: Sending message " + jtf.getText());
+                GameClient.getInstance().sendChatMessage(jtf.getText());
+                jtf.setText("");
             });
             jtf.getDocument().addDocumentListener(new DocumentListener() {
                 @Override

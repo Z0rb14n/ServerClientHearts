@@ -1,36 +1,36 @@
-package ui.client;
+package client.ui;
 
 // TODO FINISH GUI
 
-import ui.console.Console;
+import client.GameClient;
+import client.console.Console;
 import util.ChatMessage;
-import util.GameClient;
 
 import javax.swing.*;
 import java.awt.*;
 
-// Represents the main JFrame the user interacts with
-public class MainFrame extends JFrame {
-    private final static String TOO_MANY_PLAYERS_MSG = "Too many players.";
-    private final static String CONNECTION_TIMEOUT = "Timed out.";
-    private final static String DEFAULT_COULD_NOT_CONNECT = "Could not connect.";
+/**
+ * Main JFrame the user interacts with on the client
+ */
+public class ClientFrame extends JFrame {
+    public static boolean useConsole = true;
     private final static Dimension WINDOW_DIMENSION = new Dimension(1366, 708);
     private boolean displayingInputIP = true;
     private final GamePanel gp = new GamePanel();
     private ConnectionPanel cp = new ConnectionPanel();
-    private static MainFrame singleton;
+    private static ClientFrame singleton;
 
     // MODIFIES: this
     // EFFECTS: ensures there is only one MainFrame in existence
-    public static MainFrame getFrame() {
+    public static ClientFrame getFrame() {
         if (singleton == null) {
-            singleton = new MainFrame();
+            singleton = new ClientFrame();
         }
         return singleton;
     }
 
     // EFFECTS: initializes the JFrame with an update updateTimer and a message receiver thread
-    private MainFrame() {
+    private ClientFrame() {
         super("Server Client Hearts Client");
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setBackground(Color.WHITE);
@@ -38,9 +38,23 @@ public class MainFrame extends JFrame {
         setSize(WINDOW_DIMENSION);
         cp.initialize();
         add(cp);
-        Console.getConsole(); // creates the console window
+        if (useConsole)
+            Console.getConsole(); // creates the console window
         pack();
         setVisible(true);
+    }
+
+    public void switchToGamePanel() {
+        if (displayingInputIP) {
+            invalidate();
+            remove(cp);
+            add(gp);
+            displayingInputIP = false;
+            gp.update();
+            validate();
+        }
+        pack();
+        repaint();
     }
 
     public void switchToDisplayIPInput() {
@@ -69,13 +83,7 @@ public class MainFrame extends JFrame {
         if (!GameClient.getInstance().isClientActive() && !displayingInputIP) {
             switchToDisplayIPInput();
         } else if (GameClient.getInstance().isClientActive() && displayingInputIP) {
-            remove(cp);
-            add(gp);
-            displayingInputIP = false;
-            gp.update();
-            invalidate();
-            pack();
-            repaint();
+            switchToGamePanel();
         } else if (!displayingInputIP) {
             gp.update();
             repaint();
@@ -101,38 +109,9 @@ public class MainFrame extends JFrame {
         repaint();
     }
 
-    // MODIFIES: this
-    // EFFECTS: attempts to load the client with given ip
-    public void attemptLoadClient(String ip) {
-        cp.updateErrorDisplayed("");
-        GameClient.NetworkInstantiationResult result = GameClient.getInstance().connect(ip);
-        switch (result) {
-            case ALREADY_CONNECTED:
-                Console.getConsole().addMessage("Attempted to connect to client when one was already connected");
-                break;
-            case SUCCESS:
-                Console.getConsole().addMessage("Successful connection. Player num: " + GameClient.getInstance().getClientState().getPlayerNumber()
-                        + ", ID: " + GameClient.getInstance().getClientID());
-                cp.updateErrorDisplayed("");
-                cp.setVisible(false);
-                remove(cp);
-                add(gp);
-                invalidate();
-                displayingInputIP = false;
-                repaint();
-                break;
-            case TIMED_OUT:
-                Console.getConsole().addMessage("Connection timed out.");
-                cp.updateErrorDisplayed(CONNECTION_TIMEOUT);
-                break;
-            case KICKED:
-                cp.updateErrorDisplayed(TOO_MANY_PLAYERS_MSG);
-                Console.getConsole().addMessage("Too many players.");
-                break;
-            default:
-                cp.updateErrorDisplayed(DEFAULT_COULD_NOT_CONNECT);
-                Console.getConsole().addMessage("Could not connect.");
-                break;
+    public void tryLoadClient(String ip) {
+        if (displayingInputIP) {
+            cp.attemptLoadClient(ip);
         }
     }
 }

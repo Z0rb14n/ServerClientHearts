@@ -1,12 +1,13 @@
 package net;
 
+import client.GameClient;
+import client.console.Console;
+import client.ui.ClientFrame;
 import net.message.NetworkMessage;
 import net.message.client.ClientToServerMessage;
 import net.message.server.ServerIDMessage;
 import net.message.server.ServerKickMessage;
 import net.message.server.ServerToClientMessage;
-import ui.client.MainFrame;
-import ui.console.Console;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -32,7 +33,8 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
         objectEventReceiver = parent;
         if (!active()) {
             stop();
-            Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
+            if (ClientFrame.useConsole)
+                Console.getConsole().addMessage("Could not connect to ip: " + ip + ", port: " + PORT);
             throw new ConnectionException(ERR_TIMED_OUT);
         } else {
             getClientIDFromServer();
@@ -61,7 +63,7 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
             throw new ConnectionException(ERR_KICKED + ((ServerKickMessage) msg).getMessage());
         } else {
             assert msg instanceof ServerIDMessage;
-
+            GameClient.getInstance().handleServerIDMessage((ServerIDMessage) msg);
             clientID = ((ServerIDMessage) msg).getID();
             playerNum = ((ServerIDMessage) msg).getPlayerNumber();
         }
@@ -87,7 +89,8 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
         try {
             ServerToClientMessage scm = (ServerToClientMessage) NetworkMessage.packetFromByteArray(msgBuffer);
             if (scm instanceof ServerKickMessage) {
-                Console.getConsole().addMessage("Received kick message from server: " + ((ServerKickMessage) scm).getMessage());
+                if (ClientFrame.useConsole)
+                    Console.getConsole().addMessage("Received kick message from server: " + ((ServerKickMessage) scm).getMessage());
             }
             return scm;
         } catch (IOException | ClassNotFoundException e) {
@@ -101,8 +104,11 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
     public void write(ClientToServerMessage msg) {
         try {
             byte[] bytes = NetworkMessage.packetToByteArray(msg);
-            writeInt(bytes.length);
-            writeNoLength(bytes);
+            byte[] buffer = new byte[bytes.length + 4];
+            byte[] intBytes = ByteBuffer.allocate(4).putInt(bytes.length).array();
+            System.arraycopy(intBytes, 0, buffer, 0, 4);
+            System.arraycopy(bytes, 0, buffer, 4, bytes.length);
+            writeNoLength(buffer);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
@@ -112,12 +118,6 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
     private int readInt() {
         byte[] bytes = readBytes(4);
         return ByteBuffer.wrap(bytes).getInt();
-    }
-
-    // EFFECTS: writes out the byte representation of an integer to the server
-    private void writeInt(int a) {
-        byte[] bytes = ByteBuffer.allocate(4).putInt(a).array();
-        writeNoLength(bytes);
     }
 
     // EFFECTS: gets current client ID
@@ -166,9 +166,9 @@ public final class ModifiedNewClient extends ModifiedClient implements EventRece
                 ServerToClientMessage message = lastMessages.poll();
                 assert (message != null);
                 if (message instanceof ServerKickMessage)
-                    MainFrame.getFrame().updateErrorMessage(((ServerKickMessage) message).getMessage());
+                    ClientFrame.getFrame().updateErrorMessage(((ServerKickMessage) message).getMessage());
                 else
-                    MainFrame.getFrame().updateErrorMessage("You got kicked from the server. Kick message not received, however.");
+                    ClientFrame.getFrame().updateErrorMessage("You got kicked from the server. Kick message not received, however.");
                 lastMessages.clear();
             }
         }

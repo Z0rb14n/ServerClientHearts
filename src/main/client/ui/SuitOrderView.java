@@ -1,11 +1,12 @@
-package ui.client;
+package client.ui;
 
-import util.GameClient;
+import client.GameClient;
+import util.card.Deck;
 
 import javax.swing.*;
-import java.awt.event.*;
-
-// TODO SUIT CHANGE FUNCTIONALITY
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
 
 // Represents the view of the SuitOrder
 class SuitOrderView extends JPanel {
@@ -17,10 +18,13 @@ class SuitOrderView extends JPanel {
     private static final String VALUE_STRING = "Value";
     private final JRadioButton preferSuit = new JRadioButton(SUIT_STRING, true);
     private final JRadioButton preferValue = new JRadioButton(VALUE_STRING, false);
+    private final Deck deck = GameClient.getInstance().getClientState().getPlayerDeck();
+    private final DeckView parent;
 
     // EFFECTS: initializes SuitOrderView and its components
-    SuitOrderView() {
+    SuitOrderView(DeckView parent) {
         super();
+        this.parent = parent;
         ButtonGroup buttonGroup = new ButtonGroup();
         buttonGroup.add(preferSuit);
         buttonGroup.add(preferValue);
@@ -50,7 +54,7 @@ class SuitOrderView extends JPanel {
     // MODIFIES: this
     // EFFECTS: updates all components
     void update() {
-        boolean isSortingByValue = GameClient.getInstance().getClientState().getPlayerDeck().getOrder().isSortingByValue();
+        boolean isSortingByValue = deck.getOrder().isSortingByValue();
         preferValue.setSelected(isSortingByValue);
         preferSuit.setSelected(!isSortingByValue);
         rcb.update();
@@ -62,59 +66,39 @@ class SuitOrderView extends JPanel {
     // MODIFIES: MainFrame
     // EFFECTS: adjusts the state of the main application's deck's sorting order
     private void setSortOrder(boolean isValue) {
-        GameClient.getInstance().getClientState().getPlayerDeck().getOrder().setSortByValue(isValue);
-        update();
-    }
-
-
-    // MODIFIES: MainFrame
-    // EFFECTS: sorts the main application's deck
-    private void sort() {
-        GameClient.getInstance().getClientState().getPlayerDeck().sort();
+        deck.getOrderNonCopy().setSortByValue(isValue);
         update();
     }
 
     // MODIFIES: MainFrame
     // EFFECTS: calls the reset function on the SuitOrder in MainFrame
     private void reset() {
-        GameClient.getInstance().getClientState().getPlayerDeck().getOrder().reset();
+        deck.getOrderNonCopy().reset();
         update();
     }
 
     // MODIFIES: MainFrame
     // EFFECTS: sets the SuitOrder in MainFrame to reverse or not reverse
     private void setDoReverse(boolean value) {
-        GameClient.getInstance().getClientState().getPlayerDeck().getOrder().setReverse(value);
+        deck.getOrderNonCopy().setReverse(value);
         update();
     }
 
     // Represents the "Reverse [X]" check box
     private class ReverseCheckBox extends JCheckBox {
-        // EFFECTS: initializes the check box with given item listener and title
+        /**
+         * Initializes the JCheckBox with given item listener and title
+         */
         ReverseCheckBox() {
             super("Reverse Order");
-            addItemListener(new Listener());
+            addItemListener(e -> setDoReverse(e.getStateChange() == ItemEvent.SELECTED));
         }
 
         // MODIFIES: this
         // EFFECTS: updates the reversed check box with current "is reversed" state
         void update() {
-            setSelected(GameClient.getInstance().getClientState().getPlayerDeck().getOrder().isReversed());
+            setSelected(deck.getOrder().isReversed());
             repaint();
-        }
-
-        // Represents the item listener that determines if the reverse button is checked
-        private class Listener implements ItemListener {
-            @Override
-            // MODIFIES: MainFrame
-            // EFFECTS: tells the given suit order to update according to the new state of the box
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.DESELECTED) {
-                    setDoReverse(false);
-                } else if (e.getStateChange() == ItemEvent.SELECTED) {
-                    setDoReverse(true);
-                }
-            }
         }
     }
 
@@ -124,25 +108,13 @@ class SuitOrderView extends JPanel {
         ResetButton() {
             super("Reset to Default");
             setEnabled(false);
-            addMouseListener(new Listener());
+            addActionListener(e -> reset());
         }
 
         // MODIFIES: this
         // EFFECTS: updates the reset button to the current state of the client state
         void update() {
-            setEnabled(!GameClient.getInstance().getClientState().getPlayerDeck().getOrder().isDefault());
-        }
-
-        // Represents the Mouse listener that determines if the reset button is clicked
-        private class Listener extends MouseAdapter {
-            @Override
-            // MODIFIES: ResetButton
-            // EFFECTS: resets the suit order
-            public void mouseClicked(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON1) {
-                    reset();
-                }
-            }
+            setEnabled(!deck.getOrder().isDefault());
         }
     }
 
@@ -152,25 +124,17 @@ class SuitOrderView extends JPanel {
         SortButton() {
             super("Sort");
             setEnabled(false);
-            addMouseListener(new Listener());
+            addActionListener(e -> {
+                deck.sort();
+                parent.cv.setAllCardsInactive();
+                ClientFrame.getFrame().update();
+            });
         }
 
         // MODIFIES: this
         // EFFECTS: updates the reset button to the current state of the client state
         void update() {
-            setEnabled(!GameClient.getInstance().getClientState().getPlayerDeck().isSorted());
-        }
-
-        // Represents the Mouse listener that determines if the reset button is clicked
-        private class Listener extends MouseAdapter {
-            @Override
-            // MODIFIES: ResetButton
-            // EFFECTS: resets the suit order
-            public void mouseClicked(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON1) {
-                    sort();
-                }
-            }
+            setEnabled(!deck.isSorted());
         }
     }
 

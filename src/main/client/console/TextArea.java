@@ -1,4 +1,4 @@
-package ui.console;
+package client.console;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

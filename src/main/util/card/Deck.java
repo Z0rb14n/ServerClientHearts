@@ -28,14 +28,24 @@ public class Deck implements Iterable<Card>, Serializable {
     }
 
     /**
-     * Gets the suit order of the deck
+     * Gets a copy of suit order of the deck
      *
-     * @return Suit order of the deck
+     * @return copy of the suit order of the deck
      */
     @NotNull
     @Contract(pure = true)
     public SuitOrder getOrder() {
         return order.copy();
+    }
+
+    /**
+     * Gets the suit order of the deck without making a copy
+     *
+     * @return suit order of the deck
+     */
+    @NotNull
+    public SuitOrder getOrderNonCopy() {
+        return order;
     }
 
     /**

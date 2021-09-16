@@ -4,7 +4,8 @@ import net.message.NetworkMessage;
 import net.message.client.ClientChatMessage;
 import net.message.client.ClientToServerMessage;
 import net.message.server.*;
-import ui.server.ServerFrame;
+import org.jetbrains.annotations.Contract;
+import server.ui.Main;
 import util.card.Card;
 import util.card.Deck;
 import util.card.Suit;
@@ -17,13 +18,14 @@ import java.util.UUID;
 
 import static net.Constants.*;
 
-public final class ModifiedNewServer extends ModifiedServer {
+public final class ModifiedNewServer extends ModifiedServer implements EventReceiver {
     private final LinkedHashMap<String, ModifiedClient> clients = new LinkedHashMap<>(4);
     private final ChatMessageHandler cmh = new ChatMessageHandler();
     private final String[] IDS = new String[4];
 
-    public ModifiedNewServer(EventReceiver parent) {
-        super(parent, Constants.PORT);
+    public ModifiedNewServer() {
+        super(Constants.PORT);
+        this.eventReceiver = this;
         System.out.println("Server started at: " + ModifiedServer.ip());
         cmh.start();
     }
@@ -87,7 +89,7 @@ public final class ModifiedNewServer extends ModifiedServer {
 
     // MODIFIES: this
     // EFFECTS: informs players that the game has ended
-    public void endGame(boolean[] winners, int points, Deck[] penaltyHands) {
+    public void endGame(boolean[] winners, int[] points, Deck[] penaltyHands) {
         try {
             write(new ServerGameEndMessage(penaltyHands, winners));
         } catch (IOException e) {
@@ -95,9 +97,17 @@ public final class ModifiedNewServer extends ModifiedServer {
         }
     }
 
-    // MODIFIES: this
-    // EFFECTS: runs when a new client connects
-    public void onClientConnect(ModifiedClient c) {
+
+    /**
+     * Runs when a client connects to the server
+     *
+     * @param s Server in question
+     * @param c client that connected
+     */
+    @Override
+    @Contract(mutates = "this")
+    public void clientConnectionEvent(ModifiedServer s, ModifiedClient c) {
+        assert (s == this);
         System.out.println("New client " + c.ip() + " connected to server  " + ModifiedServer.ip());
         int spot = firstEmptySpace();
         if (spot == -1) {
@@ -135,37 +145,52 @@ public final class ModifiedNewServer extends ModifiedServer {
         }
     }
 
-    // MODIFIES: this
-    // EFFECTS: runs when a client disconnects
-    public void onClientDisconnect(ModifiedClient c) {
+    /**
+     * Runs when a client has disconnected - remove a client from the entry list
+     *
+     * @param c client that has just disconnected
+     */
+    @Override
+    @Contract(mutates = "this")
+    public void disconnectEvent(ModifiedClient c) {
         if (clients.containsValue(c)) {
             System.out.println("Client disconnected: " + c.ip());
-            removeClientFromEntries(c);
             informPlayersOnDisconnect(c);
+            removeClientFromEntries(c);
         }
     }
 
-    // EFFECTS: messages all other clients that a player has joined
+    /**
+     * Messages all other clients that a player has joined
+     *
+     * @param playerNumber player number that joined
+     */
     private void informPlayersPlayerJoined(int playerNumber) {
         ServerToClientMessage scm = new ServerPlayerConnectionMessage(playerNumber);
         for (int i = 0; i < IDS.length; i++) {
             if (IDS[i] != null && i != playerNumber - 1) {
+                System.out.println("Informing player " + (i + 1));
                 sendNthClientMessage(i + 1, scm);
             }
         }
     }
 
-    // MODIFIES: this
-    // EFFECTS: informs other players that a player has disconnected
+    /**
+     * Informs other players that a player has disconnected
+     *
+     * @param c Player that disconnected
+     */
+    @Contract(mutates = "this")
     private void informPlayersOnDisconnect(ModifiedClient c) {
         int playerNum = getClientNumber(c);
         if (playerNum == 0) return;
-        try {
-            write(new ServerPlayerDisconnectionMessage(playerNum));
-            System.out.println("Written out disconnect message.");
-        } catch (IOException e) {
-            e.printStackTrace();
+        ServerPlayerDisconnectionMessage message = new ServerPlayerDisconnectionMessage(playerNum);
+        for (int i = 0; i < IDS.length; i++) {
+            if (IDS[i] != null && i != playerNum - 1) {
+                sendNthClientMessage(i + 1, message);
+            }
         }
+        System.out.println("Written out disconnection messages.");
     }
 
     // EFFECTS: returns client number (1-4), 0 if non-existent
@@ -204,20 +229,20 @@ public final class ModifiedNewServer extends ModifiedServer {
     // MODIFIES: this
     // EFFECTS: kicks the client with given message
     public void kick(ModifiedClient c, String msg) {
+        new Throwable().printStackTrace();
         try {
             c.write(NetworkMessage.packetToByteArray(new ServerKickMessage(msg)));
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("Kicking client: " + c.ip());
         disconnect(c);
-        System.out.println("Client kicked: " + c.ip());
         removeClientFromEntries(c);
     }
 
     // MODIFIES: this
     // EFFECTS: writes out a ServerToClientMessage to clients
     public void write(ServerToClientMessage msg) throws IOException {
-
         write(NetworkMessage.packetToByteArray(msg));
     }
 
@@ -324,9 +349,8 @@ public final class ModifiedNewServer extends ModifiedServer {
                         kickInvalid(getClientNumber(c));
                     } else if (csm instanceof ClientChatMessage) {
                         handleChatMessage((ClientChatMessage) csm, c);
-                        System.out.print("handled chat message.");
                     } else {
-                        ServerFrame.getInstance().addNewMessage(new MessagePair(c, csm));
+                        Main.getGameServer().addNewMessage(new MessagePair(c,csm));
                     }
                     c = available(); // get next client
                 }
