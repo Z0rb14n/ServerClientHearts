@@ -1,6 +1,8 @@
 package client.console.command;
 
-// Represents an exception thrown to indicate instantiating an invalid command
+/**
+ * Represents an exception thrown to indicate instantiating an invalid command
+ */
 public class InvalidCommandException extends Exception {
     public InvalidCommandException() {
         super();

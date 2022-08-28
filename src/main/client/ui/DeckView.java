@@ -5,6 +5,8 @@ import client.GameClient;
 import org.jetbrains.annotations.Contract;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * Represents the view of the deck, containing a CardView, SuitOrderView and a play button
@@ -14,14 +16,6 @@ class DeckView extends JPanel {
     final CardView cv = new CardView(this);
     private final SuitOrderView sov = new SuitOrderView(this);
     private final ClientGameState clientGameState = GameClient.getInstance().getClientState();
-
-    /**
-     * @return true if you should pass 3 cards
-     */
-    boolean isOnThreeCardState() {
-        return !clientGameState.getPlayersThatPassed()[clientGameState.getPlayerNumber() - 1] &&
-                clientGameState.isStartedPassingCards() && !clientGameState.isAllCardsPassed();
-    }
 
     /**
      * @return true if you should play 1 card
@@ -65,35 +59,37 @@ class DeckView extends JPanel {
     /**
      * JButton that when pressed plays cards
      */
-    private class PlayButton extends JButton {
+    private class PlayButton extends JButton implements ActionListener {
         /**
          * Initializes the JButton with text and an action listener
          */
         PlayButton() {
             super("Play");
             setEnabled(false);
-            addActionListener(e -> {
-                if (cv.getActiveCards().size() == 3) {
-                    GameClient.getInstance().passCards(cv.getActiveCards().get(0), cv.getActiveCards().get(1), cv.getActiveCards().get(2));
-                    cv.setAllCardsInactive();
-                } else if (cv.getActiveCards().size() == 1) {
-                    GameClient.getInstance().playCard(cv.getActiveCards().get(0));
-                    cv.setAllCardsInactive();
-                }
-                setEnabled(false);
-            });
+            addActionListener(this);
         }
 
         /**
          * Updates enabled state based on number of cards and current state
          */
         void update() {
-            if (isOnThreeCardState())
+            if (clientGameState.shouldPassCards())
                 setEnabled(cv.getNumberSelectedCards() == 3);
             else if (isOnOneCardState()) {
-                if (cv.getNumberSelectedCards() == 1 && GameClient.getInstance().getClientState().isValidCardPlay(cv.getActiveCards().get(0)))
-                    setEnabled(true);
+                setEnabled(cv.getNumberSelectedCards() == 1 && GameClient.getInstance().getClientState().isValidCardPlay(cv.getActiveCards().get(0)));
             } else setEnabled(false);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (cv.getActiveCards().size() == 3) {
+                GameClient.getInstance().passCards(cv.getActiveCards().get(0), cv.getActiveCards().get(1), cv.getActiveCards().get(2));
+                cv.setAllCardsInactive();
+            } else if (cv.getActiveCards().size() == 1) {
+                GameClient.getInstance().playCard(cv.getActiveCards().get(0));
+                cv.setAllCardsInactive();
+            }
+            setEnabled(false);
         }
     }
 }

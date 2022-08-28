@@ -1,5 +1,6 @@
 package client.ui;
 
+import client.ClientGameState;
 import client.GameClient;
 import org.jetbrains.annotations.Contract;
 import util.card.Card;
@@ -63,6 +64,17 @@ class CardView extends JPanel implements MouseListener {
             if (activeCards[i]) drawnYPos -= HEIGHT_OFFSET;
             drawCard(g2d, CARD_WIDTH * i + BORDER_THICKNESS, drawnYPos, d.get(i));
         }
+        if (!shouldBeActive()) {
+            g2d.setColor(new Color(50, 50, 50, 150));
+            g2d.fillRect(0, 0, getWidth(), getHeight());
+        }
+    }
+
+    private static boolean isCardAllowed(Card c) {
+        ClientGameState state = GameClient.getInstance().getClientState();
+        if (!state.isAllCardsPassed()) return true;
+        return state.isValidCardPlay(c);
+
     }
 
     // MODIFIES: g
@@ -73,14 +85,17 @@ class CardView extends JPanel implements MouseListener {
         AffineTransform af = g.getTransform();
         g.setStroke(new BasicStroke(2));
         g.translate(x, y);
-        g.setColor(Color.WHITE);
+        if (isCardAllowed(c))
+            g.setColor(Color.WHITE);
+        else
+            g.setColor(Color.GRAY);
         g.fillRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20, 20);
         g.setColor(Color.BLACK);
         g.drawRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20, 20);
         g.setFont(font);
         g.setColor(c.getSuit().getColor());
         String firstLine = "" + c.getSuit().getCharacter();
-        String secondLine = c.isFaceCard() ? c.getFace().toString() : "" + c.getNumber();
+        String secondLine = c.isFaceCard() ? "" + c.getFace() : "" + c.getNumber();
         FontMetrics fm = g.getFontMetrics();
         g.drawString(firstLine, 15 - fm.stringWidth(firstLine) / 2, 15);
         g.drawString(secondLine, 15 - fm.stringWidth(secondLine) / 2, 35);
@@ -94,11 +109,16 @@ class CardView extends JPanel implements MouseListener {
     // MODIFIES: this
     // EFFECTS: toggles the active cards upon mouse click
     public void mouseClicked(MouseEvent e) {
+        if (!shouldBeActive()) {
+            return;
+        }
+        ClientGameState state = GameClient.getInstance().getClientState();
         // top left of JPanel is 0,0
         int index = Math.floorDiv(e.getX() - BORDER_THICKNESS, CARD_WIDTH);
         System.out.println("[CardView::mouseClicked]: " + index);
-        if (index >= GameClient.getInstance().getClientState().getPlayerDeck().size() || index < 0) return;
-        if (parent.isOnThreeCardState()) {
+        Deck deck = state.getPlayerDeck();
+        if (index >= deck.size() || index < 0) return;
+        if (state.shouldPassCards()) {
             if (activeCards[index]) {
                 activeCards[index] = false;
                 numSelected--;
@@ -107,13 +127,14 @@ class CardView extends JPanel implements MouseListener {
                 numSelected++;
             }
         } else if (parent.isOnOneCardState()) {
-            System.out.println("maya hee");
             if (activeCards[index]) {
                 activeCards[index] = false;
                 numSelected = 0;
             } else if (numSelected == 0) {
-                activeCards[index] = true;
-                numSelected = 1;
+                if (isCardAllowed(deck.get(index))) {
+                    activeCards[index] = true;
+                    numSelected = 1;
+                }
             }
         }
         parent.updatePlayButton();
@@ -127,6 +148,14 @@ class CardView extends JPanel implements MouseListener {
     void setAllCardsInactive() {
         Arrays.fill(activeCards, false);
         numSelected = 0;
+    }
+
+    private boolean shouldBeActive() {
+        ClientGameState state = GameClient.getInstance().getClientState();
+        if (!state.isAllCardsPassed())
+            return state.shouldPassCards();
+
+        return state.canPlay() && state.getPlayerDeck().size() > 0;
     }
 
     //<editor-fold desc="Ignore">

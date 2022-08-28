@@ -238,6 +238,10 @@ public class ClientGameState implements Serializable {
         return allCardsPassed;
     }
 
+    public boolean shouldPassCards() {
+        return !playersThatPassed[playerNumber - 1] && startedPassingCards && !allCardsPassed;
+    }
+
     public int getNextToPlay() {
         return nextToPlay;
     }
