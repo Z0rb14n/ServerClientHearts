@@ -20,7 +20,7 @@ import static net.Constants.DEFAULT_TIMEOUT;
 
 public class GameClient implements ObjectEventReceiver {
     public static final int MAX_CHAT_MESSAGES = 100;
-    private final ClientGameState gameState = new ClientGameState();
+    private final ClientGameState gameState = ClientGameState.getInstance();
     private final Queue<ChatMessage> chatMessages = new ArrayDeque<>(MAX_CHAT_MESSAGES);
     private final boolean[] onlinePlayers = new boolean[4];
     private final ReentrantLock waitingForMessageMutex = new ReentrantLock();
@@ -219,10 +219,6 @@ public class GameClient implements ObjectEventReceiver {
         gameState.reset();
         for (int i = 0; i < 4; i++) onlinePlayers[i] = false;
         chatMessages.clear();
-    }
-
-    public ClientGameState getClientState() {
-        return gameState;
     }
 
     //<editor-fold desc="Incoming Message Processing">

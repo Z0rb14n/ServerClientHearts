@@ -1,6 +1,6 @@
 package client.ui;
 
-import client.GameClient;
+import client.ClientGameState;
 import util.SuitOrder;
 import util.card.Suit;
 
@@ -33,7 +33,7 @@ class SuitDisplay extends JPanel {
     // EFFECTS: adjusts SuitDisplay according to current MainFrame deck state
     void update() {
         StringBuilder sb = new StringBuilder();
-        Suit[] so = GameClient.getInstance().getClientState().getPlayerDeck().getOrder().getSuitOrder();
+        Suit[] so = ClientGameState.getInstance().getPlayerDeck().getOrder().getSuitOrder();
         for (int i = so.length - 1; i >= 0; i--) {
             sb.append(so[i].getCharacter());
             if (i != 0) sb.append(" < ");

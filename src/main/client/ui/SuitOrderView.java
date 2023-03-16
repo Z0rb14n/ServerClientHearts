@@ -1,6 +1,6 @@
 package client.ui;
 
-import client.GameClient;
+import client.ClientGameState;
 import util.card.Deck;
 
 import javax.swing.*;
@@ -18,7 +18,7 @@ class SuitOrderView extends JPanel {
     private static final String VALUE_STRING = "Value";
     private final JRadioButton preferSuit = new JRadioButton(SUIT_STRING, true);
     private final JRadioButton preferValue = new JRadioButton(VALUE_STRING, false);
-    private final Deck deck = GameClient.getInstance().getClientState().getPlayerDeck();
+    private final Deck deck = ClientGameState.getInstance().getPlayerDeck();
     private final DeckView parent;
 
     // EFFECTS: initializes SuitOrderView and its components

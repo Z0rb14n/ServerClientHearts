@@ -1,5 +1,6 @@
 package client.ui;
 
+import client.ClientGameState;
 import client.GameClient;
 import client.console.Console;
 import org.jetbrains.annotations.Contract;
@@ -78,7 +79,7 @@ class ConnectionPanel extends JPanel {
                 break;
             case SUCCESS:
                 if (ClientFrame.useConsole)
-                    Console.getConsole().addMessage("Successful connection. Player num: " + GameClient.getInstance().getClientState().getPlayerNumber()
+                    Console.getConsole().addMessage("Successful connection. Player num: " + ClientGameState.getInstance().getPlayerNumber()
                             + ", ID: " + GameClient.getInstance().getClientID());
                 updateErrorDisplayed("");
                 setVisible(false);

@@ -15,7 +15,7 @@ class DeckView extends JPanel {
     private final PlayButton pb = new PlayButton();
     final CardView cv = new CardView(this);
     private final SuitOrderView sov = new SuitOrderView(this);
-    private final ClientGameState clientGameState = GameClient.getInstance().getClientState();
+    private final ClientGameState clientGameState = ClientGameState.getInstance();
 
     /**
      * @return true if you should play 1 card
@@ -76,7 +76,7 @@ class DeckView extends JPanel {
             if (clientGameState.shouldPassCards())
                 setEnabled(cv.getNumberSelectedCards() == 3);
             else if (isOnOneCardState()) {
-                setEnabled(cv.getNumberSelectedCards() == 1 && GameClient.getInstance().getClientState().isValidCardPlay(cv.getActiveCards().get(0)));
+                setEnabled(cv.getNumberSelectedCards() == 1 && ClientGameState.getInstance().isValidCardPlay(cv.getActiveCards().get(0)));
             } else setEnabled(false);
         }
 

@@ -1,5 +1,6 @@
 package client.ui;
 
+import client.ClientGameState;
 import client.GameClient;
 
 import javax.imageio.ImageIO;
@@ -85,7 +86,7 @@ public class PlayerView extends JPanel {
     // EFFECTS: paints this component onto the graphics object
     public void paintComponent(Graphics g) {
         final boolean[] existingPlayers = GameClient.getInstance().getOnlinePlayers();
-        final int playerNum = GameClient.getInstance().getClientState().getPlayerNumber();
+        final int playerNum = ClientGameState.getInstance().getPlayerNumber();
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setFont(font);

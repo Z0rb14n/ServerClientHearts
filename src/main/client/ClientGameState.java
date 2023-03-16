@@ -34,7 +34,14 @@ public class ClientGameState implements Serializable {
     private int firstPlayed = -1;
     private int numRoundsPlayed = 0;
 
-    public ClientGameState() {
+    private static ClientGameState instance = null;
+
+    public static ClientGameState getInstance() {
+        if (instance == null) instance = new ClientGameState();
+        return instance;
+    }
+
+    private ClientGameState() {
         reset();
     }
 
@@ -240,6 +247,11 @@ public class ClientGameState implements Serializable {
 
     public boolean shouldPassCards() {
         return !playersThatPassed[playerNumber - 1] && startedPassingCards && !allCardsPassed;
+    }
+
+    public boolean isCardAllowed(Card c) {
+        if (!isAllCardsPassed()) return true;
+        return isValidCardPlay(c);
     }
 
     public int getNextToPlay() {

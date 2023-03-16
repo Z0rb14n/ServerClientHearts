@@ -1,16 +1,13 @@
 package client.ui;
 
 import client.ClientGameState;
-import client.GameClient;
 import org.jetbrains.annotations.Contract;
-import util.card.Card;
 import util.card.Deck;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.geom.AffineTransform;
 import java.util.Arrays;
 
 /**
@@ -19,7 +16,6 @@ import java.util.Arrays;
 class CardView extends JPanel implements MouseListener {
     private static final int CARD_WIDTH = 80;
     private static final int CARD_HEIGHT = 150;
-    private static final Font font = new Font("Arial", Font.PLAIN, 20);
     private static final int BORDER_THICKNESS = 2;
     private static final int SIZE_BUFFER = 4 * BORDER_THICKNESS;
     private static final int HEIGHT_OFFSET = 20;
@@ -44,7 +40,7 @@ class CardView extends JPanel implements MouseListener {
     // EFFECTS: returns the active cards
     Deck getActiveCards() {
         Deck deck = new Deck();
-        Deck clientDeck = GameClient.getInstance().getClientState().getPlayerDeck();
+        Deck clientDeck = ClientGameState.getInstance().getPlayerDeck();
         for (int i = 0; i < clientDeck.size(); i++) {
             if (activeCards[i]) deck.add(clientDeck.get(i));
         }
@@ -58,51 +54,16 @@ class CardView extends JPanel implements MouseListener {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
 
-        Deck d = GameClient.getInstance().getClientState().getPlayerDeck();
+        Deck d = ClientGameState.getInstance().getPlayerDeck();
         for (int i = 0; i < d.size(); i++) {
             int drawnYPos = getY() + BORDER_THICKNESS + HEIGHT_OFFSET;
             if (activeCards[i]) drawnYPos -= HEIGHT_OFFSET;
-            drawCard(g2d, CARD_WIDTH * i + BORDER_THICKNESS, drawnYPos, d.get(i));
+            DrawUtil.drawCard(g2d, CARD_WIDTH * i + BORDER_THICKNESS, drawnYPos, CARD_WIDTH, CARD_HEIGHT, d.get(i));
         }
         if (!shouldBeActive()) {
             g2d.setColor(new Color(50, 50, 50, 150));
             g2d.fillRect(0, 0, getWidth(), getHeight());
         }
-    }
-
-    private static boolean isCardAllowed(Card c) {
-        ClientGameState state = GameClient.getInstance().getClientState();
-        if (!state.isAllCardsPassed()) return true;
-        return state.isValidCardPlay(c);
-
-    }
-
-    // MODIFIES: g
-    // EFFECTS: draws the card offset by given x and y coordinates onto graphics object
-    private static void drawCard(Graphics2D g, int x, int y, Card c) {
-        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        AffineTransform af = g.getTransform();
-        g.setStroke(new BasicStroke(2));
-        g.translate(x, y);
-        if (isCardAllowed(c))
-            g.setColor(Color.WHITE);
-        else
-            g.setColor(Color.GRAY);
-        g.fillRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20, 20);
-        g.setColor(Color.BLACK);
-        g.drawRoundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, 20, 20);
-        g.setFont(font);
-        g.setColor(c.getSuit().getColor());
-        String firstLine = "" + c.getSuit().getCharacter();
-        String secondLine = c.isFaceCard() ? "" + c.getFace() : "" + c.getNumber();
-        FontMetrics fm = g.getFontMetrics();
-        g.drawString(firstLine, 15 - fm.stringWidth(firstLine) / 2, 15);
-        g.drawString(secondLine, 15 - fm.stringWidth(secondLine) / 2, 35);
-        g.scale(-1, -1);
-        g.drawString(firstLine, -CARD_WIDTH + 15 - fm.stringWidth(firstLine) / 2, -CARD_HEIGHT + 15);
-        g.drawString(secondLine, -CARD_WIDTH + 15 - fm.stringWidth(secondLine) / 2, -CARD_HEIGHT + 35);
-        g.setTransform(af);
     }
 
     @Override
@@ -112,7 +73,7 @@ class CardView extends JPanel implements MouseListener {
         if (!shouldBeActive()) {
             return;
         }
-        ClientGameState state = GameClient.getInstance().getClientState();
+        ClientGameState state = ClientGameState.getInstance();
         // top left of JPanel is 0,0
         int index = Math.floorDiv(e.getX() - BORDER_THICKNESS, CARD_WIDTH);
         System.out.println("[CardView::mouseClicked]: " + index);
@@ -131,7 +92,7 @@ class CardView extends JPanel implements MouseListener {
                 activeCards[index] = false;
                 numSelected = 0;
             } else if (numSelected == 0) {
-                if (isCardAllowed(deck.get(index))) {
+                if (ClientGameState.getInstance().isCardAllowed(deck.get(index))) {
                     activeCards[index] = true;
                     numSelected = 1;
                 }
@@ -151,7 +112,7 @@ class CardView extends JPanel implements MouseListener {
     }
 
     private boolean shouldBeActive() {
-        ClientGameState state = GameClient.getInstance().getClientState();
+        ClientGameState state = ClientGameState.getInstance();
         if (!state.isAllCardsPassed())
             return state.shouldPassCards();
 
