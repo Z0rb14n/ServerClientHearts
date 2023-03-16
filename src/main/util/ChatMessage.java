@@ -21,7 +21,7 @@ public class ChatMessage {
      * @throws IllegalArgumentException if number is out of bounds (i.e. not [1-4])
      */
     public ChatMessage(int number, @NotNull String msg) {
-        if (number < 1 || number > 4) throw new IllegalArgumentException();
+        if (number < 0 || number > 4) throw new IllegalArgumentException();
         message = msg;
         playerNumberSender = number;
     }
@@ -29,6 +29,7 @@ public class ChatMessage {
     @Override
     @Contract(pure = true)
     public String toString() {
+        if (playerNumberSender == 0) return "[Server] " + message;
         return "Player " + playerNumberSender + ": " + message;
     }
 }

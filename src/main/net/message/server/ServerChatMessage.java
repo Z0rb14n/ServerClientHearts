@@ -11,12 +11,8 @@ public class ServerChatMessage implements ServerToClientMessage {
     private final String message;
     private final int playerNumber;
 
-    public ServerChatMessage() {
-        this("", -1);
-    }
-
     public ServerChatMessage(@NotNull String message, int playerNumber) {
-        ServerToClientMessage.verifyPlayerNumber(playerNumber);
+        if (playerNumber != 0) ServerToClientMessage.verifyPlayerNumber(playerNumber);
         this.message = message;
         this.playerNumber = playerNumber;
     }
@@ -31,7 +27,7 @@ public class ServerChatMessage implements ServerToClientMessage {
 
     @Override
     public boolean isValid() {
-        return playerNumber >= 1 && playerNumber <= 4;
+        return playerNumber >= 0 && playerNumber <= 4;
     }
 
     @Override

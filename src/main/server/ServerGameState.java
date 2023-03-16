@@ -1,5 +1,6 @@
 package server;
 
+import net.message.server.ServerChatMessage;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 import server.ui.Main;
@@ -8,6 +9,9 @@ import util.PlayOrder;
 import util.card.Card;
 import util.card.Deck;
 import util.card.Suit;
+
+import java.io.IOException;
+import java.util.Arrays;
 
 // Represents the state of the server (i.e. has the game started?)
 public class ServerGameState {
@@ -249,6 +253,13 @@ public class ServerGameState {
         if (numTurns != 14) return;
         gameEnded = true;
         Main.getNetServer().endGame(gameWinner(), allPenaltyPoints(), penalties);
+        try {
+            Main.getNetServer().write(new ServerChatMessage("Game ended. Winner: " + Arrays.toString(gameWinner()) + ", "
+                    + Arrays.toString(allPenaltyPoints()) + ", " + Arrays.toString(penalties), 0));
+        } catch (IOException e) {
+            e.printStackTrace();
+            // no need to kick - just a chat message
+        }
     }
 
     // EFFECTS: returns current winner
