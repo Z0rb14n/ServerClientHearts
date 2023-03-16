@@ -10,15 +10,16 @@ public class DrawUtil {
     private static final Font font = new Font("Arial", Font.PLAIN, 20);
 
     public static void drawCard(Graphics2D g, int x, int y, int width, int height, Card c) {
+        drawCard(g, x, y, width, height, c, ClientGameState.getInstance().isCardAllowed(c));
+    }
+
+    public static void drawCard(Graphics2D g, int x, int y, int width, int height, Card c, boolean allowed) {
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         AffineTransform af = g.getTransform();
         g.setStroke(new BasicStroke(2));
         g.translate(x, y);
-        if (ClientGameState.getInstance().isCardAllowed(c))
-            g.setColor(Color.WHITE);
-        else
-            g.setColor(Color.GRAY);
+        g.setColor(allowed ? Color.WHITE : Color.GRAY);
         g.fillRoundRect(0, 0, width, height, 20, 20);
         g.setColor(Color.BLACK);
         g.drawRoundRect(0, 0, width, height, 20, 20);

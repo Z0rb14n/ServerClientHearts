@@ -9,12 +9,10 @@ import util.card.Card;
 import util.card.Deck;
 import util.card.Suit;
 
-// TODO SEND PLAYING/PASSING ORDER OVER SERVERTOCLIENTMESSAGE
-
 // Represents the state of the server (i.e. has the game started?)
 public class ServerGameState {
-    private static final PlayOrder PLAYING_ORDER = PlayOrder.ASCENDING_NUM;
-    private static final PassOrder PASS_ORDER = PassOrder.ASCENDING_NUM;
+    private final PlayOrder playingOrder = PlayOrder.ASCENDING_NUM;
+    private final PassOrder passOrder = PassOrder.ASCENDING_NUM;
     private boolean isGameStarted = false;
     private boolean allCardsPassed = false;
     private int numTurns = 0;
@@ -91,6 +89,14 @@ public class ServerGameState {
         return center;
     }
 
+    public PlayOrder getPlayingOrder() {
+        return playingOrder;
+    }
+
+    public PassOrder getPassOrder() {
+        return passOrder;
+    }
+
     // EFFECTS: determines whether player number c (1-4) can play card (i.e. in their deck)
     private boolean isInvalidPlay(Card c, int playerNum) {
         if (playerNum < 1 || playerNum > 4)
@@ -109,7 +115,7 @@ public class ServerGameState {
 
     // EFFECTS: determines whether the player (1-4) has played a card already (i.e. is in the center)
     private boolean hasPlayedCard(int playerNum) {
-        return PLAYING_ORDER.hasPlayerPlayed(startingPlayer, center.size(), playerNum);
+        return playingOrder.hasPlayerPlayed(startingPlayer, center.size(), playerNum);
     }
 
     // EFFECTS: determines whether the player is not the next player to play
@@ -119,7 +125,7 @@ public class ServerGameState {
 
     // EFFECTS: determines the player number of player next to play
     private int nextToPlay() {
-        return PLAYING_ORDER.nextPlayer(startingPlayer, center.size());
+        return playingOrder.nextPlayer(startingPlayer, center.size());
     }
 
     // MODIFIES: this, server
@@ -208,7 +214,7 @@ public class ServerGameState {
     private int trickWinner() {
         assert (center.size() == 4);
         // works only because index starts at 0 instead of 1
-        return PLAYING_ORDER.nextPlayer(startingPlayer, center.highestIndexOfSuit(currentSuitToPlay));
+        return playingOrder.nextPlayer(startingPlayer, center.highestIndexOfSuit(currentSuitToPlay));
     }
 
     // MODIFIES: this
@@ -218,7 +224,7 @@ public class ServerGameState {
             if (d.isEmpty()) return;
         }
         for (int i = 0; i < 4; i++) {
-            int receivingPlayerIndex = PASS_ORDER.toPass(i + 1) - 1;
+            int receivingPlayerIndex = passOrder.toPass(i + 1) - 1;
             hands[receivingPlayerIndex].add(passingHands[i]);
             receivingHands[receivingPlayerIndex] = passingHands[i];
         }

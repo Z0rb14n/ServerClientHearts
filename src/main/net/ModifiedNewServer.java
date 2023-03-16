@@ -6,6 +6,8 @@ import net.message.client.ClientToServerMessage;
 import net.message.server.*;
 import org.jetbrains.annotations.Contract;
 import server.ui.Main;
+import util.PassOrder;
+import util.PlayOrder;
 import util.card.Card;
 import util.card.Deck;
 import util.card.Suit;
@@ -47,10 +49,10 @@ public final class ModifiedNewServer extends ModifiedServer implements EventRece
 
     // MODIFIES: this
     // EFFECTS: runs when the game has started
-    public void onGameStart(Deck[] decks) {
+    public void onGameStart(Deck[] decks, PlayOrder playOrder, PassOrder passOrder) {
         if (decks.length != 4) throw new IllegalArgumentException();
         for (int i = 0; i < 4; i++) {
-            sendNthClientMessage(i + 1, new ServerStartGameMessage(decks[i]));
+            sendNthClientMessage(i + 1, new ServerStartGameMessage(decks[i], playOrder, passOrder));
         }
 
     }

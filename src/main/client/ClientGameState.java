@@ -79,6 +79,8 @@ public class ClientGameState implements Serializable {
     void startGame(@NotNull ServerStartGameMessage message) {
         playerDeck.clear();
         playerDeck.add(message.getClientHand());
+        currentPassOrder = message.getPassOrder();
+        currentPlayOrder = message.getPlayOrder();
         gameStarted = true;
         startedPassingCards = true;
         ClientLogger.logMessage("[ClientGameStart::startGame]: Player hand: " + playerDeck);
@@ -107,6 +109,7 @@ public class ClientGameState implements Serializable {
         penalties[message.getPlayerWhoStartsNext() - 1].add(message.getNewPenaltyCards());
         nextToPlay = message.getPlayerWhoStartsNext();
         requiredSuitToPlay = null;
+        center.clear();
         numRoundsPlayed++;
     }
 

@@ -41,7 +41,7 @@ public class GameServer {
         if (!gameState.isGameStarted() && newServer.isFull()) {
             // start game, transition to pass cards
             gameState.startGame();
-            newServer.onGameStart(gameState.getHandsInOrder());
+            newServer.onGameStart(gameState.getHandsInOrder(), gameState.getPlayingOrder(), gameState.getPassOrder());
         }
         if (hasNewAction()) {
             handleMessages();

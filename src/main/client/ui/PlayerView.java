@@ -94,6 +94,14 @@ public class PlayerView extends JPanel {
         FontMetrics fm = g.getFontMetrics();
         int x = YOU_TEXT_POSITIONS[playerNum - 1][0] - (fm.stringWidth("YOU") / 2);
         g.drawString("YOU", x, YOU_TEXT_POSITIONS[playerNum - 1][1]);
+        drawCats(g);
+        drawCards(g2d);
+        //g.drawImage(bicycleCat, 0, 0, null);
+    }
+
+    private void drawCats(Graphics g) {
+        final boolean[] existingPlayers = GameClient.getInstance().getOnlinePlayers();
+
         if (existingPlayers[0]) g.drawImage(catDefault, CAT_COORDINATES[0][0], CAT_COORDINATES[0][1], null);
         else g.drawImage(catOutlineOnly, CAT_COORDINATES[0][0], CAT_COORDINATES[0][1], null);
 
@@ -105,7 +113,19 @@ public class PlayerView extends JPanel {
 
         if (existingPlayers[3]) g.drawImage(catFaceRight, CAT_COORDINATES[3][0], CAT_COORDINATES[3][1], null);
         else g.drawImage(catOutlineOnly, CAT_COORDINATES[3][0], CAT_COORDINATES[3][1], null);
-        //g.drawImage(bicycleCat, 0, 0, null);
+    }
+
+    private void drawCards(Graphics2D g2d) {
+        int firstPlayed = ClientGameState.getInstance().getFirstPlayed();
+        if (firstPlayed != -1) {
+            int playerNum = firstPlayed;
+            for (int i = 0; i < ClientGameState.getInstance().getCenter().size(); i++) {
+                DrawUtil.drawCard(g2d, CAT_COORDINATES[(playerNum + 3) % 4][0] + 50 * (i % 2 == 0 ? 1 : 0),
+                        CAT_COORDINATES[(playerNum + 3) % 4][1] + 100, 50, 100,
+                        ClientGameState.getInstance().getCenter().get(i), true);
+                playerNum = ClientGameState.getInstance().getCurrentPlayOrder().nextPlayer(playerNum);
+            }
+        }
     }
 
     // EFFECTS: returns a resized image to the new width and new height
